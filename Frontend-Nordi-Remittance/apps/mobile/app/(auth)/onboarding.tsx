@@ -41,9 +41,8 @@ import { ArrowRight, Globe, Shield, TrendingUp, Wallet, type LucideIcon } from '
 
 import { storageService } from '@/core/services/storage-service';
 import { Button } from '@/components/ui';
-import { colors } from '@/constants/colors';
-import { LogoMark } from '@/components/brand/logo-mark';
-import { useTilt, type Tilt } from '@/hooks/use-tilt';
+import { colors } from '@nordi/shared/constants/colors';
+import { useTilt, type Tilt } from '@/core/hooks/use-tilt';
 
 // ---------------------------------------------------------------------------
 // Content
@@ -446,7 +445,9 @@ export default function OnboardingScreen() {
       {/* Header */}
       <View className="flex-row items-center justify-between px-6 py-3">
         <View className="flex-row items-center gap-2">
-          <LogoMark size={24} tone="onLight" />
+          <View className="h-6 w-6 items-center justify-center rounded-full border-2 border-primary-600">
+            <ArrowRight size={13} color={colors.primary.DEFAULT} />
+          </View>
           <Text
             className="text-neutral-900 dark:text-white"
             style={{ fontSize: 15, fontWeight: '600', letterSpacing: -0.2 }}

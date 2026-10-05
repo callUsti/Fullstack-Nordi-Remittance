@@ -10,12 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.AccessBank",
-      "useAppleSignIn": true,
-      "supportedDevices": [
-        "iphone",
-        "ipad"
-      ]
+      "bundleIdentifier": "com.anonymous.AccessBank"
     },
     "android": {
       "adaptiveIcon": {

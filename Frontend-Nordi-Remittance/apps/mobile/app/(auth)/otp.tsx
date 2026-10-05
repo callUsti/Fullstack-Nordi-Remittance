@@ -224,7 +224,9 @@ export default function OtpScreen() {
             return (
               <TextInput
                 key={index}
-                ref={(ref) => (inputRefs.current[index] = ref)}
+                ref={(ref) => {
+                  inputRefs.current[index] = ref;
+                }}
                 value={digit}
                 onChangeText={(val) => handleCharChange(index, val)}
                 onKeyPress={({ nativeEvent }) => handleKeyPress(index, nativeEvent.key)}

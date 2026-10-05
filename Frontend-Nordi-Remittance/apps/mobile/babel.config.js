@@ -44,6 +44,7 @@ module.exports = function (api) {
     ];
   }
 
+  config.plugins.push('react-native-worklets/plugin');
+
   return config;
 };
-

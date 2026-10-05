@@ -16,7 +16,7 @@ const workspaceRoot = path.resolve(projectRoot, '../..');
 const config = getDefaultConfig(projectRoot);
 
 // Watch the whole workspace so changes in `packages/shared` trigger reloads.
-config.watchFolders = [workspaceRoot];
+config.watchFolders = [...config.watchFolders, workspaceRoot];
 
 // Resolve modules from this app's `node_modules` first, then fall back to
 // the hoisted workspace-root `node_modules`.
