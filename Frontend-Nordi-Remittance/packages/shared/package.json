@@ -1,0 +1,27 @@
+{
+  "name": "@nordi/shared",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Platform-agnostic core (API client, domain repositories/types, stores, constants, utils) shared between the Nordi website and mobile apps.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "axios": "^1.7.2",
+    "socket.io-client": "^4.8.3",
+    "zod": "^4.3.6",
+    "zustand": "^5.0.10"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.90.20",
+    "react": "^18.2.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@tanstack/react-query": "^5.90.20",
+    "@types/react": "^18.2.66",
+    "typescript": "^5.2.2"
+  }
+}

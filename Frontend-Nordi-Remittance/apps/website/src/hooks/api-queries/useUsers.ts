@@ -1,0 +1,23 @@
+// Moved to the shared package — re-exported for backwards-compatible imports.
+export {
+  useUserProfile,
+  useUserAddress,
+  useUserEmployment,
+  useUserBankAccounts,
+  useUserNotificationPreferences,
+  useUserReferralStats,
+  useReferredUsers,
+  useUpdateProfile,
+  useUpdateAvatar,
+  useDeleteAvatar,
+  useUpdateAddress,
+  useUpdateEmployment,
+  useAddBankAccount,
+  useUpdateBankAccount,
+  useDeleteBankAccount,
+  useSetPrimaryBankAccount,
+  useVerifyBankAccount,
+  useUpdateUserNotificationPreferences,
+  useDeleteUserAccount,
+  useExportUserData,
+} from "@nordi/shared/hooks/api-queries/useUsers";

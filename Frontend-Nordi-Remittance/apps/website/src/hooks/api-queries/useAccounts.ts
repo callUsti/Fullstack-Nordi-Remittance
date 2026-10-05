@@ -1,0 +1,22 @@
+// Moved to the shared package — re-exported for backwards-compatible imports.
+export {
+  useWallets,
+  useWallet,
+  useBalanceHistory,
+  useAccountLimits,
+  useAccountSummary,
+  useBeneficiaries,
+  useAddBeneficiary,
+  useRemoveBeneficiary,
+  useCreateWallet,
+  useUpdateWallet,
+  useCloseWallet,
+  useAdminWallets,
+  useAdminUpdateWalletStatus,
+  useAdminPendingApplications,
+  useAdminApproveApplication,
+  useAdminRejectApplication,
+  useAccountApplications,
+  useApplyForAccount,
+  useCancelApplication,
+} from "@nordi/shared/hooks/api-queries/useAccounts";

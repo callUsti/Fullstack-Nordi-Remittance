@@ -1,0 +1,2 @@
+// Moved to the shared package — re-exported for backwards-compatible imports.
+export { addDays, addMonths, addYears, calculateAge, datePickerConfig, formatDate, formatDateDisplay, formatDateForApi, formatDateForInput, formatDateTime, formatTime, getMaxDateOfBirth, getMinExpiryDate, getRelativeTime, getToday, isDateInFuture, isDateInPast, isMinimumAge } from "@nordi/shared/utils/helpers/date.helpers";

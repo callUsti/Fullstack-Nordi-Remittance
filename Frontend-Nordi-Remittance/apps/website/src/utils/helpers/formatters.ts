@@ -1,0 +1,2 @@
+// Moved to the shared package — re-exported for backwards-compatible imports.
+export { capitalizeFirst, capitalizeWords, formatAccountNumber, formatAddressSingleLine, formatCardNumber, formatCurrency, formatCurrencyCompact, formatFileSize, formatIBAN, formatIdType, formatName, formatNumber, formatPercentage, formatPhoneNumber, formatStatus, truncateText } from "@nordi/shared/utils/helpers/formatters";
