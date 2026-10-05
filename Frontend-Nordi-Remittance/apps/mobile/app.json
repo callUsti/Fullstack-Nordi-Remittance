@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "AccessBank",
-    "slug": "AccessBank",
+    "name": "nordi-remitwave",
+    "slug": "nordi-remitwave",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "nordiremittance",
+    "icon": "./assets/images/confirmed.png",
+    "scheme": "nordiremitwave",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -15,7 +15,7 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
-        "foregroundImage": "./assets/images/adaptive-icon.png"
+        "foregroundImage": "./assets/images/confirmed.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
@@ -43,7 +43,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splashImg.png",
+          "image": "./assets/images/confirmed.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"

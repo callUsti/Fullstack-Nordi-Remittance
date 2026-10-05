@@ -33,7 +33,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { BlurMask, Canvas, Group, Points, type SkPoint } from '@shopify/react-native-skia';
 
-import { colors } from '@nordi/shared/src/constants/colors';
+import { colors } from '@nordi/shared/constants/colors';
 import Images  from '@/constants/ImageStrings';
 import { useTilt, type Tilt } from '@/core/hooks/use-tilt';
 
@@ -407,7 +407,7 @@ export default function MotionSplashScreen({
 
 const styles = StyleSheet.create({
   root: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: BG,
   },
   logo: {

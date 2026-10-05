@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
-import categories from 'app/screens/MoreCategory';
+import categories from '../MoreCategory';
 
 const MoreOptionScreen = () => {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
