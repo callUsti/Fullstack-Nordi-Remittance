@@ -1,0 +1,30 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@components/*": ["./src/components/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@core/*": ["./src/core/*"],
+      "@store/*": ["../../packages/shared/src/store/*"],
+      "@hooks/*": ["../../packages/shared/src/hooks/*"],
+      "@shared/*": ["../../packages/shared/src/*"],
+      "@nordi/shared": ["../../packages/shared/src"],
+      "@nordi/shared/*": ["../../packages/shared/src/*"],
+      "@contexts/*": ["./src/contexts/*"],
+      "@constants/*": ["./src/constants/*"]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    ".env.d.ts",
+    "src/types/*.d.ts",
+    "../../packages/shared/src/domain/types/**/*.ts"
+  ],
+  "exclude": ["node_modules"]
+}
