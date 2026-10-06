@@ -1,13 +1,17 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useMobileTheme } from '@/core/theme/useMobileTheme';
 
 export default function ScanScreen() {
+  const theme = useMobileTheme();
+  const styles = createStyles(theme);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Scan to Pay</Text>
         <TouchableOpacity style={styles.historyButton}>
-          <Ionicons name="time" size={24} color="#2563eb" />
+          <Ionicons name="time" size={24} color={theme.primary} />
         </TouchableOpacity>
       </View>
 
@@ -23,13 +27,13 @@ export default function ScanScreen() {
 
       <View style={styles.actions}>
         <TouchableOpacity style={styles.actionButton}>
-          <View style={[styles.actionIcon, { backgroundColor: '#eff6ff' }]}>
-            <Ionicons name="qr-code" size={24} color="#2563eb" />
+          <View style={[styles.actionIcon, { backgroundColor: theme.primarySoft }]}>
+            <Ionicons name="qr-code" size={24} color={theme.primary} />
           </View>
           <Text style={styles.actionText}>My QR Code</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionButton}>
-          <View style={[styles.actionIcon, { backgroundColor: '#f0fdf4' }]}>
+          <View style={[styles.actionIcon, { backgroundColor: theme.surfaceAlt }]}>
             <Ionicons name="images" size={24} color="#16a34a" />
           </View>
           <Text style={styles.actionText}>Upload QR</Text>
@@ -45,7 +49,7 @@ export default function ScanScreen() {
         ].map((scan, index) => (
           <TouchableOpacity key={index} style={styles.scanItem}>
             <View style={styles.scanIcon}>
-              <Ionicons name="qr-code" size={24} color="#64748b" />
+              <Ionicons name="qr-code" size={24} color={theme.iconMuted} />
             </View>
             <View style={styles.scanInfo}>
               <Text style={styles.scanName}>{scan.name}</Text>
@@ -58,17 +62,17 @@ export default function ScanScreen() {
 
       <View style={styles.footer}>
         <TouchableOpacity style={styles.flashButton}>
-          <Ionicons name="flash" size={24} color="#64748b" />
+          <Ionicons name="flash" size={24} color={theme.iconMuted} />
         </TouchableOpacity>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useMobileTheme>) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc'
+    backgroundColor: theme.background
   },
   header: {
     flexDirection: 'row',
@@ -80,13 +84,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#1f2937'
+    color: theme.text
   },
   historyButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#eff6ff',
+    backgroundColor: theme.primarySoft,
     alignItems: 'center',
     justifyContent: 'center'
   },
@@ -105,7 +109,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 40,
     height: 40,
-    borderColor: '#2563eb',
+    borderColor: theme.primary,
     borderWidth: 4
   },
   topRight: {
@@ -128,7 +132,7 @@ const styles = StyleSheet.create({
   },
   scanText: {
     fontSize: 16,
-    color: '#64748b',
+    color: theme.textMuted,
     marginTop: 24
   },
   actions: {
@@ -150,7 +154,7 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 14,
-    color: '#64748b'
+    color: theme.textMuted
   },
   recentScans: {
     padding: 20
@@ -158,13 +162,13 @@ const styles = StyleSheet.create({
   recentTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1f2937',
+    color: theme.text,
     marginBottom: 16
   },
   scanItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     padding: 16,
     borderRadius: 12,
     marginBottom: 12
@@ -173,7 +177,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: theme.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16
@@ -184,17 +188,17 @@ const styles = StyleSheet.create({
   scanName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1f2937'
+    color: theme.text
   },
   scanTime: {
     fontSize: 14,
-    color: '#64748b',
+    color: theme.textMuted,
     marginTop: 4
   },
   scanAmount: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1f2937'
+    color: theme.text
   },
   footer: {
     padding: 20,
@@ -204,7 +208,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',

@@ -1,7 +1,11 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useMobileTheme } from '@/core/theme/useMobileTheme';
 
 export default function SupportScreen() {
+  const theme = useMobileTheme();
+  const styles = createStyles(theme);
+
   const supportCategories = [
     { icon: 'card', label: 'Cards & Payments' },
     { icon: 'shield-checkmark', label: 'Account Security' },
@@ -29,14 +33,14 @@ export default function SupportScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Support</Text>
         <TouchableOpacity style={styles.chatButton}>
-          <Ionicons name="chatbubble-ellipses" size={24} color="#2563eb" />
+          <Ionicons name="chatbubble-ellipses" size={24} color={theme.primary} />
         </TouchableOpacity>
       </View>
 
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color="#64748b" />
-          <TextInput style={styles.searchInput} placeholder="Search help articles..." placeholderTextColor="#64748b" />
+          <Ionicons name="search" size={20} color={theme.iconMuted} />
+          <TextInput style={styles.searchInput} placeholder="Search help articles..." placeholderTextColor={theme.textMuted} />
         </View>
       </View>
 
@@ -44,7 +48,7 @@ export default function SupportScreen() {
         {supportCategories.map((category, index) => (
           <TouchableOpacity key={index} style={styles.categoryItem}>
             <View style={styles.categoryIcon}>
-              <Ionicons name={category.icon as any} size={24} color="#2563eb" />
+              <Ionicons name={category.icon as any} size={24} color={theme.primary} />
             </View>
             <Text style={styles.categoryLabel}>{category.label}</Text>
           </TouchableOpacity>
@@ -57,7 +61,7 @@ export default function SupportScreen() {
           <TouchableOpacity key={index} style={styles.faqItem}>
             <View style={styles.faqHeader}>
               <Text style={styles.faqQuestion}>{item.question}</Text>
-              <Ionicons name="chevron-down" size={20} color="#64748b" />
+              <Ionicons name="chevron-down" size={20} color={theme.iconMuted} />
             </View>
             <Text style={styles.faqAnswer}>{item.answer}</Text>
           </TouchableOpacity>
@@ -68,8 +72,8 @@ export default function SupportScreen() {
         <Text style={styles.sectionTitle}>Contact Us</Text>
         <View style={styles.contactOptions}>
           <TouchableOpacity style={styles.contactOption}>
-            <View style={[styles.contactIcon, { backgroundColor: '#eff6ff' }]}>
-              <Ionicons name="call" size={24} color="#2563eb" />
+            <View style={[styles.contactIcon, { backgroundColor: theme.primarySoft }]}>
+              <Ionicons name="call" size={24} color={theme.primary} />
             </View>
             <Text style={styles.contactLabel}>Call Us</Text>
             <Text style={styles.contactDetail}>24/7 Support Line</Text>
@@ -99,10 +103,10 @@ export default function SupportScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useMobileTheme>) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc'
+    backgroundColor: theme.background
   },
   header: {
     flexDirection: 'row',
@@ -114,13 +118,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#1f2937'
+    color: theme.text
   },
   chatButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#eff6ff',
+    backgroundColor: theme.primarySoft,
     alignItems: 'center',
     justifyContent: 'center'
   },
@@ -130,7 +134,7 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     borderRadius: 12,
     padding: 12
   },
@@ -138,7 +142,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 8,
     fontSize: 16,
-    color: '#1f2937'
+    color: theme.text
   },
   categories: {
     flexDirection: 'row',
@@ -148,7 +152,7 @@ const styles = StyleSheet.create({
   },
   categoryItem: {
     width: '48%',
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16
@@ -157,7 +161,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#eff6ff',
+    backgroundColor: theme.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12
@@ -165,7 +169,7 @@ const styles = StyleSheet.create({
   categoryLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1f2937'
+    color: theme.text
   },
   section: {
     padding: 20
@@ -173,11 +177,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1f2937',
+    color: theme.text,
     marginBottom: 16
   },
   faqItem: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12
@@ -190,12 +194,12 @@ const styles = StyleSheet.create({
   faqQuestion: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1f2937',
+    color: theme.text,
     flex: 1
   },
   faqAnswer: {
     fontSize: 14,
-    color: '#64748b',
+    color: theme.textMuted,
     marginTop: 8
   },
   contactSection: {
@@ -207,7 +211,7 @@ const styles = StyleSheet.create({
   },
   contactOption: {
     width: '48%',
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center'
@@ -223,17 +227,17 @@ const styles = StyleSheet.create({
   contactLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1f2937',
+    color: theme.text,
     marginBottom: 4
   },
   contactDetail: {
     fontSize: 14,
-    color: '#64748b'
+    color: theme.textMuted
   },
   emergencySection: {
     margin: 20,
     padding: 20,
-    backgroundColor: '#fef2f2',
+    backgroundColor: theme.dangerSoft,
     borderRadius: 12
   },
   emergencyHeader: {
@@ -244,19 +248,19 @@ const styles = StyleSheet.create({
   emergencyTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#dc2626',
+    color: theme.danger,
     marginLeft: 8
   },
   emergencyText: {
     fontSize: 14,
-    color: '#64748b',
+    color: theme.textMuted,
     marginBottom: 16
   },
   emergencyButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#dc2626',
+    backgroundColor: theme.danger,
     borderRadius: 8,
     padding: 12
   },

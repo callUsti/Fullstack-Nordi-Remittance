@@ -10,6 +10,9 @@
     "apps/*",
     "packages/*"
   ],
+  "devDependencies": {
+    "expo-router": "~57.0.24"
+  },
   "scripts": {
     "dev": "npm run dev --workspace apps/website",
     "dev:website": "npm run dev --workspace apps/website",
@@ -19,7 +22,6 @@
     "build:mobile": "npm run build --workspace apps/mobile",
     "lint": "npm run lint --workspace apps/website",
     "lint:website": "npm run lint --workspace apps/website",
-    "lint:mobile": "npm run lint --workspace apps/mobile",
     "typecheck": "npm run typecheck --workspace packages/shared && npm run typecheck --workspace apps/website && npm run typecheck --workspace apps/mobile",
     "typecheck:shared": "npm run typecheck --workspace packages/shared",
     "typecheck:website": "npm run typecheck --workspace apps/website",

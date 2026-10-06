@@ -26,6 +26,7 @@ import {
 } from '@nordi/shared/hooks/api-queries/useAuth';
 import { useAuthStore } from '@nordi/shared/store/auth.store';
 import { processAuthSyncResponse } from '@/core/auth/clerkSync.helper';
+import { useMobileTheme } from '@/core/theme/useMobileTheme';
 
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -34,6 +35,7 @@ const VALID_CHARS = /^[A-HJ-NP-Za-hj-np-z2-9]$/;
 
 export default function OtpScreen() {
   const router = useRouter();
+  const theme = useMobileTheme();
   const params = useLocalSearchParams<{
     otpSessionToken?: string;
     email?: string;
@@ -210,7 +212,7 @@ export default function OtpScreen() {
         {/* Error Alert */}
         {errorMessage && (
           <View className="flex-row items-center gap-2.5 p-3.5 rounded-xl bg-error-50 dark:bg-error-950/40 border border-error-200 dark:border-error-800">
-            <ShieldAlert size={18} color="#EF4444" />
+            <ShieldAlert size={18} color={theme.danger} />
             <Text className="flex-1 text-xs font-medium text-error-700 dark:text-error-300">
               {errorMessage}
             </Text>
@@ -267,7 +269,7 @@ export default function OtpScreen() {
               disabled={isPending}
               className="flex-row items-center gap-1.5"
             >
-              <RotateCw size={14} color="#2563EB" />
+              <RotateCw size={14} color={theme.primary} />
               <Text className="text-xs font-semibold text-primary-600 dark:text-primary-400">
                 Resend verification code
               </Text>
@@ -280,7 +282,7 @@ export default function OtpScreen() {
           onPress={() => router.replace('/(auth)/login')}
           className="flex-row items-center justify-center gap-2 py-2"
         >
-          <ArrowLeft size={16} color="#6B7280" />
+          <ArrowLeft size={16} color={theme.iconMuted} />
           <Text className="text-xs font-semibold text-neutral-600 dark:text-neutral-400">
             Back to Sign In
           </Text>

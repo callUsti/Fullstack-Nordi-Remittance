@@ -8,6 +8,7 @@
 // ============================================================================
 
 const { getDefaultConfig } = require('expo/metro-config');
+const { withNativeWind } = require('nativewind/metro');
 const path = require('path');
 
 const projectRoot = __dirname;
@@ -25,8 +26,20 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
 ];
 
-// `@nordi/shared` is a source-only package (no build step) — make sure
-// Metro resolves its package.json `main` instead of a stale cached entry.
-config.resolver.disableHierarchicalLookup = false;
+// Shared hooks and the app provider must resolve the same React Query context.
+config.resolver.extraNodeModules = {
+  ...config.resolver.extraNodeModules,
+  '@tanstack/react-query': path.resolve(
+    projectRoot,
+    'node_modules/@tanstack/react-query',
+  ),
+  '@tanstack/query-core': path.resolve(
+    projectRoot,
+    'node_modules/@tanstack/react-query/node_modules/@tanstack/query-core',
+  ),
+};
+config.resolver.disableHierarchicalLookup = true;
 
-module.exports = config;
+module.exports = withNativeWind(config, {
+  input: path.resolve(projectRoot, 'global.css'),
+});

@@ -1,8 +1,12 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useMobileTheme } from '@/core/theme/useMobileTheme';
 
 export default function CardsScreen() {
+  const theme = useMobileTheme();
+  const styles = createStyles(theme);
+
   const cards: Array<{
     id: number;
     type: string;
@@ -32,6 +36,7 @@ export default function CardsScreen() {
         <Text style={styles.title}>My Cards</Text>
         <TouchableOpacity style={styles.addButton}>
           <Ionicons name="add" size={24} color="#fff" />
+        </TouchableOpacity>
         </TouchableOpacity>
       </View>
 
@@ -63,20 +68,20 @@ export default function CardsScreen() {
         <Text style={styles.sectionTitle}>Card Actions</Text>
         <View style={styles.actions}>
           <TouchableOpacity style={styles.action}>
-            <View style={[styles.actionIcon, { backgroundColor: '#e0f2fe' }]}>
-              <Ionicons name="lock-closed" size={24} color="#0284c7" />
+            <View style={[styles.actionIcon, { backgroundColor: theme.primarySoft }]}>
+              <Ionicons name="lock-closed" size={24} color={theme.isDark ? '#60a5fa' : '#0284c7'} />
             </View>
             <Text style={styles.actionText}>Lock Card</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.action}>
-            <View style={[styles.actionIcon, { backgroundColor: '#fef3c7' }]}>
-              <Ionicons name="settings" size={24} color="#d97706" />
+            <View style={[styles.actionIcon, { backgroundColor: theme.isDark ? '#78350f' : '#fef3c7' }]}>
+              <Ionicons name="settings" size={24} color={theme.isDark ? '#fbbf24' : '#d97706'} />
             </View>
             <Text style={styles.actionText}>Settings</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.action}>
-            <View style={[styles.actionIcon, { backgroundColor: '#dcfce7' }]}>
-              <Ionicons name="eye" size={24} color="#16a34a" />
+            <View style={[styles.actionIcon, { backgroundColor: theme.isDark ? '#15803d' : '#dcfce7' }]}>
+              <Ionicons name="eye" size={24} color={theme.isDark ? '#86efac' : '#16a34a'} />
             </View>
             <Text style={styles.actionText}>Show PIN</Text>
           </TouchableOpacity>
@@ -88,7 +93,7 @@ export default function CardsScreen() {
         {[1, 2, 3].map(i => (
           <TouchableOpacity key={i} style={styles.transaction}>
             <View style={styles.transactionIcon}>
-              <Ionicons name="cart" size={24} color="#64748b" />
+              <Ionicons name="cart" size={24} color={theme.iconMuted} />
             </View>
             <View style={styles.transactionInfo}>
               <Text style={styles.transactionTitle}>Shopping Mall</Text>
@@ -102,10 +107,10 @@ export default function CardsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useMobileTheme>) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc'
+    backgroundColor: theme.background
   },
   header: {
     flexDirection: 'row',
@@ -117,13 +122,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#1f2937'
+    color: theme.text
   },
   addButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#2563eb',
+    backgroundColor: theme.primary,
     alignItems: 'center',
     justifyContent: 'center'
   },
@@ -185,7 +190,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1f2937',
+    color: theme.text,
     marginBottom: 16
   },
   actions: {
@@ -205,7 +210,7 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 14,
-    color: '#64748b'
+    color: theme.textMuted
   },
   transactionsContainer: {
     padding: 20
@@ -213,7 +218,7 @@ const styles = StyleSheet.create({
   transaction: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     padding: 16,
     borderRadius: 12,
     marginBottom: 12
@@ -233,11 +238,11 @@ const styles = StyleSheet.create({
   transactionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1f2937'
+    color: theme.text
   },
   transactionDate: {
     fontSize: 14,
-    color: '#64748b',
+    color: theme.textMuted,
     marginTop: 4
   },
   transactionAmount: {

@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
-import categories from '../MoreCategory';
+import { useRouter } from 'expo-router';
+import categories from '@/constants/MoreCategory';
+import { useMobileTheme } from '@/core/theme/useMobileTheme';
 
 const MoreOptionScreen = () => {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const router = useRouter();
+  const theme = useMobileTheme();
+  const styles = createStyles(theme);
 
   const toggleCategory = (title: string) => {
     setActiveCategory(activeCategory === title ? null : title);
@@ -15,8 +20,8 @@ const MoreOptionScreen = () => {
       <View style={styles.searchContainer}>
         <View style={styles.searchInputContainer}>
           {/* Replace with a compatible icon */}
-          <FontAwesome name="search" size={16} color="black" />
-          <TextInput style={styles.searchInput} placeholder="Search..." />
+          <FontAwesome name="search" size={16} color={theme.iconMuted} />
+          <TextInput style={styles.searchInput} placeholder="Search..." placeholderTextColor={theme.textMuted} />
         </View>
       </View>
 
@@ -30,24 +35,28 @@ const MoreOptionScreen = () => {
               </View>
               <View
                 style={{
-                  backgroundColor: 'white',
+                  backgroundColor: theme.surface,
                   borderRadius: 50,
                   padding: 8,
                   justifyContent: 'center',
                   alignItems: 'center'
                 }}
               >
-                <MaterialIcons name="keyboard-arrow-down" size={24} color={activeCategory === category.title ? 'blue' : 'black'} />
+                <MaterialIcons name="keyboard-arrow-down" size={24} color={activeCategory === category.title ? theme.primary : theme.text} />
               </View>
             </TouchableOpacity>
 
             {activeCategory === category.title && (
               <View style={styles.subOptionsContainer}>
                 {category.subOptions.map((subOption, subIndex) => (
-                  <View key={subIndex} style={styles.subOption}>
+                  <TouchableOpacity
+                    key={subIndex}
+                    style={styles.subOption}
+                    onPress={() => router.push(subOption.link)}
+                  >
                     {subOption.icon}
                     <Text style={styles.subOptionText}>{subOption.title}</Text>
-                  </View>
+                  </TouchableOpacity>
                 ))}
               </View>
             )}
@@ -63,10 +72,10 @@ const MoreOptionScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useMobileTheme>) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: theme.background,
     marginTop: 30,
     padding: 16
   },
@@ -76,23 +85,24 @@ const styles = StyleSheet.create({
   searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderColor: '#E0E0E0',
+    borderColor: theme.border,
     borderWidth: 1,
     padding: 8,
     borderRadius: 8,
-    backgroundColor: '#F3F4F6'
+    backgroundColor: theme.surfaceAlt
   },
   searchInput: {
     marginLeft: 8,
     flex: 1,
-    fontSize: 18
+    fontSize: 18,
+    color: theme.text,
   },
   scrollableContainer: {
     paddingBottom: 16 // Space at the bottom of the ScrollView
   },
   categoryContainer: {
     marginBottom: 16,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: theme.surfaceAlt,
     borderRadius: 16,
     padding: 10
   },
@@ -107,7 +117,8 @@ const styles = StyleSheet.create({
   },
   categoryTitle: {
     fontSize: 14,
-    marginLeft: 16
+    marginLeft: 16,
+    color: theme.text
   },
   subOptionsContainer: {
     marginTop: 16,
@@ -118,7 +129,7 @@ const styles = StyleSheet.create({
   subOption: {
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.surface,
     borderRadius: 8,
     width: '23%',
     marginBottom: 16,
@@ -126,7 +137,8 @@ const styles = StyleSheet.create({
   },
   subOptionText: {
     marginTop: 8,
-    fontSize: 10
+    fontSize: 10,
+    color: theme.text
   },
   logoutButton: {
     backgroundColor: '#EF4444',

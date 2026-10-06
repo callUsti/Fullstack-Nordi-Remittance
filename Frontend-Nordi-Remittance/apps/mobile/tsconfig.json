@@ -3,20 +3,51 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": ["./src/*"],
-      "@components/*": ["./src/components/*"],
-      "@utils/*": ["./src/utils/*"],
-      "@core/*": ["./src/core/*"],
-      "@store/*": ["../../packages/shared/src/store/*"],
-      "@hooks/*": ["../../packages/shared/src/hooks/*"],
-      "@shared/*": ["../../packages/shared/src/*"],
-      "@nordi/shared": ["../../packages/shared/src"],
-      "@nordi/shared/*": ["../../packages/shared/src/*"],
-      "@contexts/*": ["./src/contexts/*"],
-      "@constants/*": ["./src/constants/*"],
-      "react-native": ["./node_modules/react-native"],
-      "react": ["./node_modules/@types/react"],
-      "react/*": ["./node_modules/@types/react/*"]
+      "react": [
+        "./node_modules/@types/react/index.d.ts"
+      ],
+      "react/*": [
+        "./node_modules/@types/react/*"
+      ],
+      "@/*": [
+        "./*"
+      ],
+      "@app/*": [
+        "./app/*"
+      ],
+      "@assets/*": [
+        "./assets/*"
+      ],
+      "@components/*": [
+        "./components/*"
+      ],
+      "@constants/*": [
+        "./constants/*"
+      ],
+      "@core/*": [
+        "./core/*"
+      ],
+      "@hooks/*": [
+        "./hooks/*"
+      ],
+      "@utils/*": [
+        "./core/utils/*"
+      ],
+      "@store/*": [
+        "../../packages/shared/src/store/*"
+      ],
+      "@shared/*": [
+        "../../packages/shared/src/*"
+      ],
+      "@nordi/shared": [
+        "../../packages/shared/src/index"
+      ],
+      "@nordi/shared/*": [
+        "../../packages/shared/src/*"
+      ],
+      "@types/*": [
+        "./types/*"
+      ]
     }
   },
   "include": [
@@ -26,7 +57,10 @@
     "expo-env.d.ts",
     ".env.d.ts",
     "src/types/*.d.ts",
-    "../../packages/shared/src/domain/types/**/*.ts"
+    "../../packages/shared/src/domain/types/**/*.ts",
+    "nativewind-env.d.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }

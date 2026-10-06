@@ -2,42 +2,35 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
+import { useMobileTheme } from '@/core/theme/useMobileTheme';
 
 const Transfer = () => {
   const router = useRouter();
+  const theme = useMobileTheme();
+  const styles = createStyles(theme);
 
-  const majorTransferOptions = [
-    { id: 1, label: 'Access-to-Access', icon: 'bank', route: '/Transactions/AccessToAccess', color: '#2563eb' },
-    { id: 2, label: 'Access-to-Others', icon: 'users', route: '/Transactions/AccessToOthers', color: '#16a34a' },
-    { id: 3, label: 'International Transfers', icon: 'globe', route: '/international', color: '#000080' },
-    { id: 4, label: 'Access-SwiftPAY', icon: 'bolt', route: '/swiftpay', color: '#ef4444' },
-    { id: 5, label: 'Access-to-crypto', icon: 'btc', route: '/swiftpay', color: '#F7931A' }
-  ];
-
-  const thirdPartyServices = [
-    { id: 5, label: 'PayPal', icon: 'paypal', route: '/paypal', color: '#3b82f6' },
-    { id: 6, label: 'Venmo', icon: 'money', route: '/venmo', color: '#10b981' },
-    { id: 7, label: 'CashApp', icon: 'dollar', route: '/cashapp', color: '#1d4ed8' },
-    { id: 8, label: 'Zelle', icon: 'credit-card', route: '/zelle', color: '#6b7280' },
-    { id: 9, label: 'Google Pay', icon: 'google-wallet', route: '/googlepay', color: '#f43f5e' },
-    { id: 10, label: 'Apple Pay', icon: 'apple', route: '/applepay', color: '#000000' }
+  const majorTransferOptions: { id: number; label: string; icon: string; route: Href; color: string }[] = [
+    { id: 1, label: 'Access-to-Access', icon: 'bank', route: '/screens/Transactions/AccessToAccess', color: '#2563eb' },
+    { id: 2, label: 'Access-to-Others', icon: 'users', route: '/screens/Transactions/AccessToOthers', color: '#16a34a' },
+    { id: 3, label: 'International Transfers', icon: 'globe', route: '/screens/Transactions/AccessInternational', color: '#000080' },
+    { id: 4, label: 'Access-SwiftPAY', icon: 'bolt', route: '/screens/Transactions/AccessSwiftPay', color: '#ef4444' },
+    { id: 5, label: 'Access-to-crypto', icon: 'btc', route: '/screens/Transactions/AccessCrypto', color: '#F7931A' }
   ];
 
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: theme.background }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 40, padding: 20 }}>
         <TouchableOpacity onPress={() => router.back()}>
-          888
-          <Ionicons name="arrow-back" size={24} color="#000" />
+          <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
         <Text style={styles.sectionTitle}>Transfer Options</Text>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 20 }} showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={{ padding: 20 }} showsVerticalScrollIndicator={false}>
         {/* Major Transfer Options */}
         {majorTransferOptions.map(option => (
-          <TouchableOpacity key={option.id} style={styles.option} onPress={() => router.push(option.route as any)}>
+          <TouchableOpacity key={option.id} style={styles.option} onPress={() => router.push(option.route)}>
             <View style={[styles.iconContainer, { backgroundColor: `${option.color}20` }]}>
               <FontAwesome name={option.icon as any} size={24} color={option.color} />
             </View>
@@ -45,30 +38,16 @@ const Transfer = () => {
           </TouchableOpacity>
         ))}
 
-        {/* Divider */}
-        <View style={styles.divider}>
-          <Text style={styles.dividerText}>Third-Party Services</Text>
-        </View>
-
-        {/* Third-Party Payment Options */}
-        {thirdPartyServices.map(service => (
-          <TouchableOpacity key={service.id} style={styles.option} onPress={() => router.push(service.route as any)}>
-            <View style={[styles.iconContainer, { backgroundColor: `${service.color}20` }]}>
-              <FontAwesome name={service.icon as any} size={24} color={service.color} />
-            </View>
-            <Text style={styles.optionText}>{service.label}</Text>
-          </TouchableOpacity>
-        ))}
       </ScrollView>
     </GestureHandlerRootView>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useMobileTheme>) => StyleSheet.create({
   sectionTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1f2937',
+    color: theme.text,
     marginLeft: 15
   },
   option: {
@@ -76,7 +55,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: theme.border,
     marginBottom: 12
   },
   iconContainer: {
@@ -90,22 +69,8 @@ const styles = StyleSheet.create({
   optionText: {
     fontSize: 18,
     fontWeight: '500',
-    color: '#1f2937'
+    color: theme.text
   },
-  divider: {
-    marginVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#d1d5db',
-    alignItems: 'center'
-  },
-  dividerText: {
-    position: 'absolute',
-    top: -12,
-    backgroundColor: '#f8fafc',
-    paddingHorizontal: 10,
-    fontSize: 16,
-    color: '#6b7280'
-  }
 });
 
 export default Transfer;

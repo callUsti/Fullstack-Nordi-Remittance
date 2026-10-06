@@ -1,6 +1,8 @@
+import '../global.css';
 import { useCallback, useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { Appearance, StyleSheet, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
@@ -9,15 +11,19 @@ import { queryClient } from '@nordi/shared/core/lib/queryClient';
 import { bootstrapMobilePlatform } from '@/core/bootstrap';
 import { useAuthStore } from '@nordi/shared/store/auth.store';
 import { usePermissionsStore } from '@nordi/shared/store/permissions.store';
+import useThemeStore from '@nordi/shared/store/theme.store';
+import { colorScheme } from 'nativewind';
 import { initializeDevicePermissions } from '@/core/utils/permission-handler';
 import { storageService } from '@/core/services/storage-service';
 import { MobileClerkProvider } from '@/core/auth/clerk';
 import { ToastContainer } from '@/components/ui';
-import MotionSplashScreen from './(auth)/motion-splash-screen';
+import MotionSplashScreen from '@/components/auth/MotionSplashScreen';
 
 void SplashScreen.preventAutoHideAsync().catch((error: unknown) => {
   console.error('Unable to hold the native splash screen:', error);
 });
+
+
 
 // Wire shared (`@nordi/shared`) modules to React Native implementations
 // before anything in the component tree can call the API client, socket,
@@ -36,6 +42,8 @@ export default function RootLayout() {
   const devicePermissionsInitialized = usePermissionsStore(
     (state) => state.devicePermissionsInitialized,
   );
+  const themeMode = useThemeStore((state) => state.mode);
+  const isDarkMode = useThemeStore((state) => state.isDarkMode);
   const [startupInitialized, setStartupInitialized] = useState(false);
   const [startupError, setStartupError] = useState<string | null>(null);
 
@@ -58,6 +66,19 @@ export default function RootLayout() {
   }, [initializeStartup]);
 
   useEffect(() => {
+    colorScheme.set(themeMode);
+    useThemeStore.getState().initializeTheme();
+  }, [themeMode]);
+
+  useEffect(() => {
+    const subscription = Appearance.addChangeListener(() => {
+      useThemeStore.getState().initializeTheme();
+    });
+
+    return () => subscription.remove();
+  }, []);
+
+  useEffect(() => {
     if (fontsLoaded) {
       void SplashScreen.hideAsync().catch((error: unknown) => {
         console.error('Unable to hide the native splash screen:', error);
@@ -73,29 +94,31 @@ export default function RootLayout() {
     devicePermissionsInitialized;
 
   return (
-    <MobileClerkProvider>
+    <GestureHandlerRootView style={styles.container}>
       <QueryClientProvider client={queryClient}>
-        <View style={styles.container}>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="screens" options={{ headerShown: false }} />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-          {!appInitialized && (
-            <View style={StyleSheet.absoluteFill}>
-              <MotionSplashScreen
-                error={startupError}
-                onRetry={startupError ? initializeStartup : undefined}
-              />
-            </View>
-          )}
-        </View>
-        <ToastContainer />
-        <StatusBar style="light" />
+        <MobileClerkProvider>
+          <View style={styles.container}>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="screens" options={{ headerShown: false }} />
+              <Stack.Screen name="+not-found" />
+            </Stack>
+            {!appInitialized && (
+              <View style={StyleSheet.absoluteFill}>
+                <MotionSplashScreen
+                  error={startupError}
+                  onRetry={startupError ? initializeStartup : undefined}
+                />
+              </View>
+            )}
+          </View>
+          <ToastContainer />
+          <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+        </MobileClerkProvider>
       </QueryClientProvider>
-    </MobileClerkProvider>
+    </GestureHandlerRootView>
   );
 }
 

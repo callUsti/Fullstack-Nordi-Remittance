@@ -13,9 +13,11 @@ import { Button, Input } from '@/components/ui';
 
 // Shared hooks
 import { useForgotPassword } from '@nordi/shared/hooks/api-queries/useAuth';
+import { useMobileTheme } from '@/core/theme/useMobileTheme';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
+  const theme = useMobileTheme();
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
@@ -60,7 +62,7 @@ export default function ForgotPasswordScreen() {
       >
         <View className="items-center py-6 px-2">
           <View className="w-20 h-20 rounded-full bg-success-100 dark:bg-success-950/60 items-center justify-center mb-6">
-            <CheckCircle2 size={42} color="#10B981" />
+            <CheckCircle2 size={42} color={theme.isDark ? '#86efac' : '#10B981'} />
           </View>
 
           <Text className="text-sm text-neutral-600 dark:text-neutral-300 text-center leading-relaxed mb-8">
@@ -92,7 +94,7 @@ export default function ForgotPasswordScreen() {
         {/* Error Alert */}
         {(errorMessage || forgotPasswordMutation.error) && (
           <View className="flex-row items-center gap-2.5 p-3.5 rounded-xl bg-error-50 dark:bg-error-950/40 border border-error-200 dark:border-error-800">
-            <ShieldAlert size={18} color="#EF4444" />
+            <ShieldAlert size={18} color={theme.danger} />
             <Text className="flex-1 text-xs font-medium text-error-700 dark:text-error-300">
               {errorMessage || forgotPasswordMutation.error?.message || 'Error occurred'}
             </Text>
@@ -107,7 +109,7 @@ export default function ForgotPasswordScreen() {
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
-          leftIcon={<Mail size={18} color="#6B7280" />}
+          leftIcon={<Mail size={18} color={theme.iconMuted} />}
           error={emailError}
           helperText="We will send a password reset verification link to this address."
         />

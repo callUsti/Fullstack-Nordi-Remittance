@@ -1,14 +1,17 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import FeaturedComponent from '../screens/Homescreens/Featured';
-import PartialCrypto from '../screens/Homescreens/PartialCrypto';
+import FeaturedComponent from '@/components/home/Featured';
+import PartialCrypto from '@/components/home/PartialCrypto';
 import React, { useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import HomeServices from '../screens/Homescreens/HomeServices';
+import HomeServices from '@/components/home/HomeServices';
+import { useMobileTheme } from '@/core/theme/useMobileTheme';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const theme = useMobileTheme();
+  const styles = createStyles(theme);
 
   const renderTransactions = () => (
     <View style={styles.transactionsSection}>
@@ -53,7 +56,7 @@ export default function HomeScreen() {
             <Text style={styles.transactionName}>{transaction.name}</Text>
             <Text style={styles.transactionDate}>{transaction.date}</Text>
           </View>
-          <Text style={[styles.transactionAmount, { color: transaction.amount > 0 ? '#22c55e' : '#ef4444' }]}>
+          <Text style={[styles.transactionAmount, { color: transaction.amount > 0 ? '#22c55e' : theme.danger }]}>
             {transaction.amount > 0 ? '+' : ''}
             {transaction.amount.toFixed(2)}
           </Text>
@@ -76,21 +79,21 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useMobileTheme>) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc'
+    backgroundColor: theme.background
   },
 
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1f2937',
+    color: theme.text,
     marginBottom: 16
   },
 
   transactionsSection: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     padding: 20,
@@ -104,7 +107,7 @@ const styles = StyleSheet.create({
   },
   seeAll: {
     fontSize: 16,
-    color: '#2563eb'
+    color: theme.primary
   },
   transaction: {
     flexDirection: 'row',
@@ -125,11 +128,11 @@ const styles = StyleSheet.create({
   transactionName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1f2937'
+    color: theme.text
   },
   transactionDate: {
     fontSize: 14,
-    color: '#64748b',
+    color: theme.textMuted,
     marginTop: 4
   },
   transactionAmount: {

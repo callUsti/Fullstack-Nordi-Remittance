@@ -11,7 +11,7 @@ import apiClient, { ApiResponse, PaginatedResponse } from "../../core/api/client
 // ============================================================================
 
 export interface DisputeFilters {
-  status?: "open" | "under_review" | "resolved" | "rejected";
+  status?: DisputeStatus;
   type?: string;
   startDate?: string;
   endDate?: string;

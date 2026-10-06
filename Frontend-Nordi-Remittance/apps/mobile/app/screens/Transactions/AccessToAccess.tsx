@@ -5,8 +5,11 @@ import * as Progress from 'react-native-progress';
 import AccountCard from '@/components/AccountCard';
 import { useRouter } from 'expo-router';
 import ConvertFx from './ConvertFx';
+import { useMobileTheme } from '@/core/theme/useMobileTheme';
 
 const AccessToAccess = () => {
+  const theme = useMobileTheme();
+  const styles = createStyles(theme);
   const [activeTab, setActiveTab] = useState('accessAccount');
   const [accountNumber, setAccountNumber] = useState('');
   const [accountName, setAccountName] = useState('');
@@ -71,7 +74,7 @@ const AccessToAccess = () => {
                 </TouchableOpacity>
               </View>
 
-              <Progress.Bar progress={0.5} width={null} color="#2563eb" style={styles.progressBar} />
+              <Progress.Bar progress={0.5} width={null} color={theme.primary} style={styles.progressBar} />
 
               <View style={styles.amountContainer}>
                 <Text style={styles.amountText}>Amount Used: $5,000</Text>
@@ -87,27 +90,27 @@ const AccessToAccess = () => {
               </View>
 
               <View style={styles.inputContainer}>
-                <FontAwesome name="search" size={20} color="#9ca3af" style={styles.inputIcon} />
-                <TextInput style={styles.input} placeholder="No frequent beneficiaries" />
+                <FontAwesome name="search" size={20} color={theme.iconMuted} style={styles.inputIcon} />
+                <TextInput style={styles.input} placeholder="No frequent beneficiaries" placeholderTextColor={theme.textMuted} />
               </View>
 
               {/* Form Fields */}
               <View style={styles.formContainer}>
                 <View style={styles.inputContainer}>
-                  <FontAwesome name="bank" size={20} color="#9ca3af" style={styles.inputIcon} />
-                  <TextInput style={styles.input} placeholder="Account Number" keyboardType="numeric" value={accountNumber} onChangeText={handleAccountNumberChange} />
+                  <FontAwesome name="bank" size={20} color={theme.iconMuted} style={styles.inputIcon} />
+                  <TextInput style={styles.input} placeholder="Account Number" placeholderTextColor={theme.textMuted} keyboardType="numeric" value={accountNumber} onChangeText={handleAccountNumberChange} />
                 </View>
                 <View style={styles.inputContainer}>
-                  <FontAwesome name="user" size={20} color="#9ca3af" style={styles.inputIcon} />
-                  <TextInput style={styles.input} placeholder="Account Name" value={accountName} onChangeText={handleInputChange(setAccountName)} />
+                  <FontAwesome name="user" size={20} color={theme.iconMuted} style={styles.inputIcon} />
+                  <TextInput style={styles.input} placeholder="Account Name" placeholderTextColor={theme.textMuted} value={accountName} onChangeText={handleInputChange(setAccountName)} />
                 </View>
                 <View style={styles.inputContainer}>
-                  <FontAwesome name="money" size={20} color="#9ca3af" style={styles.inputIcon} />
-                  <TextInput style={styles.input} placeholder="Amount" keyboardType="numeric" value={amount} onChangeText={handleInputChange(setAmount)} />
+                  <FontAwesome name="money" size={20} color={theme.iconMuted} style={styles.inputIcon} />
+                  <TextInput style={styles.input} placeholder="Amount" placeholderTextColor={theme.textMuted} keyboardType="numeric" value={amount} onChangeText={handleInputChange(setAmount)} />
                 </View>
                 <View style={styles.inputContainer}>
-                  <FontAwesome name="pencil" size={20} color="#9ca3af" style={styles.inputIcon} />
-                  <TextInput style={styles.input} placeholder="Transfer Description" value={description} onChangeText={handleInputChange(setDescription)} />
+                  <FontAwesome name="pencil" size={20} color={theme.iconMuted} style={styles.inputIcon} />
+                  <TextInput style={styles.input} placeholder="Transfer Description" placeholderTextColor={theme.textMuted} value={description} onChangeText={handleInputChange(setDescription)} />
                 </View>
               </View>
             </>
@@ -137,30 +140,30 @@ const AccessToAccess = () => {
 
 export default AccessToAccess;
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
-  appBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#2563eb', paddingVertical: 15, paddingHorizontal: 20, marginTop: 40 },
+const createStyles = (theme: ReturnType<typeof useMobileTheme>) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
+  appBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: theme.primary, paddingVertical: 15, paddingHorizontal: 20, marginTop: 40 },
   appBarTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold', marginLeft: 15 },
-  tabBar: { flexDirection: 'row', justifyContent: 'space-around', backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#e5e7eb' },
+  tabBar: { flexDirection: 'row', justifyContent: 'space-around', backgroundColor: theme.surface, borderBottomWidth: 1, borderBottomColor: theme.border },
   tabButton: { paddingVertical: 15, width: '50%', alignItems: 'center' },
-  activeTab: { borderBottomWidth: 2, borderBottomColor: '#2563eb' },
-  tabText: { fontSize: 16, color: '#1f2937' },
+  activeTab: { borderBottomWidth: 2, borderBottomColor: theme.primary },
+  tabText: { fontSize: 16, color: theme.text },
   scrollViewContent: { paddingBottom: 20 },
-  progressContainer: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 10, backgroundColor: '#fff' },
-  limitText: { color: '#1f2937', fontSize: 14 },
-  upgradeText: { color: '#2563eb', fontSize: 14 }, 
+  progressContainer: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 10, backgroundColor: theme.surface },
+  limitText: { color: theme.text, fontSize: 14 },
+  upgradeText: { color: theme.primary, fontSize: 14 },
   progressBar: { marginHorizontal: 20, marginBottom: 10 }, 
   amountContainer: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 10 }, 
-  amountText: { color: '#1f2937' }, 
-  beneficiaryContainer: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 10, backgroundColor: '#fff' }, beneficiaryText: { color: '#1f2937' }, 
-  findText: { color: '#2563eb' }, 
-  inputContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 10, marginHorizontal: 20, borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 12, backgroundColor: '#fff' }, 
-  inputIcon: { marginRight: 10 }, input: { flex: 1, fontSize: 16, color: '#1f2937' }, 
+  amountText: { color: theme.text },
+  beneficiaryContainer: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 10, backgroundColor: theme.surface }, beneficiaryText: { color: theme.text },
+  findText: { color: theme.primary },
+  inputContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 10, marginHorizontal: 20, borderWidth: 1, borderColor: theme.border, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 12, backgroundColor: theme.surface },
+  inputIcon: { marginRight: 10 }, input: { flex: 1, fontSize: 16, color: theme.text },
   formContainer: { marginTop: 20 }, 
   convertFxContainer: { padding: 20 }, 
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10, color: '#1f2937' }, 
-  fxText: { fontSize: 16, color: '#64748b' }, 
-  proceedButtonContainer: { padding: 20, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#e5e7eb' }, 
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10, color: theme.text },
+  fxText: { fontSize: 16, color: theme.textMuted },
+  proceedButtonContainer: { padding: 20, backgroundColor: theme.surface, borderTopWidth: 1, borderTopColor: theme.border },
   proceedButton: { paddingVertical: 15, borderRadius: 8, alignItems: 'center' }, 
   proceedButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' }
 });

@@ -4,8 +4,11 @@ import axios from 'axios';
 import { FontAwesome } from '@expo/vector-icons'; // For up/down chart arrows
 import LoadingScreen from '@/components/LoadingScreen';
 import { COINMARKETCAP_API_KEY } from '@env';
+import { useMobileTheme } from '@/core/theme/useMobileTheme';
 
 const CryptoListScreen = () => {
+  const theme = useMobileTheme();
+  const styles = createStyles(theme);
   const [coins, setCoins] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -58,34 +61,41 @@ const CryptoListScreen = () => {
 
   return (
     <View style={styles.container}>
-      <TextInput style={styles.searchBar} placeholder="Search for a coin..." value={searchTerm} onChangeText={setSearchTerm} />
+      <TextInput
+        style={styles.searchBar}
+        placeholder="Search for a coin..."
+        placeholderTextColor={theme.textMuted}
+        value={searchTerm}
+        onChangeText={setSearchTerm}
+      />
       <FlatList data={filteredCoins} renderItem={renderItem} showsVerticalScrollIndicator={false} keyExtractor={item => item.id.toString()} />
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useMobileTheme>) => StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 20, // Ensures space below notch on iPhone X and similar devices
     paddingHorizontal: 16,
-    backgroundColor: '#F0F8FF'
+    backgroundColor: theme.background
   },
   searchBar: {
     height: 45,
-    borderColor: '#cccccc',
+    borderColor: theme.border,
     borderWidth: 1,
     paddingHorizontal: 10,
     marginBottom: 16,
     borderRadius: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.surface,
+    color: theme.text,
     marginTop: 50
   },
   coinContainer: {
     flexDirection: 'row',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#eeeeee'
+    borderBottomColor: theme.border
   },
   coinImage: {
     width: 48,
@@ -97,7 +107,8 @@ const styles = StyleSheet.create({
   },
   coinName: {
     fontSize: 16,
-    fontWeight: 'bold'
+    fontWeight: 'bold',
+    color: theme.text
   },
   priceContainer: {
     flexDirection: 'row',
@@ -121,11 +132,13 @@ const styles = StyleSheet.create({
   },
   coinMarketCap: {
     fontSize: 12,
-    marginTop: 4
+    marginTop: 4,
+    color: theme.textMuted
   },
   coinVolume: {
     fontSize: 12,
-    marginTop: 4
+    marginTop: 4,
+    color: theme.textMuted
   }
 });
 

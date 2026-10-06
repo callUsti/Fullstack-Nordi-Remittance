@@ -83,11 +83,16 @@ export const useWebhookDeliveries = (
       params,
     ],
     queryFn: async () => {
-      const response = await IntegrationsRepository.getWebhookDeliveries(
-        webhookId,
-        params,
-      );
-      return response;
+      const response = await IntegrationsRepository.getWebhookById(webhookId);
+      const deliveries = response.data.deliveryHistory;
+      if (!params) {
+        return deliveries;
+      }
+
+      const page = Math.max(1, params.page ?? 1);
+      const limit = params.limit ?? deliveries.length;
+      const start = (page - 1) * limit;
+      return deliveries.slice(start, start + limit);
     },
     enabled: !!webhookId,
   });
@@ -144,13 +149,12 @@ export const useApiKey = (keyId: UUID) => {
  */
 export const useApiKeyUsage = (
   keyId: UUID,
-  params?: { startDate?: string; endDate?: string },
 ) => {
   return useQuery({
-    queryKey: [...queryKeys.integrations.apiKeyDetail(keyId), "usage", params],
+    queryKey: [...queryKeys.integrations.apiKeyDetail(keyId), "usage"],
     queryFn: async () => {
-      const response = await IntegrationsRepository.getApiKeyById(keyId, params);
-      return response.data;
+      const response = await IntegrationsRepository.getApiKeyById(keyId);
+      return response.data.usageStats;
     },
     enabled: !!keyId,
   });
@@ -321,7 +325,7 @@ export const useToggleWebhookStatus = () => {
         queryKey: queryKeys.integrations.webhooks(),
       });
       showToast(
-        data.active ? "Webhook activated" : "Webhook deactivated",
+        data.isActive ? "Webhook activated" : "Webhook deactivated",
         "success",
       );
     },

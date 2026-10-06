@@ -14,9 +14,11 @@ import { Button, Spinner } from '@/components/ui';
 // Shared hooks & store
 import { useVerifyEmail, useResendVerificationEmail } from '@nordi/shared/hooks/api-queries/useAuth';
 import { useAuthStore } from '@nordi/shared/store/auth.store';
+import { useMobileTheme } from '@/core/theme/useMobileTheme';
 
 export default function VerifyEmailScreen() {
   const router = useRouter();
+  const theme = useMobileTheme();
   const params = useLocalSearchParams<{ token?: string }>();
   const token = params.token;
 
@@ -78,7 +80,7 @@ export default function VerifyEmailScreen() {
           {isSuccess && (
             <>
               <View className="w-20 h-20 rounded-full bg-success-100 dark:bg-success-950/60 items-center justify-center mb-6">
-                <CheckCircle2 size={42} color="#10B981" />
+                <CheckCircle2 size={42} color={theme.isDark ? '#86efac' : '#10B981'} />
               </View>
               <Text className="text-base font-semibold text-neutral-900 dark:text-white text-center mb-2">
                 Email Successfully Verified!
@@ -100,7 +102,7 @@ export default function VerifyEmailScreen() {
           {isError && (
             <>
               <View className="w-20 h-20 rounded-full bg-error-100 dark:bg-error-950/60 items-center justify-center mb-6">
-                <XCircle size={42} color="#EF4444" />
+                <XCircle size={42} color={theme.isDark ? '#fca5a5' : '#EF4444'} />
               </View>
               <Text className="text-base font-semibold text-neutral-900 dark:text-white text-center mb-2">
                 Verification Failed
@@ -136,7 +138,7 @@ export default function VerifyEmailScreen() {
     >
       <View className="items-center py-4 px-2 space-y-4">
         <View className="w-20 h-20 rounded-full bg-primary-100 dark:bg-primary-950/60 items-center justify-center mb-2">
-          <Mail size={38} color="#2563EB" />
+          <Mail size={38} color={theme.primary} />
         </View>
 
         <Text className="text-sm text-neutral-600 dark:text-neutral-300 text-center leading-relaxed">

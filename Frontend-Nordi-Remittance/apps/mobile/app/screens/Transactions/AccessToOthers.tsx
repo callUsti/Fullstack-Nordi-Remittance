@@ -10,11 +10,14 @@ import * as Location from 'expo-location';
 import axios from 'axios';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 
-import ConfirmTransaction from './ConfirmTransaction';
+import ConfirmTransaction from '@/components/transactions/ConfirmTransaction';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BANK_DATA_API_KEY } from '@env';
+import { useMobileTheme } from '@/core/theme/useMobileTheme';
 
 const AccessToOthers = () => {
+  const theme = useMobileTheme();
+  const styles = createStyles(theme);
   const [bankName, setBankName] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [accountName, setAccountName] = useState('');
@@ -179,17 +182,18 @@ const AccessToOthers = () => {
   return (
     <View style={styles.container}>
       {/* App Bar */}
-      <View style={[styles.appBar, showBottomSheet && { backgroundColor: 'darkgrey' }]}>
+      <View style={[styles.appBar, showBottomSheet && { backgroundColor: theme.surfaceAlt }]}>
         <TouchableOpacity onPress={() => !showBottomSheet && router.back()}>
-          <Ionicons name="arrow-back" size={24} color={showBottomSheet ? '#000' : '#fff'} />
+          <Ionicons name="arrow-back" size={24} color={showBottomSheet ? theme.text : '#fff'} />
         </TouchableOpacity>
-        <Text style={[styles.appBarTitle, showBottomSheet && { color: '#000' }]}>Other Banks Transfers</Text>
+        <Text style={[styles.appBarTitle, showBottomSheet && { color: theme.text }]}>Other Banks Transfers</Text>
       </View>
 
       {/* Scrollable Content with Keyboard Avoidance */}
-      <GestureHandlerRootView style={{ flex: 1 }}>
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: theme.background }}>
         <KeyboardAvoidingView style={[{ flex: 1 }, showBottomSheet ? styles.disabledInput : null]} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <ScrollView
+            style={{ backgroundColor: theme.background }}
             contentContainerStyle={styles.scrollViewContent}
             showsVerticalScrollIndicator={false}
             scrollEnabled={!showBottomSheet}
@@ -222,8 +226,8 @@ const AccessToOthers = () => {
                 </View>
 
                 <View style={styles.inputContainer}>
-                  <FontAwesome name="search" size={20} color="#9ca3af" style={styles.inputIcon} />
-                  <TextInput style={styles.input} placeholder="No frequent beneficiaries" />
+                  <FontAwesome name="search" size={20} color={theme.iconMuted} style={styles.inputIcon} />
+                  <TextInput style={styles.input} placeholder="No frequent beneficiaries" placeholderTextColor={theme.textMuted} />
                 </View>
 
                 {/* Form Fields */}
@@ -254,10 +258,11 @@ const AccessToOthers = () => {
                   <Text style={{ fontSize: 15, color: '#a0a0a0', marginTop: 15 }}>( Optional )</Text>
                   {/* IBAN or Routing Number */}
                   <View style={styles.inputContainer}>
-                    <FontAwesome name="bank" size={20} color="#9ca3af" style={styles.inputIcon} />
+                    <FontAwesome name="bank" size={20} color={theme.iconMuted} style={styles.inputIcon} />
                     <TextInput
                       style={[styles.input, isLoading || showBottomSheet ? styles.disabledInput : null]}
                       placeholder={determineFormFields() === 'routing' ? 'Routing Number' : 'IBAN Number'}
+                      placeholderTextColor={theme.textMuted}
                       keyboardType="numeric"
                       value={ibanOrRouting}
                       onChangeText={handleInputChange(setIbanOrRouting)}
@@ -267,10 +272,11 @@ const AccessToOthers = () => {
 
                   {/* SWIFT Code */}
                   <View style={styles.inputContainer}>
-                    <FontAwesome name="bank" size={20} color="#9ca3af" style={styles.inputIcon} />
+                    <FontAwesome name="bank" size={20} color={theme.iconMuted} style={styles.inputIcon} />
                     <TextInput
                       style={[styles.input, isLoading || showBottomSheet ? styles.disabledInput : null]}
                       placeholder="SWIFT Code"
+                      placeholderTextColor={theme.textMuted}
                       value={swiftCode}
                       onChangeText={handleInputChange(setSwiftCode)}
                       editable={!isLoading && !showBottomSheet}
@@ -282,16 +288,17 @@ const AccessToOthers = () => {
 
                   {/* Bank Name */}
                   <View style={styles.inputContainer}>
-                    <FontAwesome name="bank" size={20} color="#9ca3af" style={styles.inputIcon} />
-                    <TextInput style={styles.input} placeholder="Bank Name" value={bankName} onChangeText={handleInputChange(setBankName)} editable={!showBottomSheet} />
+                    <FontAwesome name="bank" size={20} color={theme.iconMuted} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="Bank Name" placeholderTextColor={theme.textMuted} value={bankName} onChangeText={handleInputChange(setBankName)} editable={!showBottomSheet} />
                   </View>
 
                   {/* Account Number */}
                   <View style={styles.inputContainer}>
-                    <FontAwesome name="bank" size={20} color="#9ca3af" style={styles.inputIcon} />
+                    <FontAwesome name="bank" size={20} color={theme.iconMuted} style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
                       placeholder="Account Number"
+                      placeholderTextColor={theme.textMuted}
                       keyboardType="numeric"
                       value={accountNumber}
                       onChangeText={handleAccountNumberChange}
@@ -301,16 +308,17 @@ const AccessToOthers = () => {
 
                   {/* Account Name */}
                   <View style={styles.inputContainer}>
-                    <FontAwesome name="user" size={20} color="#9ca3af" style={styles.inputIcon} />
-                    <TextInput style={styles.input} placeholder="Account Name" value={accountName} onChangeText={handleInputChange(setAccountName)} editable={!showBottomSheet} />
+                    <FontAwesome name="user" size={20} color={theme.iconMuted} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="Account Name" placeholderTextColor={theme.textMuted} value={accountName} onChangeText={handleInputChange(setAccountName)} editable={!showBottomSheet} />
                   </View>
 
                   {/* Amount */}
                   <View style={styles.inputContainer}>
-                    <FontAwesome name="money" size={20} color="#9ca3af" style={styles.inputIcon} />
+                    <FontAwesome name="money" size={20} color={theme.iconMuted} style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
                       placeholder="Amount"
+                      placeholderTextColor={theme.textMuted}
                       keyboardType="numeric"
                       value={amount}
                       onChangeText={handleInputChange(setAmount)}
@@ -320,8 +328,8 @@ const AccessToOthers = () => {
 
                   {/* Description */}
                   <View style={styles.inputContainer}>
-                    <FontAwesome name="comment" size={20} color="#9ca3af" style={styles.inputIcon} />
-                    <TextInput style={styles.input} placeholder="Description" value={description} onChangeText={handleInputChange(setDescription)} editable={!showBottomSheet} />
+                    <FontAwesome name="comment" size={20} color={theme.iconMuted} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="Description" placeholderTextColor={theme.textMuted} value={description} onChangeText={handleInputChange(setDescription)} editable={!showBottomSheet} />
                   </View>
 
                   {/* Transfer Button */}
@@ -373,12 +381,13 @@ const AccessToOthers = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useMobileTheme>) => StyleSheet.create({
   container: {
-    flex: 1
+    flex: 1,
+    backgroundColor: theme.background
   },
   appBar: {
-    backgroundColor: '#2563eb',
+    backgroundColor: theme.primary,
     paddingVertical: 15,
     paddingHorizontal: 20,
     flexDirection: 'row',
@@ -404,10 +413,10 @@ const styles = StyleSheet.create({
   },
   limitText: {
     fontSize: 16,
-    color: '#111827'
+    color: theme.text
   },
   upgradeText: {
-    color: '#2563eb',
+    color: theme.primary,
     fontSize: 14
   },
   progressBar: {
@@ -420,7 +429,7 @@ const styles = StyleSheet.create({
   },
   amountText: {
     fontSize: 14,
-    color: '#6b7280'
+    color: theme.textMuted
   },
   beneficiaryContainer: {
     flexDirection: 'row',
@@ -430,11 +439,11 @@ const styles = StyleSheet.create({
   beneficiaryText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827'
+    color: theme.text
   },
   findText: {
     fontSize: 14,
-    color: '#2563eb'
+    color: theme.primary
   },
   inputContainer: {
     marginVertical: 10,
@@ -442,14 +451,16 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: theme.border,
     borderRadius: 5,
     padding: 10,
-    paddingLeft: 40
+    paddingLeft: 40,
+    backgroundColor: theme.surface,
+    color: theme.text
   },
   disabledInput: {
-    backgroundColor: '#f0f0f0',
-    color: '#a0a0a0'
+    backgroundColor: theme.surfaceAlt,
+    color: theme.textMuted
   },
   inputIcon: {
     position: 'absolute',
@@ -463,22 +474,24 @@ const styles = StyleSheet.create({
   },
   countryText: {
     fontSize: 16,
-    color: '#111827'
+    color: theme.text
   },
   countryPicker: {
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: theme.border,
     borderRadius: 5,
     maxHeight: 150,
-    marginTop: 5
+    marginTop: 5,
+    backgroundColor: theme.surface
   },
   countryPickerText: {
     padding: 10,
-    fontSize: 16
+    fontSize: 16,
+    color: theme.text
   },
   dataContainer: {
     padding: 16,
-    backgroundColor: '#e5f3ff',
+    backgroundColor: theme.primarySoft,
     borderRadius: 8
   },
   transferButton: {
@@ -496,13 +509,13 @@ const styles = StyleSheet.create({
   BottomSheetContainer: {
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    backgroundColor: '#fff', // Ensure the background color is set
-    shadowColor: '#000', // Dark shadow for depth
-    shadowOffset: { width: 0, height: 5 }, // Position shadow below
-    shadowOpacity: 0.3, // Adjust shadow opacity
-    shadowRadius: 10, // Adjust shadow spread
-    elevation: 10, // Elevation for Android shadow
-    paddingTop: 10 // Add spacing at the top for better shadow visibility
+    backgroundColor: theme.surface,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 10,
+    paddingTop: 10
   }
 });
 

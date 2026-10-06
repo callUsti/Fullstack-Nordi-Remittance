@@ -9,14 +9,15 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Linking,
+  Image,
   StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  useColorScheme,
   useWindowDimensions,
 } from 'react-native';
+import { useColorScheme } from 'nativewind';
 import Animated, {
   Easing,
   Extrapolation,
@@ -37,12 +38,13 @@ import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowRight, Globe, Shield, TrendingUp, Wallet, type LucideIcon } from 'lucide-react-native';
+import { ArrowRight } from 'lucide-react-native';
 
 import { storageService } from '@/core/services/storage-service';
 import { Button } from '@/components/ui';
 import { colors } from '@nordi/shared/constants/colors';
 import { useTilt, type Tilt } from '@/core/hooks/use-tilt';
+import Images from '@/constants/ImageStrings';
 
 // ---------------------------------------------------------------------------
 // Content
@@ -52,7 +54,6 @@ interface Slide {
   id: string;
   title: string;
   body: string;
-  Icon: LucideIcon;
   chips: [string, string];
 }
 
@@ -61,28 +62,24 @@ const SLIDES: Slide[] = [
     id: 'send',
     title: 'Send money across borders',
     body: 'Transfers settle in seconds, with live exchange rates and no hidden fees.',
-    Icon: Globe,
     chips: ['USD → NGN', 'Live rate'],
   },
   {
     id: 'hold',
     title: 'One account, every currency',
     body: 'Hold, convert and pay in over 30 currencies, each with its own virtual IBAN.',
-    Icon: Wallet,
     chips: ['30+ currencies', 'Virtual IBAN'],
   },
   {
     id: 'grow',
     title: 'Make your balance work',
     body: 'Automated savings and competitive interest, right inside your account.',
-    Icon: TrendingUp,
     chips: ['Auto-save', 'Earns interest'],
   },
   {
     id: 'secure',
     title: 'Protected by design',
     body: 'Biometric sign-in, multi-factor authentication and 24/7 fraud monitoring.',
-    Icon: Shield,
     chips: ['256-bit encryption', 'Biometric login'],
   },
 ];
@@ -100,12 +97,12 @@ const STAGE_MAX = 300;
 // ---------------------------------------------------------------------------
 
 function usePalette() {
-  const dark = useColorScheme() === 'dark';
+  const { colorScheme } = useColorScheme();
+  const dark = colorScheme === 'dark';
   return {
     dark,
     ring: dark ? colors.primary[800] : colors.primary[200],
     node: dark ? colors.primary[400] : colors.primary[600],
-    tile: dark ? colors.primary[500] : colors.primary[600],
     glass: dark ? 'rgba(15, 23, 42, 0.55)' : 'rgba(255, 255, 255, 0.62)',
     glassEdge: dark ? colors.neutral[700] : colors.neutral[200],
     chipText: dark ? colors.neutral[100] : colors.neutral[800],
@@ -257,8 +254,6 @@ function SlideView({
   palette: Palette;
 }) {
   const size = Math.min(width * 0.78, STAGE_MAX);
-  const Icon = slide.Icon;
-
   // -1 (off to the left) … 0 (centred) … 1 (off to the right)
   const offset = useDerivedValue(() => scrollX.value / width - index);
 
@@ -303,12 +298,17 @@ function SlideView({
               height: 72,
               borderRadius: 24,
               borderCurve: 'continuous',
-              backgroundColor: palette.tile,
+              backgroundColor: colors.white,
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <Icon size={26} color={colors.white} strokeWidth={1.6} />
+            <Image
+              source={Images.Logo}
+              resizeMode="contain"
+              style={{ width: 64, height: 64 }}
+              accessibilityLabel="Nordi logo"
+            />
           </View>
         </Layer>
 

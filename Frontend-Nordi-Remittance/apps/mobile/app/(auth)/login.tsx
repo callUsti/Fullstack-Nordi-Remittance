@@ -22,6 +22,7 @@ import { Button, Input } from '@/components/ui';
 import { useLogin } from '@nordi/shared/hooks/api-queries/useAuth';
 import { useAuthStore } from '@nordi/shared/store/auth.store';
 import { useClerkSocialAuth } from '@/core/auth/clerk';
+import { useMobileTheme } from '@/core/theme/useMobileTheme';
 
 // Website base URL for external registration
 const WEB_SIGNUP_URL =
@@ -30,6 +31,7 @@ const WEB_SIGNUP_URL =
 
 export default function LoginScreen() {
   const router = useRouter();
+  const theme = useMobileTheme();
   const { setAuthenticated } = useAuthStore();
   const loginMutation = useLogin();
   const { signInWithGoogle, isLoading: isSocialLoading, isClerkAvailable } = useClerkSocialAuth();
@@ -155,7 +157,7 @@ export default function LoginScreen() {
         {/* Error Alert */}
         {(errorMessage || loginMutation.error) && (
           <View className="flex-row items-center gap-2.5 p-3.5 rounded-xl bg-error-50 dark:bg-error-950/40 border border-error-200 dark:border-error-800">
-            <ShieldAlert size={18} color="#EF4444" />
+            <ShieldAlert size={18} color={theme.danger} />
             <Text className="flex-1 text-xs font-medium text-error-700 dark:text-error-300">
               {errorMessage || loginMutation.error?.message || 'Sign in error'}
             </Text>
@@ -171,7 +173,7 @@ export default function LoginScreen() {
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
-          leftIcon={<Mail size={18} color="#6B7280" />}
+          leftIcon={<Mail size={18} color={theme.iconMuted} />}
           error={emailError}
         />
 
@@ -182,7 +184,7 @@ export default function LoginScreen() {
           value={password}
           onChangeText={setPassword}
           isPassword
-          leftIcon={<Lock size={18} color="#6B7280" />}
+          leftIcon={<Lock size={18} color={theme.iconMuted} />}
           error={passwordError}
         />
 
@@ -229,7 +231,7 @@ export default function LoginScreen() {
           isDisabled={isPending}
           onPress={handleGoogleSignIn}
           leftIcon={
-            <Globe size={18} color="#2563EB" />
+            <Globe size={18} color={theme.primary} />
           }
         >
           Continue with Google
@@ -241,7 +243,7 @@ export default function LoginScreen() {
             <Text className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">
               New to Nordea Remittance?
             </Text>
-            <ExternalLink size={14} color="#6B7280" />
+            <ExternalLink size={14} color={theme.iconMuted} />
           </View>
           <Text className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed mb-3">
             Mobile app access requires an existing verified banking account. Please complete KYC registration on our secure web platform.

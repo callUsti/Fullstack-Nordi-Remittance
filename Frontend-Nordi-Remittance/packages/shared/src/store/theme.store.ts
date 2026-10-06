@@ -32,7 +32,7 @@ let getSystemPreferenceImpl: () => boolean = () => {
   return false;
 };
 
-let applyThemeImpl: (isDark: boolean) => void = (isDark) => {
+let applyThemeImpl: (isDark: boolean, mode: ThemeMode) => void = (isDark) => {
   if (typeof document !== 'undefined') {
     const root = document.documentElement;
     if (isDark) {
@@ -45,14 +45,15 @@ let applyThemeImpl: (isDark: boolean) => void = (isDark) => {
 
 export function configureThemeStore(options: {
   getSystemPreference?: () => boolean;
-  applyTheme?: (isDark: boolean) => void;
+  applyTheme?: (isDark: boolean, mode: ThemeMode) => void;
 }): void {
   if (options.getSystemPreference) getSystemPreferenceImpl = options.getSystemPreference;
   if (options.applyTheme) applyThemeImpl = options.applyTheme;
 }
 
 const getSystemPreference = (): boolean => getSystemPreferenceImpl();
-const applyTheme = (isDark: boolean): void => applyThemeImpl(isDark);
+const applyTheme = (isDark: boolean, mode: ThemeMode): void =>
+  applyThemeImpl(isDark, mode);
 
 // ========================
 // STORE
@@ -75,7 +76,7 @@ const useThemeStore = create<ThemeState>()(
           isDark = getSystemPreference();
         }
         
-        applyTheme(isDark);
+        applyTheme(isDark, mode);
         set({ mode, isDarkMode: isDark });
       },
 
@@ -84,7 +85,7 @@ const useThemeStore = create<ThemeState>()(
         const newIsDark = !isDarkMode;
         const newMode = newIsDark ? 'dark' : 'light';
         
-        applyTheme(newIsDark);
+        applyTheme(newIsDark, newMode);
         set({ isDarkMode: newIsDark, mode: newMode });
       },
 
@@ -100,7 +101,7 @@ const useThemeStore = create<ThemeState>()(
           isDark = getSystemPreference();
         }
         
-        applyTheme(isDark);
+        applyTheme(isDark, mode);
         set({ isDarkMode: isDark });
       },
     }),

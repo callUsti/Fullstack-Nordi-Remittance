@@ -1,7 +1,11 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useMobileTheme } from '@/core/theme/useMobileTheme';
 
 export default function ProfileScreen() {
+  const theme = useMobileTheme();
+  const styles = createStyles(theme);
+
   const profileSections = [
     {
       title: 'Account Settings',
@@ -43,7 +47,7 @@ export default function ProfileScreen() {
           </View>
         </View>
         <TouchableOpacity style={styles.editButton}>
-          <Ionicons name="pencil" size={20} color="#2563eb" />
+          <Ionicons name="pencil" size={20} color={theme.primary} />
         </TouchableOpacity>
       </View>
 
@@ -72,11 +76,11 @@ export default function ProfileScreen() {
               <TouchableOpacity key={itemIndex} style={styles.menuItem}>
                 <View style={styles.menuItemLeft}>
                   <View style={styles.menuItemIcon}>
-                    <Ionicons name={item.icon as any} size={20} color="#2563eb" />
+                    <Ionicons name={item.icon as any} size={20} color={theme.primary} />
                   </View>
                   <Text style={styles.menuItemLabel}>{item.label}</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="#64748b" />
+                <Ionicons name="chevron-forward" size={20} color={theme.iconMuted} />
               </TouchableOpacity>
             ))}
           </View>
@@ -84,17 +88,17 @@ export default function ProfileScreen() {
       ))}
 
       <TouchableOpacity style={styles.logoutButton}>
-        <Ionicons name="log-out" size={20} color="#ef4444" />
+        <Ionicons name="log-out" size={20} color={theme.danger} />
         <Text style={styles.logoutText}>Log Out</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useMobileTheme>) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc'
+    backgroundColor: theme.background
   },
   header: {
     flexDirection: 'row',
@@ -102,7 +106,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     paddingTop: 60,
-    backgroundColor: '#fff'
+    backgroundColor: theme.surface
   },
   profileInfo: {
     flexDirection: 'row',
@@ -120,24 +124,24 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1f2937'
+    color: theme.text
   },
   email: {
     fontSize: 14,
-    color: '#64748b',
+    color: theme.textMuted,
     marginTop: 4
   },
   editButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#eff6ff',
+    backgroundColor: theme.primarySoft,
     alignItems: 'center',
     justifyContent: 'center'
   },
   quickStats: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     padding: 20,
     marginTop: 1
   },
@@ -148,17 +152,17 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#2563eb'
+    color: theme.primary
   },
   statLabel: {
     fontSize: 12,
-    color: '#64748b',
+    color: theme.textMuted,
     marginTop: 4
   },
   statDivider: {
     width: 1,
     height: '100%',
-    backgroundColor: '#e2e8f0'
+    backgroundColor: theme.border
   },
   section: {
     marginTop: 24,
@@ -167,11 +171,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1f2937',
+    color: theme.text,
     marginBottom: 16
   },
   sectionContent: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     borderRadius: 16,
     overflow: 'hidden'
   },
@@ -181,7 +185,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9'
+    borderBottomColor: theme.border
   },
   menuItemLeft: {
     flexDirection: 'row',
@@ -191,20 +195,20 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#eff6ff',
+    backgroundColor: theme.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12
   },
   menuItemLabel: {
     fontSize: 16,
-    color: '#1f2937'
+    color: theme.text
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     marginTop: 24,
     marginHorizontal: 20,
     marginBottom: 40,
@@ -214,7 +218,7 @@ const styles = StyleSheet.create({
   logoutText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#ef4444',
+    color: theme.danger,
     marginLeft: 8
   }
 });

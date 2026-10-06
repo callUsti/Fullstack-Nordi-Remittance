@@ -1,7 +1,11 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useMobileTheme } from '@/core/theme/useMobileTheme';
 
 export default function AccessScreen() {
+  const theme = useMobileTheme();
+  const styles = createStyles(theme);
+
   const accessItems = [
     {
       title: 'Quick Access',
@@ -34,7 +38,7 @@ export default function AccessScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>My Access</Text>
         <TouchableOpacity style={styles.helpButton}>
-          <Ionicons name="help-circle" size={24} color="#2563eb" />
+          <Ionicons name="help-circle" size={24} color={theme.primary} />
         </TouchableOpacity>
       </View>
 
@@ -56,12 +60,12 @@ export default function AccessScreen() {
             {section.items.map((item, itemIndex) => (
               <TouchableOpacity key={itemIndex} style={styles.accessItem}>
                 <View style={styles.accessItemLeft}>
-                  <View style={[styles.accessItemIcon, { backgroundColor: item.enabled ? '#eff6ff' : '#f1f5f9' }]}>
-                    <Ionicons name={item.icon as any} size={20} color={item.enabled ? '#2563eb' : '#94a3b8'} />
+                  <View style={[styles.accessItemIcon, { backgroundColor: item.enabled ? theme.primarySoft : theme.surfaceAlt }]}>
+                    <Ionicons name={item.icon as any} size={20} color={item.enabled ? theme.primary : theme.iconMuted} />
                   </View>
-                  <Text style={[styles.accessItemLabel, { color: item.enabled ? '#1f2937' : '#64748b' }]}>{item.label}</Text>
+                  <Text style={[styles.accessItemLabel, { color: item.enabled ? theme.text : theme.textMuted }]}>{item.label}</Text>
                 </View>
-                <View style={[styles.toggle, { backgroundColor: item.enabled ? '#2563eb' : '#e2e8f0' }]}>
+                <View style={[styles.toggle, { backgroundColor: item.enabled ? theme.primary : theme.border }]}>
                   <View style={[styles.toggleKnob, { transform: [{ translateX: item.enabled ? 20 : 0 }] }]} />
                 </View>
               </TouchableOpacity>
@@ -74,14 +78,14 @@ export default function AccessScreen() {
         <Text style={styles.deviceTitle}>Current Device</Text>
         <View style={styles.deviceDetails}>
           <View style={styles.deviceIcon}>
-            <Ionicons name="phone-portrait" size={24} color="#2563eb" />
+            <Ionicons name="phone-portrait" size={24} color={theme.primary} />
           </View>
           <View style={styles.deviceText}>
             <Text style={styles.deviceName}>iPhone 13 Pro</Text>
             <Text style={styles.deviceStatus}>Last accessed: Just now</Text>
           </View>
           <TouchableOpacity style={styles.deviceAction}>
-            <Ionicons name="settings-outline" size={20} color="#64748b" />
+            <Ionicons name="settings-outline" size={20} color={theme.iconMuted} />
           </TouchableOpacity>
         </View>
       </View>
@@ -89,10 +93,10 @@ export default function AccessScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useMobileTheme>) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc'
+    backgroundColor: theme.background
   },
   header: {
     flexDirection: 'row',
@@ -104,20 +108,20 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#1f2937'
+    color: theme.text
   },
   helpButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#eff6ff',
+    backgroundColor: theme.primarySoft,
     alignItems: 'center',
     justifyContent: 'center'
   },
   securityScore: {
     margin: 20,
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     borderRadius: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -134,27 +138,27 @@ const styles = StyleSheet.create({
   scoreTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1f2937'
+    color: theme.text
   },
   scoreValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#2563eb'
+    color: theme.primary
   },
   scoreBar: {
     height: 8,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: theme.surfaceAlt,
     borderRadius: 4,
     overflow: 'hidden'
   },
   scoreProgress: {
     height: '100%',
-    backgroundColor: '#2563eb',
+    backgroundColor: theme.primary,
     borderRadius: 4
   },
   scoreText: {
     fontSize: 14,
-    color: '#64748b',
+    color: theme.textMuted,
     marginTop: 8
   },
   section: {
@@ -164,11 +168,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1f2937',
+    color: theme.text,
     marginBottom: 16
   },
   sectionContent: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     borderRadius: 16,
     overflow: 'hidden'
   },
@@ -178,7 +182,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9'
+    borderBottomColor: theme.border
   },
   accessItemLeft: {
     flexDirection: 'row',
@@ -204,7 +208,7 @@ const styles = StyleSheet.create({
   toggleKnob: {
     width: 20,
     height: 20,
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     borderRadius: 10
   },
   deviceInfo: {
@@ -214,13 +218,13 @@ const styles = StyleSheet.create({
   deviceTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1f2937',
+    color: theme.text,
     marginBottom: 16
   },
   deviceDetails: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     padding: 16,
     borderRadius: 16
   },
@@ -228,7 +232,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#eff6ff',
+    backgroundColor: theme.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16
@@ -239,18 +243,18 @@ const styles = StyleSheet.create({
   deviceName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1f2937'
+    color: theme.text
   },
   deviceStatus: {
     fontSize: 14,
-    color: '#64748b',
+    color: theme.textMuted,
     marginTop: 4
   },
   deviceAction: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: theme.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center'
   }

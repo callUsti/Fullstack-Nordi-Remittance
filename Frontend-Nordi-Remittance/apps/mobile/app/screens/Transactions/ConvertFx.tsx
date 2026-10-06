@@ -5,8 +5,11 @@ import { Picker } from '@react-native-picker/picker'; // For currency dropdown
 import { LinearGradient } from 'expo-linear-gradient';
 import AccountCard from '@/components/AccountCard';
 import { CURRENCY_CONVERSION_API_KEY } from '@env';
+import { useMobileTheme } from '@/core/theme/useMobileTheme';
 
 const ConvertFx = () => {
+  const theme = useMobileTheme();
+  const styles = createStyles(theme);
   const [fromCurrency, setFromCurrency] = useState('USD');
   const [toCurrency, setToCurrency] = useState('EUR');
   const [amount, setAmount] = useState('');
@@ -71,7 +74,7 @@ const ConvertFx = () => {
         {/* Instructions */}
         <View style={styles.instructionsContainer}>
           <Text style={styles.instructionsText}>
-            <Ionicons name="information-circle-outline" size={16} color="#0284c7" /> Enter the amount to convert and select your currencies.
+            <Ionicons name="information-circle-outline" size={16} color={theme.primary} /> Enter the amount to convert and select your currencies.
           </Text>
         </View>
 
@@ -91,7 +94,7 @@ const ConvertFx = () => {
           {/* From Currency */}
           <View style={styles.currencyPicker}>
             <Text style={styles.label}>From Currency</Text>
-            <Picker selectedValue={fromCurrency} onValueChange={itemValue => setFromCurrency(itemValue)} style={styles.picker}>
+            <Picker selectedValue={fromCurrency} onValueChange={itemValue => setFromCurrency(itemValue)} style={styles.picker} itemStyle={{ color: theme.text }}>
               {Object.keys(conversionRates).map(currency => (
                 <Picker.Item key={currency} label={currency} value={currency} />
               ))}
@@ -100,13 +103,13 @@ const ConvertFx = () => {
 
           {/* Reversal Button */}
           <TouchableOpacity onPress={reverseCurrencies} style={styles.reverseIconContainer}>
-            <MaterialIcons name="swap-horiz" size={32} color="#0284c7" />
+            <MaterialIcons name="swap-horiz" size={32} color={theme.primary} />
           </TouchableOpacity>
 
           {/* To Currency */}
           <View style={styles.currencyPicker}>
             <Text style={styles.label}>To Currency</Text>
-            <Picker selectedValue={toCurrency} onValueChange={handleCurrencyChange} style={styles.picker}>
+            <Picker selectedValue={toCurrency} onValueChange={handleCurrencyChange} style={styles.picker} itemStyle={{ color: theme.text }}>
               {Object.keys(conversionRates).map(currency => (
                 <Picker.Item key={currency} label={currency} value={currency} />
               ))}
@@ -117,7 +120,7 @@ const ConvertFx = () => {
         {/* Amount Input */}
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Amount</Text>
-          <TextInput style={styles.input} value={amount} onChangeText={handleAmountChange} placeholder="Enter amount" keyboardType="numeric" />
+          <TextInput style={styles.input} value={amount} onChangeText={handleAmountChange} placeholder="Enter amount" placeholderTextColor={theme.textMuted} keyboardType="numeric" />
         </View>
 
         {/* Converted Amount */}
@@ -141,7 +144,7 @@ const ConvertFx = () => {
         <Text style={styles.lastUpdateText}>Last updated: {lastUpdate}</Text>
 
         {/* Transfer Button */}
-        <TouchableOpacity style={[styles.transferButton, { backgroundColor: amount ? '#2563eb' : '#9ca3af' }]} disabled={!amount}>
+        <TouchableOpacity style={[styles.transferButton, { backgroundColor: amount ? theme.primary : theme.iconMuted }]} disabled={!amount}>
           <Text style={styles.transferButtonText}>Transfer</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -151,10 +154,10 @@ const ConvertFx = () => {
 
 export default ConvertFx;
 
-const styles = StyleSheet.create({
-  container: { padding: 16, backgroundColor: '#f8fafc' },
-  instructionsContainer: { backgroundColor: '#e0f7fa', padding: 10, borderRadius: 8, marginBottom: 20 },
-  instructionsText: { fontSize: 14, color: '#0284c7' },
+const createStyles = (theme: ReturnType<typeof useMobileTheme>) => StyleSheet.create({
+  container: { padding: 16, backgroundColor: theme.background },
+  instructionsContainer: { backgroundColor: theme.primarySoft, padding: 10, borderRadius: 8, marginBottom: 20 },
+  instructionsText: { fontSize: 14, color: theme.primary },
   domiciliaryCard: { borderRadius: 16, padding: 16, marginBottom: 20 },
   cardContent: { flexDirection: 'column', alignItems: 'flex-start' },
   cardText: { fontSize: 18, fontWeight: 'bold', color: '#fff' },
@@ -162,18 +165,18 @@ const styles = StyleSheet.create({
   currencySelectorContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   currencyPicker: { flex: 1 },
   reverseIconContainer: { padding: 10 },
-  label: { fontSize: 14, color: '#1f2937', marginBottom: 8 },
-  picker: { backgroundColor: '#fff', borderRadius: 8, padding: 10 },
+  label: { fontSize: 14, color: theme.text, marginBottom: 8 },
+  picker: { backgroundColor: theme.surface, borderRadius: 8, padding: 10 },
   inputContainer: { marginBottom: 20 },
-  input: { borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, padding: 12, fontSize: 16, backgroundColor: '#fff' },
-  convertedAmountContainer: { padding: 20, backgroundColor: '#e5f3ff', borderRadius: 8, alignItems: 'center', marginBottom: 20 },
-  convertedText: { fontSize: 18, fontWeight: 'bold', color: '#2563eb' },
+  input: { borderWidth: 1, borderColor: theme.border, borderRadius: 8, padding: 12, fontSize: 16, color: theme.text, backgroundColor: theme.surface },
+  convertedAmountContainer: { padding: 20, backgroundColor: theme.primarySoft, borderRadius: 8, alignItems: 'center', marginBottom: 20 },
+  convertedText: { fontSize: 18, fontWeight: 'bold', color: theme.primary },
   conversionRateContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  conversionRateText: { fontSize: 16, color: '#1f2937', marginRight: 10 },
+  conversionRateText: { fontSize: 16, color: theme.text, marginRight: 10 },
   greenRate: { color: '#16a34a', fontSize: 16 },
   redRate: { color: '#dc2626', fontSize: 16 },
-  neutralRate: { color: '#64748b', fontSize: 16 },
-  lastUpdateText: { fontSize: 12, color: '#64748b', marginBottom: 10 },
+  neutralRate: { color: theme.textMuted, fontSize: 16 },
+  lastUpdateText: { fontSize: 12, color: theme.textMuted, marginBottom: 10 },
   transferButton: { padding: 16, borderRadius: 8, alignItems: 'center' },
   transferButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' }
 });
