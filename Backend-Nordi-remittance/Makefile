@@ -251,15 +251,18 @@ kafka-topics-docker: ## List all topics via Docker container
 # KAFKA_CONSOLE_CMD:= kafka-console-consumer.sh
 
 # ── Windows paths (C:\kafka installed, bin\windows in PATH) ──────────────────
-KAFKA_HOME       := C:\kafka
-KAFKA_CONFIG     := $(KAFKA_HOME)\config\server.properties
-KAFKA_LOG_DIR    := $(KAFKA_HOME)\logs
-KAFKA_STORAGE    := kafka-storage.bat
-KAFKA_SERVER     := kafka-server-start.bat
-KAFKA_SERVER_STOP:= kafka-server-stop.bat
-KAFKA_TOPICS_CMD := kafka-topics.bat
-KAFKA_CONSOLE_CMD:= kafka-console-consumer.bat
-KAFKA_BOOTSTRAP  := localhost:9092
+KAFKA_HOME        := C:\kafka
+KAFKA_CONFIG      := $(KAFKA_HOME)\config\server.properties
+# log.dirs in server.properties is set to C:/kafka/kraft-combined-logs
+KAFKA_LOG_DIR     := $(KAFKA_HOME)\kraft-combined-logs
+KAFKA_BROKER_LOG  := $(KAFKA_HOME)\logs
+KAFKA_STORAGE     := kafka-storage.bat
+KAFKA_SERVER      := kafka-server-start.bat
+KAFKA_SERVER_STOP := kafka-server-stop.bat
+KAFKA_TOPICS_CMD  := kafka-topics.bat
+KAFKA_CONSOLE_CMD := kafka-console-consumer.bat
+KAFKA_BOOTSTRAP   := localhost:9092
+KAFKA_SCRIPTS_DIR := scripts
 
 NORDI_TOPICS := nordi.transaction.initiated nordi.transaction.processed \
 	nordi.transaction.completed nordi.transaction.failed \
@@ -269,55 +272,29 @@ NORDI_TOPICS := nordi.transaction.initiated nordi.transaction.processed \
 	nordi.notifications.push nordi.notifications.email nordi.notifications.sms \
 	nordi.dlq
 
-kafka-init: ## Format KRaft storage (run once on first setup)
+kafka-init: ## Format KRaft storage — clears stale data first, then formats fresh
+	@echo "$(CYAN)Clearing any stale KRaft storage...$(RESET)"
+	@powershell -NoProfile -Command "Remove-Item -Recurse -Force '$(KAFKA_LOG_DIR)' -ErrorAction SilentlyContinue; New-Item -ItemType Directory -Force -Path '$(KAFKA_LOG_DIR)' | Out-Null"
 	@echo "$(CYAN)Generating cluster UUID and formatting KRaft storage...$(RESET)"
 	$(eval CLUSTER_ID := $(shell $(KAFKA_STORAGE) random-uuid))
 	$(KAFKA_STORAGE) format -t $(CLUSTER_ID) --standalone -c $(KAFKA_CONFIG)
 	@echo "$(GREEN)✓ KRaft storage formatted with cluster ID: $(CLUSTER_ID)$(RESET)"
 
 kafka-start: ## Start Kafka broker (KRaft mode, background)
-	@powershell -NoProfile -Command "\
-		$$port = (netstat -ano | Select-String ':9092 .*LISTENING'); \
-		if ($$port) { \
-			Write-Host '$(YELLOW)⚠ Kafka already running on port 9092$(RESET)'; \
-		} else { \
-			Write-Host '$(CYAN)Starting Kafka (KRaft mode)...$(RESET)'; \
-			Start-Process -FilePath '$(KAFKA_HOME)\bin\windows\kafka-server-start.bat' \
-				-ArgumentList '$(KAFKA_CONFIG)' \
-				-WindowStyle Hidden; \
-			$$tries = 0; \
-			do { \
-				Start-Sleep -Seconds 2; \
-				$$tries++; \
-				$$up = (netstat -ano | Select-String ':9092 .*LISTENING'); \
-				if ($$up) { \
-					Write-Host "$(GREEN)✓ Kafka running on $(KAFKA_BOOTSTRAP) (took $$($$tries * 2)s)$(RESET)"; \
-					break; \
-				} \
-				Write-Host "$(YELLOW)  waiting for Kafka... ($$($$tries * 2)s)$(RESET)"; \
-			} while ($$tries -lt 12); \
-			if (-not (netstat -ano | Select-String ':9092 .*LISTENING')) { \
-				Write-Host '$(RED)✗ Kafka failed to start after 24s — check logs: $(KAFKA_LOG_DIR)\server.log$(RESET)'; \
-			} \
-		}"
+	@powershell -NoProfile -ExecutionPolicy Bypass -File $(KAFKA_SCRIPTS_DIR)\kafka-start.ps1
 
 kafka-stop: ## Stop Kafka broker
 	@echo "$(CYAN)Stopping Kafka...$(RESET)"
-	@$(KAFKA_SERVER_STOP) || echo "$(YELLOW)⚠ Kafka was not running$(RESET)"
+	@$(KAFKA_SERVER_STOP) 2>NUL || echo "$(YELLOW)⚠ Kafka was not running$(RESET)"
 	@echo "$(GREEN)✓ Kafka stopped$(RESET)"
 
 kafka-restart: kafka-stop kafka-start ## Restart Kafka broker
 
 kafka-status: ## Check if Kafka is running
-	@powershell -NoProfile -Command "\
-		if (netstat -ano | Select-String ':9092 .*LISTENING') { \
-			Write-Host '$(GREEN)✓ Kafka is running on port 9092$(RESET)'; \
-		} else { \
-			Write-Host '$(RED)✗ Kafka is not running$(RESET)'; \
-		}"
+	@powershell -NoProfile -ExecutionPolicy Bypass -File $(KAFKA_SCRIPTS_DIR)\kafka-status.ps1
 
 kafka-logs: ## Tail Kafka server logs
-	@powershell -NoProfile -Command "Get-Content -Wait -Tail 50 '$(KAFKA_LOG_DIR)\server.log'"
+	@powershell -NoProfile -Command "Get-Content -Wait -Tail 50 '$(KAFKA_BROKER_LOG)\server.log'"
 
 kafka-topics: ## List all Kafka topics
 	$(KAFKA_TOPICS_CMD) --bootstrap-server $(KAFKA_BOOTSTRAP) --list
@@ -335,8 +312,8 @@ kafka-describe: ## Describe a Kafka topic (usage: make kafka-describe topic=nord
 kafka-console: ## Consume messages from a topic (usage: make kafka-console topic=nordi.transaction.initiated)
 	$(KAFKA_CONSOLE_CMD) --bootstrap-server $(KAFKA_BOOTSTRAP) --topic $(topic) --from-beginning
 
-kafka-clean: ## Delete KRaft storage and logs (destructive — requires kafka-init again)
-	@echo "$(YELLOW)⚠ Removing Kafka storage at $(KAFKA_LOG_DIR)$(RESET)"
+kafka-clean: ## Delete KRaft storage (destructive — requires kafka-init again)
+	@echo "$(YELLOW)⚠ Removing Kafka KRaft storage at $(KAFKA_LOG_DIR)$(RESET)"
 	@powershell -NoProfile -Command "Remove-Item -Recurse -Force '$(KAFKA_LOG_DIR)' -ErrorAction SilentlyContinue"
 	@echo "$(GREEN)✓ Kafka storage cleaned — run 'make kafka-init' before next start$(RESET)"
 
@@ -472,22 +449,10 @@ logs-tail: ## Tail application logs in dev
 	@tail -f logs/*.log 2>/dev/null || echo "$(YELLOW)No log files found — start the server first$(RESET)"
 
 ports: ## Check what's running on key ports
-	@echo "$(CYAN)Checking ports...$(RESET)"
-	@powershell -NoProfile -Command "\
-		$$check = { param($$p, $$n) \
-			if (netstat -ano | Select-String ":$$p .*LISTENING") \
-			{ Write-Host "$(GREEN)✓ Port $$p ($$n): running$(RESET)" } \
-			else { Write-Host "$(YELLOW)  Port $$p ($$n): not running$(RESET)" } }; \
-		& $$check $(PORT) 'API'; \
-		& $$check 27017 'MongoDB'; \
-		& $$check 6379  'Redis'; \
-		& $$check 9092  'Kafka'"
+	@powershell -NoProfile -ExecutionPolicy Bypass -File $(KAFKA_SCRIPTS_DIR)\ports.ps1 -ApiPort $(PORT)
 
 kill-port: ## Kill process on the API port
-	@powershell -NoProfile -Command "\
-		$$pid = (netstat -ano | Select-String ':$(PORT) .*LISTENING' | ForEach-Object { ($$_ -split '\s+')[-1] } | Select-Object -First 1); \
-		if ($$pid) { Stop-Process -Id $$pid -Force; Write-Host '$(GREEN)✓ Killed process on port $(PORT)$(RESET)' } \
-		else { Write-Host '$(GREEN)No process on port $(PORT)$(RESET)' }"
+	@powershell -NoProfile -ExecutionPolicy Bypass -File $(KAFKA_SCRIPTS_DIR)\kill-port.ps1 -Port $(PORT)
 
 # ============================================================================
 #  ML SERVICE
