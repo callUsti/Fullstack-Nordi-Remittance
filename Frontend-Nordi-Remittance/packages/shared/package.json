@@ -3,11 +3,25 @@
   "version": "1.0.0",
   "private": true,
   "description": "Platform-agnostic core (API client, domain repositories/types, stores, constants, utils) shared between the Nordi website and mobile apps.",
-  "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./core/api": "./src/core/api/index.ts",
+    "./core/algo": "./src/core/algo/index.ts",
+    "./store": "./src/store/index.ts",
+    "./utils/helpers": "./src/utils/helpers/index.ts",
+    "./utils/validators": "./src/utils/validators/index.ts",
+    "./*.ts": "./src/*.ts",
+    "./*": {
+      "types": "./src/*.ts",
+      "default": "./src/*.ts"
+    },
+    "./domain/types": "./src/domain/types/index.ts"
+  },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'no lint configured'"
   },
   "dependencies": {
     "axios": "^1.7.2",

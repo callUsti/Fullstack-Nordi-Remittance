@@ -17,6 +17,7 @@ export * from "./core/socket/socket.client";
 export * from "./core/platform";
 
 export * from "./domain/repository";
+import "./domain/types";
 export * from "./domain/types/SelectOption.types";
 
 export * from "./store";
