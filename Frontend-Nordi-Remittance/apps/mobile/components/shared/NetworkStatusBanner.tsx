@@ -2,8 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
-import { useNetworkStatus } from '../../../mobile2/src/hooks/useNetworkStatus';
-import type { NetworkQuality } from '../../../mobile2/src/core/network/network';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import type { NetworkQuality } from '@/core/network/network';
 
 interface BannerConfig {
   icon: keyof typeof Ionicons.glyphMap;

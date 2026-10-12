@@ -2,7 +2,7 @@ import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@nordi/shared/constants/colors';
-import { useNetworkStatus } from '../../../mobile2/src/hooks/useNetworkStatus';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 
 export interface QuerySectionProps {
   children: ReactNode;
