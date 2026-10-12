@@ -80,3 +80,20 @@ export function ensureCameraPermission(): Promise<boolean> {
 export function ensureMediaLibraryPermission(): Promise<boolean> {
   return ensurePermission('mediaLibrary');
 }
+
+export const permissionHandler = {
+  checkOrRequest: async (permissionType: string): Promise<boolean> => {
+    if (permissionType === 'camera') {
+      return ensureCameraPermission();
+    }
+    if (permissionType === 'mediaLibrary' || permissionType === 'photos') {
+      return ensureMediaLibraryPermission();
+    }
+    return true;
+  },
+  initialize: initializeDevicePermissions,
+  ensureCamera: ensureCameraPermission,
+  ensureMediaLibrary: ensureMediaLibraryPermission,
+};
+
+export default permissionHandler;
