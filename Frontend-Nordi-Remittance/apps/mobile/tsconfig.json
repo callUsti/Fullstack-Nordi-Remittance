@@ -3,12 +3,6 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "react": [
-        "./node_modules/@types/react/index.d.ts"
-      ],
-      "react/*": [
-        "./node_modules/@types/react/*"
-      ],
       "@/*": [
         "./*"
       ],
@@ -34,16 +28,7 @@
         "./core/utils/*"
       ],
       "@store/*": [
-        "../../packages/shared/src/store/*"
-      ],
-      "@shared/*": [
-        "../../packages/shared/src/*"
-      ],
-      "@nordi/shared": [
-        "../../packages/shared/src/index"
-      ],
-      "@nordi/shared/*": [
-        "../../packages/shared/src/*"
+        "./store/*"
       ],
       "@types/*": [
         "./types/*"
@@ -57,7 +42,8 @@
     "expo-env.d.ts",
     ".env.d.ts",
     "src/types/*.d.ts",
-    "../../packages/shared/src/domain/types/**/*.ts",
+    "types/**/*.d.ts",
+    "types/*.d.ts",
     "nativewind-env.d.ts"
   ],
   "exclude": [
