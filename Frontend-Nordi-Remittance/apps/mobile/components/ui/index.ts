@@ -33,3 +33,6 @@ export type { FileUploadProps, FileAsset } from './FileUpload';
 
 export { DatePicker } from './DatePicker';
 export type { DatePickerProps } from './DatePicker';
+
+export { Icon } from './Icon';
+export type { IconProps } from './Icon';
