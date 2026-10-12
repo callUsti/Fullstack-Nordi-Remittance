@@ -149,17 +149,86 @@ export const useLegalDocuments = () => {
 };
 
 /**
- * Get specific legal document
+ * Get terms and conditions document
+ */
+export const useTermsAndConditions = () => {
+  return useQuery({
+    queryKey: [...queryKeys.legal.all, "terms-and-conditions"],
+    queryFn: async () => {
+      const response = await LegalRepository.getTermsAndConditions();
+      return response.data;
+    },
+    staleTime: 1000 * 60 * 60 * 24,
+  });
+};
+
+/**
+ * Get privacy policy document
+ */
+export const usePrivacyPolicy = () => {
+  return useQuery({
+    queryKey: [...queryKeys.legal.all, "privacy-policy"],
+    queryFn: async () => {
+      const response = await LegalRepository.getPrivacyPolicy();
+      return response.data;
+    },
+    staleTime: 1000 * 60 * 60 * 24,
+  });
+};
+
+/**
+ * Get specific legal document (terms, privacy, etc.)
  */
 export const useLegalDocument = (documentType: string, version?: string) => {
   return useQuery({
     queryKey: [...queryKeys.legal.all, "documents", documentType, version],
     queryFn: async () => {
+      if (documentType === 'privacy' || documentType === 'privacy_policy') {
+        const response = await LegalRepository.getPrivacyPolicy();
+        return response.data;
+      }
       const response = await LegalRepository.getTermsAndConditions();
       return response.data;
     },
     enabled: !!documentType,
     staleTime: 1000 * 60 * 60 * 24,
+  });
+};
+
+/**
+ * Get user legal consent status
+ */
+export const useConsentStatus = () => {
+  return useQuery({
+    queryKey: [...queryKeys.legal.all, "consent-status"],
+    queryFn: async () => {
+      const response = await LegalRepository.getConsentStatus();
+      return response.data;
+    },
+  });
+};
+
+/**
+ * Update user consent preferences
+ */
+export const useUpdateConsent = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
+
+  return useMutation({
+    mutationFn: async (data: { marketingConsent?: boolean; dataProcessingConsent?: boolean }) => {
+      const response = await LegalRepository.updateConsent(data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.legal.all, "consent-status"],
+      });
+      showToast("Consent preferences updated", "success");
+    },
+    onError: (error: Error) => {
+      showToast(error.message || "Failed to update consent preferences", "error");
+    },
   });
 };
 
@@ -394,10 +463,10 @@ export const useRequestTaxReport = () => {
     mutationFn: async (data: {
       year: number;
       type:
-        | "annual_summary"
-        | "1099"
-        | "interest_statement"
-        | "transaction_history";
+      | "annual_summary"
+      | "1099"
+      | "interest_statement"
+      | "transaction_history";
       format?: "pdf" | "csv";
     }) => {
       const response = await LegalRepository.requestTaxReport({
