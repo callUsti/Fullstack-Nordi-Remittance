@@ -235,19 +235,30 @@ redis-keys: ## List all keys in Redis (dev only)
 
 kafka-ui: ## Open Kafka UI in browser (http://localhost:8090)
 	@echo "$(CYAN)Opening Kafka UI at http://localhost:8090$(RESET)"
-	@open http://localhost:8090 2>/dev/null || xdg-open http://localhost:8090 2>/dev/null || echo "Visit http://localhost:8090"
+	@start http://localhost:8090 2>NUL || echo "Visit http://localhost:8090"
 
 kafka-topics-docker: ## List all topics via Docker container
 	docker compose exec kafka /opt/kafka/bin/kafka-topics.sh \
 		--bootstrap-server localhost:9092 --list
 
-KAFKA_CONFIG     := /usr/local/kafka/config/server.properties
-KAFKA_LOG_DIR    := /tmp/kraft-combined-logs
-KAFKA_STORAGE    := kafka-storage.sh
-KAFKA_SERVER     := kafka-server-start.sh
-KAFKA_SERVER_STOP:= kafka-server-stop.sh
-KAFKA_TOPICS_CMD := kafka-topics.sh
-KAFKA_CONSOLE_CMD:= kafka-console-consumer.sh
+# ── macOS / Linux paths (commented out) ──────────────────────────────────────
+# KAFKA_CONFIG     := /usr/local/kafka/config/server.properties
+# KAFKA_LOG_DIR    := /tmp/kraft-combined-logs
+# KAFKA_STORAGE    := kafka-storage.sh
+# KAFKA_SERVER     := kafka-server-start.sh
+# KAFKA_SERVER_STOP:= kafka-server-stop.sh
+# KAFKA_TOPICS_CMD := kafka-topics.sh
+# KAFKA_CONSOLE_CMD:= kafka-console-consumer.sh
+
+# ── Windows paths (C:\kafka installed, bin\windows in PATH) ──────────────────
+KAFKA_HOME       := C:\kafka
+KAFKA_CONFIG     := $(KAFKA_HOME)\config\server.properties
+KAFKA_LOG_DIR    := $(KAFKA_HOME)\logs
+KAFKA_STORAGE    := kafka-storage.bat
+KAFKA_SERVER     := kafka-server-start.bat
+KAFKA_SERVER_STOP:= kafka-server-stop.bat
+KAFKA_TOPICS_CMD := kafka-topics.bat
+KAFKA_CONSOLE_CMD:= kafka-console-consumer.bat
 KAFKA_BOOTSTRAP  := localhost:9092
 
 NORDI_TOPICS := nordi.transaction.initiated nordi.transaction.processed \
@@ -265,42 +276,48 @@ kafka-init: ## Format KRaft storage (run once on first setup)
 	@echo "$(GREEN)✓ KRaft storage formatted with cluster ID: $(CLUSTER_ID)$(RESET)"
 
 kafka-start: ## Start Kafka broker (KRaft mode, background)
-	@if lsof -i :9092 -sTCP:LISTEN -t >/dev/null 2>&1; then \
-		echo "$(YELLOW)⚠ Kafka already running on port 9092$(RESET)"; \
-	else \
-		echo "$(CYAN)Starting Kafka (KRaft mode)...$(RESET)"; \
-		$(KAFKA_SERVER) -daemon $(KAFKA_CONFIG); \
-		TRIES=0; \
-		while [ $$TRIES -lt 12 ]; do \
-			sleep 2; \
-			TRIES=$$((TRIES + 1)); \
-			if lsof -i :9092 -sTCP:LISTEN -t >/dev/null 2>&1; then \
-				echo "$(GREEN)✓ Kafka running on $(KAFKA_BOOTSTRAP) (took $$((TRIES * 2))s)$(RESET)"; \
-				break; \
-			fi; \
-			echo "$(YELLOW)  waiting for Kafka... ($$((TRIES * 2))s)$(RESET)"; \
-		done; \
-		if ! lsof -i :9092 -sTCP:LISTEN -t >/dev/null 2>&1; then \
-			echo "$(RED)✗ Kafka failed to start after 24s — check logs: $(KAFKA_LOG_DIR)/server.log$(RESET)"; \
-		fi \
-	fi
+	@powershell -NoProfile -Command "\
+		$$port = (netstat -ano | Select-String ':9092 .*LISTENING'); \
+		if ($$port) { \
+			Write-Host '$(YELLOW)⚠ Kafka already running on port 9092$(RESET)'; \
+		} else { \
+			Write-Host '$(CYAN)Starting Kafka (KRaft mode)...$(RESET)'; \
+			Start-Process -FilePath '$(KAFKA_HOME)\bin\windows\kafka-server-start.bat' \
+				-ArgumentList '$(KAFKA_CONFIG)' \
+				-WindowStyle Hidden; \
+			$$tries = 0; \
+			do { \
+				Start-Sleep -Seconds 2; \
+				$$tries++; \
+				$$up = (netstat -ano | Select-String ':9092 .*LISTENING'); \
+				if ($$up) { \
+					Write-Host "$(GREEN)✓ Kafka running on $(KAFKA_BOOTSTRAP) (took $$($$tries * 2)s)$(RESET)"; \
+					break; \
+				} \
+				Write-Host "$(YELLOW)  waiting for Kafka... ($$($$tries * 2)s)$(RESET)"; \
+			} while ($$tries -lt 12); \
+			if (-not (netstat -ano | Select-String ':9092 .*LISTENING')) { \
+				Write-Host '$(RED)✗ Kafka failed to start after 24s — check logs: $(KAFKA_LOG_DIR)\server.log$(RESET)'; \
+			} \
+		}"
 
 kafka-stop: ## Stop Kafka broker
 	@echo "$(CYAN)Stopping Kafka...$(RESET)"
-	$(KAFKA_SERVER_STOP) || true
+	@$(KAFKA_SERVER_STOP) || echo "$(YELLOW)⚠ Kafka was not running$(RESET)"
 	@echo "$(GREEN)✓ Kafka stopped$(RESET)"
 
 kafka-restart: kafka-stop kafka-start ## Restart Kafka broker
 
 kafka-status: ## Check if Kafka is running
-	@if lsof -i :9092 -sTCP:LISTEN -t >/dev/null 2>&1; then \
-		echo "$(GREEN)✓ Kafka is running on port 9092$(RESET)"; \
-	else \
-		echo "$(RED)✗ Kafka is not running$(RESET)"; \
-	fi
+	@powershell -NoProfile -Command "\
+		if (netstat -ano | Select-String ':9092 .*LISTENING') { \
+			Write-Host '$(GREEN)✓ Kafka is running on port 9092$(RESET)'; \
+		} else { \
+			Write-Host '$(RED)✗ Kafka is not running$(RESET)'; \
+		}"
 
 kafka-logs: ## Tail Kafka server logs
-	tail -f $(KAFKA_LOG_DIR)/server.log
+	@powershell -NoProfile -Command "Get-Content -Wait -Tail 50 '$(KAFKA_LOG_DIR)\server.log'"
 
 kafka-topics: ## List all Kafka topics
 	$(KAFKA_TOPICS_CMD) --bootstrap-server $(KAFKA_BOOTSTRAP) --list
@@ -320,7 +337,7 @@ kafka-console: ## Consume messages from a topic (usage: make kafka-console topic
 
 kafka-clean: ## Delete KRaft storage and logs (destructive — requires kafka-init again)
 	@echo "$(YELLOW)⚠ Removing Kafka storage at $(KAFKA_LOG_DIR)$(RESET)"
-	rm -rf $(KAFKA_LOG_DIR)
+	@powershell -NoProfile -Command "Remove-Item -Recurse -Force '$(KAFKA_LOG_DIR)' -ErrorAction SilentlyContinue"
 	@echo "$(GREEN)✓ Kafka storage cleaned — run 'make kafka-init' before next start$(RESET)"
 
 kafka-setup: kafka-init kafka-start kafka-create-topics ## One-liner: init + start + create topics (first time)
@@ -456,13 +473,21 @@ logs-tail: ## Tail application logs in dev
 
 ports: ## Check what's running on key ports
 	@echo "$(CYAN)Checking ports...$(RESET)"
-	@lsof -i :$(PORT) -sTCP:LISTEN -t >/dev/null 2>&1 && echo "$(RED)Port $(PORT) (API): IN USE$(RESET)" || echo "Port $(PORT) (API): $(GREEN)available$(RESET)"
-	@lsof -i :27017 -sTCP:LISTEN -t >/dev/null 2>&1 && echo "$(GREEN)\u2713 Port 27017 (MongoDB): running$(RESET)" || echo "Port 27017 (MongoDB): $(YELLOW)not running$(RESET)"
-	@lsof -i :6379 -sTCP:LISTEN -t >/dev/null 2>&1 && echo "$(GREEN)\u2713 Port 6379 (Redis): running$(RESET)" || echo "Port 6379 (Redis): $(YELLOW)not running$(RESET)"
-	@lsof -i :9092 -sTCP:LISTEN -t >/dev/null 2>&1 && echo "$(GREEN)\u2713 Port 9092 (Kafka): running$(RESET)" || echo "Port 9092 (Kafka): $(YELLOW)not running$(RESET)"
+	@powershell -NoProfile -Command "\
+		$$check = { param($$p, $$n) \
+			if (netstat -ano | Select-String ":$$p .*LISTENING") \
+			{ Write-Host "$(GREEN)✓ Port $$p ($$n): running$(RESET)" } \
+			else { Write-Host "$(YELLOW)  Port $$p ($$n): not running$(RESET)" } }; \
+		& $$check $(PORT) 'API'; \
+		& $$check 27017 'MongoDB'; \
+		& $$check 6379  'Redis'; \
+		& $$check 9092  'Kafka'"
 
 kill-port: ## Kill process on the API port
-	@lsof -ti:$(PORT) | xargs kill -9 2>/dev/null && echo "$(GREEN)\u2713 Killed process on port $(PORT)$(RESET)" || echo "$(GREEN)No process on port $(PORT)$(RESET)"
+	@powershell -NoProfile -Command "\
+		$$pid = (netstat -ano | Select-String ':$(PORT) .*LISTENING' | ForEach-Object { ($$_ -split '\s+')[-1] } | Select-Object -First 1); \
+		if ($$pid) { Stop-Process -Id $$pid -Force; Write-Host '$(GREEN)✓ Killed process on port $(PORT)$(RESET)' } \
+		else { Write-Host '$(GREEN)No process on port $(PORT)$(RESET)' }"
 
 # ============================================================================
 #  ML SERVICE
