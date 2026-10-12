@@ -15,6 +15,9 @@ export default function AuthLayout() {
       <Stack.Screen name="reset-password" />
       <Stack.Screen name="otp" />
       <Stack.Screen name="verify-email" />
+      <Stack.Screen name="privacy-policy" />
+      <Stack.Screen name="terms-and-services" />
+      <Stack.Screen name="contact" />
     </Stack>
   );
 }
