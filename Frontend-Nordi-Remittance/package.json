@@ -1,32 +1,17 @@
 {
   "name": "nordi-frontend",
-  "version": "1.0.0",
   "private": true,
-  "engines": {
-    "node": ">=22.12.0"
-  },
-  "description": "Nordi Remittance frontend monorepo — website (Vite/React) and mobile (Expo/React Native), sharing core business logic via packages/shared.",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
-  "devDependencies": {
-    "expo-router": "~57.0.24"
-  },
   "scripts": {
-    "dev": "npm run dev --workspace apps/website",
-    "dev:website": "npm run dev --workspace apps/website",
-    "dev:mobile": "npm run start --workspace apps/mobile",
-    "build": "npm run build --workspace apps/website",
-    "build:website": "npm run build --workspace apps/website",
-    "build:mobile": "npm run build --workspace apps/mobile",
-    "lint": "npm run lint --workspace apps/website",
-    "lint:website": "npm run lint --workspace apps/website",
-    "typecheck": "npm run typecheck --workspace packages/shared && npm run typecheck --workspace apps/website && npm run typecheck --workspace apps/mobile",
-    "typecheck:shared": "npm run typecheck --workspace packages/shared",
-    "typecheck:website": "npm run typecheck --workspace apps/website",
-    "typecheck:mobile": "npm run typecheck --workspace apps/mobile",
-    "test": "npm run test --workspace apps/website",
-    "test:website": "npm run test --workspace apps/website"
-  }
+    "dev:mobile": "turbo run dev --filter=nordi-remitwave",
+    "dev:website": "turbo run dev --filter=remitwave",
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean && rimraf node_modules"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.3"
+  },
+  "packageManager": "pnpm@10.11.0"
 }
