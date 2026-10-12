@@ -72,9 +72,9 @@ start-dev: ## Start dev server without nodemon
 watch: ## Start dev server in watch mode
 	npm run dev:hot
 
+# Windows: clean uses PowerShell Remove-Item (replaces: rm -rf dist coverage node_modules/.cache)
 clean: ## Remove build artifacts and caches
-	rm -rf dist coverage node_modules/.cache
-	@echo "$(GREEN)✓ Cleaned$(RESET)"
+	@powershell -NoProfile -Command "'dist','coverage','node_modules/.cache' | ForEach-Object { Remove-Item -Recurse -Force $_ -ErrorAction SilentlyContinue }; Write-Host '[OK] Cleaned' -ForegroundColor Green"
 
 reinstall: clean install ## Clean install
 
@@ -110,8 +110,9 @@ test-coverage: ## Run tests with coverage report
 test-ui: ## Open Vitest UI
 	npm run test:ui
 
+# Windows: set env var inline via PowerShell (replaces: NODE_ENV=test npx vitest run --no-coverage)
 test-quick: ## Run tests without coverage (faster)
-	NODE_ENV=test npx vitest run --no-coverage
+	@powershell -NoProfile -Command "$$env:NODE_ENV='test'; npx vitest run --no-coverage"
 
 # ============================================================================
 #  DATABASE (MongoDB 7.x — Mongoose)
@@ -126,11 +127,9 @@ db-indexes: ## Create all MongoDB indexes
 db-verify: ## Verify query performance and index coverage
 	npm run db:verify-performance
 
+# Windows: 2>NUL replaces 2>/dev/null; && / || work the same in cmd.exe (replaces: docker compose exec mongo mongosh ... 2>/dev/null && echo OK || echo FAIL)
 db-status: ## Ping MongoDB and print connection info
-	@docker compose exec $(MONGO_CONTAINER) mongosh --eval \
-		"db.adminCommand('ping')" --quiet $(MONGO_DB) 2>/dev/null \
-		&& echo "$(GREEN)✓ MongoDB is up$(RESET)" \
-		|| echo "$(RED)✗ MongoDB not reachable$(RESET)"
+	@docker compose exec $(MONGO_CONTAINER) mongosh --eval "db.adminCommand('ping')" --quiet $(MONGO_DB) 2>NUL && echo [OK] MongoDB is up || echo [FAIL] MongoDB not reachable
 
 db-shell: ## Open a mongosh shell in the running container
 	docker compose exec $(MONGO_CONTAINER) mongosh $(MONGO_DB)
@@ -139,12 +138,15 @@ mongo-shell: db-shell ## Alias for db-shell
 
 mongo-status: db-status ## Alias for db-status
 
+# Windows: Get-Date replaces date +%Y%m%d-%H%M%S; New-Item -p replaces mkdir -p (replaces: mkdir -p backups && docker cp ...:/tmp/dump ./backups/dump-$(date ...))
 mongo-dump: ## Dump the database to ./backups/
-	@mkdir -p backups
-	docker compose exec $(MONGO_CONTAINER) mongodump \
-		--db $(MONGO_DB) --out /tmp/dump
-	docker cp $$(docker compose ps -q $(MONGO_CONTAINER)):/tmp/dump ./backups/dump-$$(date +%Y%m%d-%H%M%S)
-	@echo "$(GREEN)✓ Dump saved to ./backups/$(RESET)"
+	@powershell -NoProfile -Command "\
+		New-Item -ItemType Directory -Force -Path 'backups' | Out-Null; \
+		docker compose exec $(MONGO_CONTAINER) mongodump --db $(MONGO_DB) --out /tmp/dump; \
+		$$ts = Get-Date -Format 'yyyyMMdd-HHmmss'; \
+		$$cid = (docker compose ps -q $(MONGO_CONTAINER)); \
+		docker cp $${cid}:/tmp/dump ./backups/dump-$$ts; \
+		Write-Host '[OK] Dump saved to ./backups/' -ForegroundColor Green"
 
 mongo-restore: ## Restore latest dump (usage: make mongo-restore dump=backups/dump-20260101-120000)
 	docker compose exec $(MONGO_CONTAINER) mongorestore \
@@ -299,12 +301,9 @@ kafka-logs: ## Tail Kafka server logs
 kafka-topics: ## List all Kafka topics
 	$(KAFKA_TOPICS_CMD) --bootstrap-server $(KAFKA_BOOTSTRAP) --list
 
+# Windows: PowerShell foreach loop in kafka-create-topics.ps1 (replaces bash: for topic in $(NORDI_TOPICS); do kafka-topics.sh ... done)
 kafka-create-topics: ## Create all Nordi Kafka topics
-	@for topic in $(NORDI_TOPICS); do \
-		$(KAFKA_TOPICS_CMD) --bootstrap-server $(KAFKA_BOOTSTRAP) \
-			--create --topic $$topic --partitions 3 --replication-factor 1 --if-not-exists; \
-	done
-	@echo "$(GREEN)✓ All Nordi topics created$(RESET)"
+	@powershell -NoProfile -ExecutionPolicy Bypass -File $(KAFKA_SCRIPTS_DIR)\kafka-create-topics.ps1 -Bootstrap $(KAFKA_BOOTSTRAP)
 
 kafka-describe: ## Describe a Kafka topic (usage: make kafka-describe topic=nordi.user.registered)
 	$(KAFKA_TOPICS_CMD) --bootstrap-server $(KAFKA_BOOTSTRAP) --describe --topic $(topic)
@@ -407,17 +406,13 @@ api-info: ## Show API version and available endpoints
 #  ENVIRONMENT
 # ============================================================================
 
+# Windows: check-env.ps1 replaces bash: test -f .env && grep -q KEY .env && echo OK || echo FAIL
 check-env: ## Validate required environment variables are set
-	@echo "$(CYAN)Checking environment variables...$(RESET)"
-	@test -f .env && echo "$(GREEN)✓ .env file found$(RESET)" || echo "$(RED)✗ .env file missing$(RESET)"
-	@grep -q MONGODB_URI .env 2>/dev/null && echo "$(GREEN)✓ MONGODB_URI (in .env)$(RESET)" || echo "$(YELLOW)⚠ MONGODB_URI not set$(RESET)"
-	@grep -q REDIS_HOST .env 2>/dev/null && echo "$(GREEN)✓ REDIS_HOST (in .env)$(RESET)" || echo "$(YELLOW)⚠ REDIS_HOST not set$(RESET)"
-	@grep -q JWT_SECRET .env 2>/dev/null && echo "$(GREEN)✓ JWT_SECRET (in .env)$(RESET)" || echo "$(YELLOW)⚠ JWT_SECRET not set$(RESET)"
-	@grep -q KAFKA_BROKERS .env 2>/dev/null && echo "$(GREEN)✓ KAFKA_BROKERS (in .env)$(RESET)" || echo "$(YELLOW)⚠ KAFKA_BROKERS not set — Kafka will be skipped$(RESET)"
-	@grep -q SMTP_HOST .env 2>/dev/null && echo "$(GREEN)✓ SMTP_HOST (in .env)$(RESET)" || echo "$(YELLOW)⚠ SMTP_HOST not set$(RESET)"
+	@powershell -NoProfile -ExecutionPolicy Bypass -File $(KAFKA_SCRIPTS_DIR)\check-env.ps1
 
+# Windows: Test-Path + Copy-Item replaces bash: test -f .env && echo skip || cp .env.example .env
 gen-env: ## Generate .env from .env.example (won't overwrite existing)
-	@test -f .env && echo "$(YELLOW)⚠ .env already exists — skipping$(RESET)" || (cp .env.example .env && echo "$(GREEN)✓ .env created from .env.example$(RESET)")
+	@powershell -NoProfile -Command "if (Test-Path '.env') { Write-Host '[SKIP] .env already exists' -ForegroundColor Yellow } else { Copy-Item '.env.example' '.env'; Write-Host '[OK] .env created from .env.example' -ForegroundColor Green }"
 
 # ============================================================================
 #  BUILD & DEPLOY
@@ -445,8 +440,9 @@ docker-push: ## Push image to registry (usage: make docker-push registry=ghcr.io
 #  LOGS & MONITORING
 # ============================================================================
 
+# Windows: Get-Content -Wait replaces tail -f; Get-ChildItem replaces ls/glob (replaces: tail -f logs/*.log)
 logs-tail: ## Tail application logs in dev
-	@tail -f logs/*.log 2>/dev/null || echo "$(YELLOW)No log files found — start the server first$(RESET)"
+	@powershell -NoProfile -Command "$$logs = Get-ChildItem logs\*.log -ErrorAction SilentlyContinue; if ($$logs) { Get-Content -Wait -Tail 50 $$logs[-1].FullName } else { Write-Host '[WARN] No log files found - start the server first' -ForegroundColor Yellow }"
 
 ports: ## Check what's running on key ports
 	@powershell -NoProfile -ExecutionPolicy Bypass -File $(KAFKA_SCRIPTS_DIR)\ports.ps1 -ApiPort $(PORT)
@@ -485,11 +481,15 @@ queue-status: ## List active BullMQ queue keys in Redis
 	@echo "$(CYAN)BullMQ queue keys:$(RESET)"
 	@docker compose exec redis redis-cli KEYS "nordi-*" 2>/dev/null | sort || echo "$(YELLOW)Redis not accessible$(RESET)"
 
-queue-flush: ## Flush all BullMQ queues — DESTRUCTIVE
-	@echo "$(RED)\u26a0 This will delete all pending/failed BullMQ jobs.$(RESET)"
-	@read -p "Continue? [y/N] " c && [ "$$c" = "y" ] || exit 0
-	@docker compose exec redis redis-cli --scan --pattern "nordi-*" | xargs -r docker compose exec redis redis-cli DEL
-	@echo "$(GREEN)\u2713 Queues flushed$(RESET)"
+# Windows: Read-Host replaces read -p; ForEach-Object DEL replaces xargs DEL (replaces: read -p && redis-cli --scan ... | xargs ... DEL)
+queue-flush: ## Flush all BullMQ queues - DESTRUCTIVE
+	@powershell -NoProfile -Command "\
+		$$c = Read-Host 'WARNING: This deletes all BullMQ jobs. Continue? [y/N]'; \
+		if ($$c -eq 'y') { \
+			$$keys = docker compose exec redis redis-cli --scan --pattern 'nordi-*'; \
+			if ($$keys) { $$keys | ForEach-Object { docker compose exec redis redis-cli DEL $$_ } }; \
+			Write-Host '[OK] Queues flushed' -ForegroundColor Green \
+		} else { Write-Host '[SKIP] Aborted' -ForegroundColor Yellow }"
 
 # ============================================================================
 #  COMPOUND / WORKFLOW COMMANDS
@@ -513,6 +513,6 @@ ci: lint typecheck test ## CI pipeline: lint + typecheck + test
 precommit: lint-fix typecheck test-quick ## Pre-commit checks
 	@echo "$(GREEN)✓ Pre-commit checks passed$(RESET)"
 
+# Windows: Remove-Item -Recurse replaces rm -rf (replaces: rm -rf node_modules)
 nuke: docker-clean clean ## Nuclear option: remove everything (containers, volumes, node_modules)
-	rm -rf node_modules
-	@echo "$(RED)✗ Everything destroyed. Run 'make setup' to rebuild.$(RESET)"
+	@powershell -NoProfile -Command "Remove-Item -Recurse -Force node_modules -ErrorAction SilentlyContinue; Write-Host '[DONE] Everything destroyed. Run make setup to rebuild.' -ForegroundColor Red"
