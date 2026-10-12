@@ -1,8 +1,10 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useMobileTheme } from '@/core/theme/useMobileTheme';
 
 export default function SupportScreen() {
+  const router = useRouter();
   const theme = useMobileTheme();
   const styles = createStyles(theme);
 
@@ -32,7 +34,11 @@ export default function SupportScreen() {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Support</Text>
-        <TouchableOpacity style={styles.chatButton}>
+        <TouchableOpacity
+          style={styles.chatButton}
+          onPress={() => router.push('/(auth)/contact')}
+          accessibilityLabel="Open 24/7 AI and Live Support"
+        >
           <Ionicons name="chatbubble-ellipses" size={24} color={theme.primary} />
         </TouchableOpacity>
       </View>

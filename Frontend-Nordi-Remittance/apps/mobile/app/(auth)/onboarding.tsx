@@ -533,6 +533,20 @@ export default function OnboardingScreen() {
             </Text>
           </TouchableOpacity>
         </View>
+
+        <View className="mt-3 flex-row items-center justify-center gap-2">
+          <TouchableOpacity onPress={() => router.push('/(auth)/terms-and-services')}>
+            <Text className="text-neutral-400 dark:text-neutral-500 text-[11px] underline">
+              Terms & Conditions
+            </Text>
+          </TouchableOpacity>
+          <Text className="text-neutral-300 dark:text-neutral-600 text-[10px]">•</Text>
+          <TouchableOpacity onPress={() => router.push('/(auth)/privacy-policy')}>
+            <Text className="text-neutral-400 dark:text-neutral-500 text-[11px] underline">
+              Privacy Policy
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );

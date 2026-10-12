@@ -258,6 +258,27 @@ export default function LoginScreen() {
             Register on Web Platform
           </Button>
         </View>
+
+        {/* Legal & Support Links */}
+        <View className="mt-6 flex-row items-center justify-center flex-wrap gap-x-3 gap-y-1 pb-2">
+          <TouchableOpacity onPress={() => router.push('/(auth)/terms-and-services')}>
+            <Text className="text-[11px] text-neutral-500 dark:text-neutral-400 underline">
+              Terms of Service
+            </Text>
+          </TouchableOpacity>
+          <Text className="text-neutral-400 text-[10px]">•</Text>
+          <TouchableOpacity onPress={() => router.push('/(auth)/privacy-policy')}>
+            <Text className="text-[11px] text-neutral-500 dark:text-neutral-400 underline">
+              Privacy Policy
+            </Text>
+          </TouchableOpacity>
+          <Text className="text-neutral-400 text-[10px]">•</Text>
+          <TouchableOpacity onPress={() => router.push('/(auth)/contact')}>
+            <Text className="text-[11px] text-primary-600 dark:text-primary-400 font-medium">
+              Contact & AI Support
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </AuthLayout>
   );

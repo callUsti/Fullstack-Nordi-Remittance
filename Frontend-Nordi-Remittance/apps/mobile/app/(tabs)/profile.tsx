@@ -1,17 +1,21 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useMobileTheme } from '@/core/theme/useMobileTheme';
+import { useAuthStore } from '@nordi/shared/store/auth.store';
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const theme = useMobileTheme();
   const styles = createStyles(theme);
+  const user = useAuthStore((state) => state.user);
 
   const profileSections = [
     {
       title: 'Account Settings',
       items: [
         { icon: 'person', label: 'Personal Information', route: '/profile/personal' },
-        { icon: 'shield-checkmark', label: 'Security', route: '/profile/security' },
+        { icon: 'shield-checkmark', label: 'Security', route: '/(tabs)/access' },
         { icon: 'notifications', label: 'Notifications', route: '/profile/notifications' },
         { icon: 'language', label: 'Language', route: '/profile/language' }
       ]
@@ -19,19 +23,19 @@ export default function ProfileScreen() {
     {
       title: 'Banking Preferences',
       items: [
-        { icon: 'card', label: 'Payment Methods', route: '/profile/payments' },
+        { icon: 'card', label: 'Payment Methods', route: '/screens/cards' },
         { icon: 'wallet', label: 'Account Limits', route: '/profile/limits' },
         { icon: 'document-text', label: 'Statements', route: '/profile/statements' },
         { icon: 'analytics', label: 'Reports', route: '/profile/reports' }
       ]
     },
     {
-      title: 'Support',
+      title: 'Support & Legal',
       items: [
-        { icon: 'help-circle', label: 'Help Center', route: '/profile/help' },
-        { icon: 'chatbubble-ellipses', label: 'Contact Us', route: '/profile/contact' },
-        { icon: 'document', label: 'Terms & Conditions', route: '/profile/terms' },
-        { icon: 'shield', label: 'Privacy Policy', route: '/profile/privacy' }
+        { icon: 'help-circle', label: 'Help Center & AI', route: '/(auth)/contact' },
+        { icon: 'chatbubble-ellipses', label: 'Contact Support', route: '/(auth)/contact' },
+        { icon: 'document', label: 'Terms & Conditions', route: '/(auth)/terms-and-services' },
+        { icon: 'shield', label: 'Privacy Policy', route: '/(auth)/privacy-policy' }
       ]
     }
   ];
@@ -42,8 +46,10 @@ export default function ProfileScreen() {
         <View style={styles.profileInfo}>
           <Image source={{ uri: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400' }} style={styles.profileImage} />
           <View style={styles.profileText}>
-            <Text style={styles.name}>John Doe</Text>
-            <Text style={styles.email}>john.doe@example.com</Text>
+            <Text style={styles.name}>
+              {user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Verified User' : 'Nordi Member'}
+            </Text>
+            <Text style={styles.email}>{user?.email || 'member@nordi-remit.com'}</Text>
           </View>
         </View>
         <TouchableOpacity style={styles.editButton}>
@@ -73,7 +79,11 @@ export default function ProfileScreen() {
           <Text style={styles.sectionTitle}>{section.title}</Text>
           <View style={styles.sectionContent}>
             {section.items.map((item, itemIndex) => (
-              <TouchableOpacity key={itemIndex} style={styles.menuItem}>
+              <TouchableOpacity
+                key={itemIndex}
+                style={styles.menuItem}
+                onPress={() => item.route && router.push(item.route as any)}
+              >
                 <View style={styles.menuItemLeft}>
                   <View style={styles.menuItemIcon}>
                     <Ionicons name={item.icon as any} size={20} color={theme.primary} />
@@ -87,7 +97,13 @@ export default function ProfileScreen() {
         </View>
       ))}
 
-      <TouchableOpacity style={styles.logoutButton}>
+      <TouchableOpacity
+        style={styles.logoutButton}
+        onPress={() => {
+          useAuthStore.getState().logout();
+          router.replace('/(auth)/login');
+        }}
+      >
         <Ionicons name="log-out" size={20} color={theme.danger} />
         <Text style={styles.logoutText}>Log Out</Text>
       </TouchableOpacity>
