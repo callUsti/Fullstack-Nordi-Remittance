@@ -17,15 +17,11 @@ export default function TabLayout() {
   const borderColor = useThemeColor({}, "border");
 
   useEffect(() => {
-    // Check permissions when entering the home screen (tabs)
+    // Initialize permissions on home screen entry
     const checkPermissions = async () => {
-      // 1. Tracking (iOS critical)
-      await permissionHandler.checkOrRequest("tracking");
-      // 2. Location (for notes tagging)
-      await permissionHandler.checkOrRequest("location");
+      await permissionHandler.checkOrRequest("camera");
     };
 
-    // Slight delay to allow transitions to finish
     const timer = setTimeout(() => {
       checkPermissions();
     }, 1000);
@@ -44,7 +40,7 @@ export default function TabLayout() {
           bottom: 0,
           left: 0,
           right: 0,
-          borderTopWidth: 1, // thinner border
+          borderTopWidth: 1,
           backgroundColor: tabBarBg,
           borderTopColor: borderColor,
           height: Platform.OS === "ios" ? 90 : 70,
@@ -64,7 +60,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Notes",
+          title: "Home",
           tabBarIcon: ({ focused }) => (
             <TabIcon
               iconName="Home"
@@ -79,12 +75,12 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="access"
         options={{
-          title: "Explore",
+          title: "My Access",
           tabBarIcon: ({ focused }) => (
             <TabIcon
-              iconName="Grid2x2"
+              iconName="ShieldCheck"
               focused={focused}
               activeIconBg={activeIconBg}
               activeColor={activeColor}
@@ -96,12 +92,12 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="chat"
+        name="scan"
         options={{
-          title: "Brainy",
+          title: "Scan",
           tabBarIcon: ({ focused }) => (
             <TabIcon
-              iconName="Brain"
+              iconName="QrCode"
               focused={focused}
               activeIconBg={activeIconBg}
               activeColor={activeColor}
@@ -113,12 +109,12 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="reminder"
+        name="support"
         options={{
-          title: "Reminders",
+          title: "Support",
           tabBarIcon: ({ focused }) => (
             <TabIcon
-              iconName="History"
+              iconName="Headset"
               focused={focused}
               activeIconBg={activeIconBg}
               activeColor={activeColor}
@@ -135,7 +131,7 @@ export default function TabLayout() {
           title: "Profile",
           tabBarIcon: ({ focused }) => (
             <TabIcon
-              iconName="UserCircle"
+              iconName="User"
               focused={focused}
               activeIconBg={activeIconBg}
               activeColor={activeColor}
