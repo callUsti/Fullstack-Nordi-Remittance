@@ -23,7 +23,7 @@ import Animated, {
   withDelay,
   Easing,
 } from 'react-native-reanimated';
-import { useNavigation } from '@react-navigation/native';
+import { useRouter} from "expo-router";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -108,7 +108,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
   alternateAction,
   variant = 'login',
 }) => {
-  const navigation = useNavigation();
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const theme = useMobileTheme();
   const gradient = GRADIENT_MAP[variant];
@@ -185,7 +185,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
             {showBackButton && (
               <TouchableOpacity
                 style={styles.backButton}
-                onPress={() => navigation.goBack()}
+                onPress={() => router.back()}
                 accessibilityLabel="Go back"
               >
                 <Ionicons name="arrow-back" size={18} color={theme.iconMuted} />
