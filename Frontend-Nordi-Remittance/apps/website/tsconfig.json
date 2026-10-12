@@ -24,10 +24,9 @@
       "@constants/*": ["constants/*"],
       // "@types": ["types/index"],
       "@types/*": ["types/*"],
-      "@nordi/shared/*": ["../../../packages/shared/src/*"],
-      "@nordi/shared": ["../../../packages/shared/src/index"]
+
     },
-    "typeRoots": ["./node_modules/@types", "../../node_modules/@types", "./src/types"],
+    "typeRoots": ["./node_modules/@types", "./src/types"],
 
     /* Bundler mode */
     "moduleResolution": "bundler",

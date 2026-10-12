@@ -23,7 +23,7 @@
     "clean": "rm -rf dist coverage node_modules/.cache"
   },
   "dependencies": {
-    "@nordi/shared": "*",
+    "@nordi/shared": "workspace:*",
     "@clerk/clerk-react": "^5.61.4",
     "@headlessui/react": "^1.7.19",
     "@heroicons/react": "^2.1.3",
