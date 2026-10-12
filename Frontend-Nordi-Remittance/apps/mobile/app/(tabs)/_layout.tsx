@@ -1,65 +1,260 @@
-import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { Platform, View } from 'react-native';
-import useThemeStore from '@nordi/shared/store/theme.store';
+import { Tabs } from "expo-router";
+import React, { useEffect, useRef } from "react";
+import { LucideIcons } from "@/constants/icons";
+import { Platform, View, Animated, StyleSheet, Easing } from "react-native";
+import { useThemeColor } from "@/hooks/useThemeColor";
+import { Icon } from "@/components/ui/Icon";
+
+import { permissionHandler } from "@/core/utils/permission-handler";
 
 export default function TabLayout() {
-  const isDarkMode = useThemeStore((state) => state.isDarkMode);
+  const backgroundColor = useThemeColor({}, "background");
+  const tabBarBg = useThemeColor({}, "surface"); // Tab bar background
+  const activeColor = useThemeColor({}, "tabBarActive");
+  const inactiveColor = useThemeColor({}, "tabBarInactive");
+  const activeIconBg = useThemeColor({}, "text"); // Dark circle for active icon context
+  const focusedIconColor = useThemeColor({}, "background"); // Icon color (inverse of circle)
+  const borderColor = useThemeColor({}, "border");
+
+  useEffect(() => {
+    // Check permissions when entering the home screen (tabs)
+    const checkPermissions = async () => {
+      // 1. Tracking (iOS critical)
+      await permissionHandler.checkOrRequest("tracking");
+      // 2. Location (for notes tagging)
+      await permissionHandler.checkOrRequest("location");
+    };
+
+    // Slight delay to allow transitions to finish
+    const timer = setTimeout(() => {
+      checkPermissions();
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
-    <View style={{ flex: 1 }}>
-      <Tabs
-        screenOptions={{
-          headerShown: false,
-
-          tabBarStyle: {
-            backgroundColor: isDarkMode ? '#0F172A' : '#fff',
-            borderTopWidth: 1,
-            borderTopColor: isDarkMode ? '#334155' : '#e5e5e5',
-            height: Platform.OS === 'ios' ? 85 : 65,
-            paddingBottom: Platform.OS === 'ios' ? 25 : 10,
-            paddingTop: 10
-          },
-          tabBarActiveTintColor: isDarkMode ? '#60A5FA' : '#2563eb',
-          tabBarInactiveTintColor: isDarkMode ? '#94A3B8' : '#64748b'
+    <Tabs
+      initialRouteName="index"
+      screenOptions={{
+        headerShown: false,
+        tabBarShowLabel: false,
+        tabBarStyle: {
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          borderTopWidth: 1, // thinner border
+          backgroundColor: tabBarBg,
+          borderTopColor: borderColor,
+          height: Platform.OS === "ios" ? 90 : 70,
+          paddingBottom: Platform.OS === "ios" ? 30 : 15,
+          paddingTop: 10,
+          paddingHorizontal: 20,
+        },
+        tabBarActiveTintColor: activeColor,
+        tabBarInactiveTintColor: inactiveColor,
+        tabBarItemStyle: {
+          borderRadius: 16,
+          marginHorizontal: 4,
+          paddingVertical: 8,
+        },
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "Notes",
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              iconName="Home"
+              focused={focused}
+              activeIconBg={activeIconBg}
+              activeColor={activeColor}
+              inactiveColor={inactiveColor}
+              backgroundColor={backgroundColor}
+              focusedIconColor={focusedIconColor}
+            />
+          ),
         }}
-      >
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: 'Home',
-            tabBarIcon: ({ size, color }) => <Ionicons name="home" size={size} color={color} />
-          }}
-        />
-        <Tabs.Screen
-          name="access"
-          options={{
-            title: 'My Access',
-            tabBarIcon: ({ size, color }) => <Ionicons name="key" size={size} color={color} />
-          }}
-        />
-        <Tabs.Screen
-          name="scan"
-          options={{
-            title: 'Scan',
-            tabBarIcon: ({ size, color }) => <Ionicons name="scan" size={size} color={color} />
-          }}
-        />
-        <Tabs.Screen
-          name="support"
-          options={{
-            title: 'Support',
-            tabBarIcon: ({ size, color }) => <Ionicons name="help-circle" size={size} color={color} />
-          }}
-        />
-        <Tabs.Screen
-          name="profile"
-          options={{
-            title: 'Profile',
-            tabBarIcon: ({ size, color }) => <Ionicons name="person" size={size} color={color} />
-          }}
-        />
-      </Tabs>
-    </View>
+      />
+      <Tabs.Screen
+        name="explore"
+        options={{
+          title: "Explore",
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              iconName="Grid2x2"
+              focused={focused}
+              activeIconBg={activeIconBg}
+              activeColor={activeColor}
+              inactiveColor={inactiveColor}
+              backgroundColor={backgroundColor}
+              focusedIconColor={focusedIconColor}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="chat"
+        options={{
+          title: "Brainy",
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              iconName="Brain"
+              focused={focused}
+              activeIconBg={activeIconBg}
+              activeColor={activeColor}
+              inactiveColor={inactiveColor}
+              backgroundColor={backgroundColor}
+              focusedIconColor={focusedIconColor}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="reminder"
+        options={{
+          title: "Reminders",
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              iconName="History"
+              focused={focused}
+              activeIconBg={activeIconBg}
+              activeColor={activeColor}
+              inactiveColor={inactiveColor}
+              backgroundColor={backgroundColor}
+              focusedIconColor={focusedIconColor}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              iconName="UserCircle"
+              focused={focused}
+              activeIconBg={activeIconBg}
+              activeColor={activeColor}
+              inactiveColor={inactiveColor}
+              backgroundColor={backgroundColor}
+              focusedIconColor={focusedIconColor}
+            />
+          ),
+        }}
+      />
+    </Tabs>
   );
 }
+
+// Animated Tab icon component
+const TabIcon = React.memo(
+  ({
+    iconName,
+    focused,
+    activeIconBg,
+    activeColor,
+    inactiveColor,
+    backgroundColor,
+    focusedIconColor,
+  }: {
+    iconName: string;
+    focused: boolean;
+    activeIconBg: string;
+    activeColor: string;
+    inactiveColor: string;
+    backgroundColor: string;
+    focusedIconColor: string;
+  }) => {
+    const progress = useRef(new Animated.Value(focused ? 1 : 0)).current;
+
+    useEffect(() => {
+      Animated.timing(progress, {
+        toValue: focused ? 1 : 0,
+        duration: 260,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start();
+    }, [focused, progress]);
+
+    const bgScale = progress.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0.96, 1.02],
+    });
+    const bgOpacity = progress;
+    const iconScale = progress.interpolate({
+      inputRange: [0, 1],
+      outputRange: [1, 1.08],
+    });
+    const dotTranslateY = progress.interpolate({
+      inputRange: [0, 1],
+      outputRange: [6, 0],
+    });
+
+    return (
+      <View style={styles.iconWrapper}>
+        <Animated.View
+          style={[
+            styles.bgCircle,
+            {
+              backgroundColor: activeIconBg,
+              opacity: bgOpacity,
+              transform: [{ scale: bgScale }],
+            },
+          ]}
+        />
+
+        <Animated.View style={{ transform: [{ scale: iconScale }], zIndex: 2 }}>
+          <Icon
+            name={iconName as any}
+            size={20}
+            color={focused ? focusedIconColor : inactiveColor}
+            strokeWidth={focused ? 2 : 1.5}
+          />
+        </Animated.View>
+
+        <Animated.View
+          style={[
+            styles.dot,
+            {
+              backgroundColor: activeIconBg, // Same as circle
+              opacity: bgOpacity,
+              transform: [{ translateY: dotTranslateY }],
+              borderColor: backgroundColor, // Match screen bg? Or transparent?
+            },
+          ]}
+        />
+      </View>
+    );
+  },
+);
+
+const styles = StyleSheet.create({
+  iconWrapper: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  bgCircle: {
+    position: "absolute",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    // subtle border to define shape on light backgrounds
+    borderWidth: 0.5,
+    borderColor: "rgba(255,255,255,0.06)",
+  },
+  dot: {
+    position: "absolute",
+    bottom: -6,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    // small white border so dot reads on dark nav backgrounds
+    borderWidth: 1,
+  },
+});
