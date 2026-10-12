@@ -37,8 +37,8 @@ export default function CardsScreen() {
         <TouchableOpacity style={styles.addButton}>
           <Ionicons name="add" size={24} color="#fff" />
         </TouchableOpacity>
-        </TouchableOpacity>
       </View>
+      
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.cardsContainer}>
         {cards.map(card => (
