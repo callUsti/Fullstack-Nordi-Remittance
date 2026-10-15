@@ -1,8 +1,6 @@
 // ============================================================================
-// useAuthDomain — Domain use-case hook for Auth (logout, etc.)
-//
-// Wraps raw @hooks/queries for container-level auth operations.
-// Components import from HERE, never from @hooks/queries/useAuth directly.
+// useAuthDomain — Domain use-case hook for Auth
+// Re-exported from @nordi/shared/client-usecase for backward compatibility
 // ============================================================================
 
-export { useLogout } from "@hooks/api-queries/useAuth";
+export * from "@nordi/shared/client-usecase/useauth-client-usecase";
