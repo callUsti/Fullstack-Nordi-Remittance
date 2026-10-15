@@ -33,7 +33,10 @@ export interface FileUploadProps {
   description?: string;
   error?: string;
   value?: FileAsset | null;
-  onChange: (file: FileAsset | null) => void;
+  onChange?: (file: FileAsset | null) => void;
+  onFilesSelected?: (files: any) => void;
+  maxFiles?: number;
+  acceptedTypes?: string[];
   required?: boolean;
   maxSizeMB?: number;
   allowDocuments?: boolean;
@@ -46,12 +49,20 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   error,
   value,
   onChange,
+  onFilesSelected,
+  maxFiles,
+  acceptedTypes,
   required = false,
   maxSizeMB = 10,
   allowDocuments = true,
   className,
 }) => {
   const [showOptions, setShowOptions] = useState(false);
+
+  const notifyChange = (file: FileAsset | null) => {
+    if (onChange) onChange(file);
+    if (onFilesSelected && file) onFilesSelected([file]);
+  };
 
   const handleCamera = async () => {
     setShowOptions(false);
@@ -72,7 +83,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
       if (!result.canceled && result.assets[0]) {
         const asset = result.assets[0];
-        onChange({
+        notifyChange({
           uri: asset.uri,
           name: asset.fileName || 'camera-capture.jpg',
           type: 'image/jpeg',
@@ -104,7 +115,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
       if (!result.canceled && result.assets[0]) {
         const asset = result.assets[0];
-        onChange({
+        notifyChange({
           uri: asset.uri,
           name: asset.fileName || 'selected-photo.jpg',
           type: 'image/jpeg',
@@ -132,7 +143,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           return;
         }
 
-        onChange({
+        notifyChange({
           uri: doc.uri,
           name: doc.name,
           type: doc.mimeType || 'application/octet-stream',
@@ -191,7 +202,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           </View>
 
           <TouchableOpacity
-            onPress={() => onChange(null)}
+            onPress={() => onChange?.(null)}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             className="p-1.5 rounded-full bg-neutral-200 dark:bg-neutral-700"
           >

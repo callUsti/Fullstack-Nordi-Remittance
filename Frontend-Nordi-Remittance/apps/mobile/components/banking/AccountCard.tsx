@@ -25,14 +25,24 @@ export type AccountType = 'savings' | 'checking' | 'business' | 'investment' | '
 export type AccountStatus = 'active' | 'frozen' | 'pending' | 'closed';
 
 export interface AccountCardProps {
-  id: string;
-  name: string;
-  accountNumber: string;
-  balance: number;
+  id?: string;
+  name?: string;
+  accountNumber?: string;
+  balance?: number;
   currency?: string;
-  type: AccountType;
+  type?: AccountType;
   status?: AccountStatus;
   isPrimary?: boolean;
+  account?: {
+    id?: string;
+    name?: string;
+    accountNumber?: string;
+    balance?: number;
+    currency?: string;
+    type?: any;
+    status?: any;
+    isPrimary?: boolean;
+  };
   lastTransaction?: {
     date: string;
     amount: number;
@@ -93,22 +103,18 @@ const statusConfig: Record<
   closed: { label: 'Closed', variant: 'default' },
 };
 
-export const AccountCard: React.FC<AccountCardProps> = ({
-  id,
-  name,
-  accountNumber,
-  balance,
-  currency = 'USD',
-  type = 'checking',
-  status = 'active',
-  isPrimary = false,
-  lastTransaction,
-  onPress,
-  onClick,
-  onCopyAccountNumber,
-  onViewDetails,
-  className,
-}) => {
+export const AccountCard: React.FC<AccountCardProps> = (props) => {
+  const merged = props.account ? { ...props.account, ...props } : props;
+  const name = merged.name || 'Account';
+  const accountNumber = merged.accountNumber || '••••';
+  const balance = merged.balance || 0;
+  const currency = merged.currency || 'USD';
+  const rawType = (merged.type as AccountType) || 'checking';
+  const type = rawType in accountTypeConfig ? rawType : 'checking';
+  const rawStatus = (merged.status as AccountStatus) || 'active';
+  const status = rawStatus in statusConfig ? rawStatus : 'active';
+  const isPrimary = !!merged.isPrimary;
+  const { onPress, onClick, onCopyAccountNumber, onViewDetails, className } = props;
   const typeInfo = accountTypeConfig[type] || accountTypeConfig.checking;
   const statusInfo = statusConfig[status];
 

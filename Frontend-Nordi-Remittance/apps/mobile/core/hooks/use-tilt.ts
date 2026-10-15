@@ -31,8 +31,8 @@ export function useTilt(range = 0.3) {
 
   useAnimatedReaction(
     () => ({
-      pitch: sensor.sensor.value.pitch,
-      roll: sensor.sensor.value.roll,
+      pitch: sensor.sensor?.value?.pitch ?? 0,
+      roll: sensor.sensor?.value?.roll ?? 0,
     }),
     (cur) => {
       if (!primed.value) {

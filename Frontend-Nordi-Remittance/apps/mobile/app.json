@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "nordi-remitwave",
+    "name": "Nordi",
     "slug": "nordi-remitwave",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,14 +8,40 @@
     "scheme": "nordiremitwave",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/confirmed.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff",
+      "dark": {
+        "image": "./assets/images/confirmed.png",
+        "backgroundColor": "#020617"
+      }
+    },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.AccessBank"
+      "bundleIdentifier": "com.anonymous.AccessBank",
+      "splash": {
+        "image": "./assets/images/confirmed.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#ffffff",
+        "dark": {
+          "image": "./assets/images/confirmed.png",
+          "backgroundColor": "#020617"
+        }
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#FFFFFF",
+        "backgroundColor": "#020617",
         "foregroundImage": "./assets/images/confirmed.png"
+      },
+      "splash": {
+        "image": "./assets/images/confirmed.png",
+        "resizeMode": "contain",
+        "dark": {
+          "image": "./assets/images/confirmed.png",
+          "backgroundColor": "#020617"
+        }
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
@@ -44,9 +70,13 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/confirmed.png",
-          "imageWidth": 200,
+          "imageWidth": 160,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#ffffff",
+          "dark": {
+            "image": "./assets/images/confirmed.png",
+            "backgroundColor": "#020617"
+          }
         }
       ],
       [

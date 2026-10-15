@@ -32,6 +32,15 @@ declare global {
     userAgent: string;
   }
 
+  interface PaginationMeta {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  }
+
   // ==========================================================================
   // USER ENUMS
   // ==========================================================================

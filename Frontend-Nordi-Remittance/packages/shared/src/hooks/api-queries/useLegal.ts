@@ -543,8 +543,8 @@ export const useAcceptTerms = () => {
   const { showToast } = useToastStore();
 
   return useMutation({
-    mutationFn: async (data: { documentType: string; version: string }) => {
-      const response = await LegalRepository.acceptTerms(data.version);
+    mutationFn: async (data: { documentType?: string; version: string }) => {
+      const response = await LegalRepository.acceptTerms(data.version, data.documentType);
       return response.data;
     },
     onSuccess: () => {

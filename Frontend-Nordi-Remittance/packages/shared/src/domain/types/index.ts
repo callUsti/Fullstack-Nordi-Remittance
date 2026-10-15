@@ -12,6 +12,7 @@ import './Admin.types';
 import './Attachment.types';
 import './Audit.types';
 import './Card.types';
+import './ClientDashboard.types';
 import './Confirm.types';
 import './FeatureGrowth.types';
 import './FraudSecurity.types';

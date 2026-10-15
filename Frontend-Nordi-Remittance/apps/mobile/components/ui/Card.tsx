@@ -2,9 +2,10 @@
 // CARD COMPONENT - React Native card container with subcomponents & variants
 // ============================================================================
 
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useEffect, useMemo, useRef } from 'react';
 import { View, Text, TouchableOpacity, ViewProps } from 'react-native';
 import { cn } from '@utils/cn';
+import { createThrottle } from '@/core/network/lodash-bounce';
 
 // ========================
 // TYPES
@@ -16,6 +17,14 @@ export interface CardProps extends ViewProps {
   variant?: CardVariant;
   size?: CardSize;
   onPress?: () => void;
+  /**
+   * Time in milliseconds to throttle rapid subsequent presses. Defaults to 600ms.
+   */
+  throttleWait?: number;
+  /**
+   * Disables throttling to allow instant consecutive fires. Defaults to false.
+   */
+  disableThrottle?: boolean;
   className?: string;
   children?: React.ReactNode;
 }
@@ -75,19 +84,58 @@ const sizeStyles: Record<CardSize, string> = {
 // MAIN CARD COMPONENT
 // ========================
 export const Card = forwardRef<View, CardProps>(
-  ({ variant = 'default', size = 'md', onPress, className, children, ...props }, ref) => {
+  (
+    {
+      variant = 'default',
+      size = 'md',
+      onPress,
+      throttleWait = 600,
+      disableThrottle = false,
+      className,
+      children,
+      ...props
+    },
+    ref,
+  ) => {
     const cardClassNames = cn(
       variantStyles[variant],
       sizeStyles[size],
       className,
     );
 
+    const onPressRef = useRef(onPress);
+    useEffect(() => {
+      onPressRef.current = onPress;
+    }, [onPress]);
+
+    const handlePress = useMemo(() => {
+      if (!onPress) return undefined;
+      if (disableThrottle) {
+        return () => onPressRef.current?.();
+      }
+      return createThrottle(
+        () => {
+          onPressRef.current?.();
+        },
+        throttleWait,
+        { leading: true, trailing: false },
+      );
+    }, [onPress ? true : false, disableThrottle, throttleWait]);
+
+    useEffect(() => {
+      return () => {
+        if (handlePress && 'cancel' in handlePress && typeof handlePress.cancel === 'function') {
+          handlePress.cancel();
+        }
+      };
+    }, [handlePress]);
+
     if (onPress) {
       return (
         <TouchableOpacity
           ref={ref as any}
           activeOpacity={0.75}
-          onPress={onPress}
+          onPress={handlePress}
           className={cardClassNames}
           {...(props as any)}
         >

@@ -16,6 +16,8 @@ export type BadgeVariant =
   | 'success'
   | 'warning'
   | 'error'
+  | 'danger'
+  | 'neutral'
   | 'info'
   | 'outline';
 
@@ -37,6 +39,8 @@ export interface BadgeProps extends ViewProps {
 const variantContainerStyles: Record<BadgeVariant, string> = {
   default:
     'bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700',
+  neutral:
+    'bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700',
   primary:
     'bg-primary-50 dark:bg-primary-950/40 border border-primary-200 dark:border-primary-800',
   secondary:
@@ -47,6 +51,8 @@ const variantContainerStyles: Record<BadgeVariant, string> = {
     'bg-warning-50 dark:bg-warning-950/40 border border-warning-200 dark:border-warning-800',
   error:
     'bg-error-50 dark:bg-error-950/40 border border-error-200 dark:border-error-800',
+  danger:
+    'bg-error-50 dark:bg-error-950/40 border border-error-200 dark:border-error-800',
   info:
     'bg-info-50 dark:bg-info-950/40 border border-info-200 dark:border-info-800',
   outline:
@@ -55,22 +61,26 @@ const variantContainerStyles: Record<BadgeVariant, string> = {
 
 const variantTextStyles: Record<BadgeVariant, string> = {
   default: 'text-neutral-700 dark:text-neutral-300',
+  neutral: 'text-neutral-700 dark:text-neutral-300',
   primary: 'text-primary-700 dark:text-primary-300 font-semibold',
   secondary: 'text-secondary-700 dark:text-secondary-300 font-semibold',
   success: 'text-success-700 dark:text-success-300 font-semibold',
   warning: 'text-warning-700 dark:text-warning-300 font-semibold',
   error: 'text-error-700 dark:text-error-300 font-semibold',
+  danger: 'text-error-700 dark:text-error-300 font-semibold',
   info: 'text-info-700 dark:text-info-300 font-semibold',
   outline: 'text-neutral-700 dark:text-neutral-300',
 };
 
 const dotColors: Record<BadgeVariant, string> = {
   default: 'bg-neutral-500',
+  neutral: 'bg-neutral-500',
   primary: 'bg-primary-500',
   secondary: 'bg-secondary-500',
   success: 'bg-success-500',
   warning: 'bg-warning-500',
   error: 'bg-error-500',
+  danger: 'bg-error-500',
   info: 'bg-info-500',
   outline: 'bg-neutral-500',
 };

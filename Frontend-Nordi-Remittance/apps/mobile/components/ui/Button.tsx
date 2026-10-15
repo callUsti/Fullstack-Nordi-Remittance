@@ -2,7 +2,7 @@
 // BUTTON COMPONENT - React Native animated button with multiple variants
 // ============================================================================
 
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useEffect, useMemo, useRef } from 'react';
 import {
   TouchableOpacity,
   Text,
@@ -11,6 +11,7 @@ import {
   TouchableOpacityProps,
 } from 'react-native';
 import { cn } from '@utils/cn';
+import { createThrottle } from '@/core/network/lodash-bounce';
 
 // ========================
 // TYPES
@@ -27,6 +28,7 @@ export type ButtonVariant =
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
 export interface ButtonProps extends Omit<TouchableOpacityProps, 'children'> {
+  title?: string;
   variant?: ButtonVariant;
   size?: ButtonSize;
   isLoading?: boolean;
@@ -38,6 +40,14 @@ export interface ButtonProps extends Omit<TouchableOpacityProps, 'children'> {
   className?: string;
   textClassName?: string;
   onClick?: (e?: any) => void;
+  /**
+   * Time in milliseconds to throttle rapid subsequent presses. Defaults to 600ms.
+   */
+  throttleWait?: number;
+  /**
+   * Disables throttling to allow instant consecutive fires. Defaults to false.
+   */
+  disableThrottle?: boolean;
 }
 
 export interface IconButtonProps extends Omit<ButtonProps, 'children'> {
@@ -103,6 +113,7 @@ const spinnerColors: Record<ButtonVariant, string> = {
 export const Button = forwardRef<View, ButtonProps>(
   (
     {
+      title,
       variant = 'primary',
       size = 'md',
       isLoading = false,
@@ -116,18 +127,49 @@ export const Button = forwardRef<View, ButtonProps>(
       disabled,
       onClick,
       onPress,
+      throttleWait = 600,
+      disableThrottle = false,
       ...props
     },
     ref,
   ) => {
     const isButtonDisabled = disabled || isDisabled || isLoading;
+    const content = children ?? title;
+
+    const onPressHandler = onPress || onClick;
+    const onPressRef = useRef(onPressHandler);
+    useEffect(() => {
+      onPressRef.current = onPressHandler;
+    }, [onPressHandler]);
+
+    const handlePress = useMemo(() => {
+      if (!onPressHandler) return undefined;
+      if (disableThrottle) {
+        return (e: any) => onPressRef.current?.(e);
+      }
+      return createThrottle(
+        (e: any) => {
+          onPressRef.current?.(e);
+        },
+        throttleWait,
+        { leading: true, trailing: false },
+      );
+    }, [onPressHandler ? true : false, disableThrottle, throttleWait]);
+
+    useEffect(() => {
+      return () => {
+        if (handlePress && 'cancel' in handlePress && typeof handlePress.cancel === 'function') {
+          handlePress.cancel();
+        }
+      };
+    }, [handlePress]);
 
     return (
       <TouchableOpacity
         ref={ref as any}
         activeOpacity={0.8}
         disabled={isButtonDisabled}
-        onPress={onPress || onClick}
+        onPress={handlePress}
         className={cn(
           'flex-row items-center justify-center',
           variantContainerStyles[variant],
@@ -148,7 +190,7 @@ export const Button = forwardRef<View, ButtonProps>(
           leftIcon && <View className="mr-2">{leftIcon}</View>
         )}
 
-        {typeof children === 'string' ? (
+        {typeof content === 'string' ? (
           <Text
             className={cn(
               variantTextStyles[variant],
@@ -156,10 +198,10 @@ export const Button = forwardRef<View, ButtonProps>(
               textClassName,
             )}
           >
-            {children}
+            {content}
           </Text>
         ) : (
-          children
+          content
         )}
 
         {!isLoading && rightIcon && <View className="ml-2">{rightIcon}</View>}

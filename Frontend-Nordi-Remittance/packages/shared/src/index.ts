@@ -30,4 +30,4 @@ export * from "./constants/form-options";
 
 export * from "./utils/validators";
 export * from "./hooks/api-queries/useLegal";
-
+export * from "./client-usecase";

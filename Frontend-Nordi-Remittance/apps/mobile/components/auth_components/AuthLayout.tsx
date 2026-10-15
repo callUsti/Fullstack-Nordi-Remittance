@@ -29,6 +29,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@nordi/shared/constants/colors';
 import { useMobileTheme } from '@/core/theme/useMobileTheme';
+import { DebouncedTouchable } from '@/components/ui';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -183,14 +184,14 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
             <Text style={styles.logoText}>Nordea</Text>
 
             {showBackButton && (
-              <TouchableOpacity
+              <DebouncedTouchable
                 style={styles.backButton}
                 onPress={() => router.back()}
                 accessibilityLabel="Go back"
               >
                 <Ionicons name="arrow-back" size={18} color={theme.iconMuted} />
                 <Text style={[styles.backText, { color: theme.textMuted }]}>Back</Text>
-              </TouchableOpacity>
+              </DebouncedTouchable>
             )}
           </View>
 
@@ -222,11 +223,32 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
               © {new Date().getFullYear()} Nordea Bank PLC. (Licensed by the IMF)
             </Text>
             <View style={styles.footerLinks}>
-              <Text style={[styles.footerLink, { color: theme.textMuted }]}>Privacy Policy</Text>
+              <DebouncedTouchable
+                onPress={() => router.push('/(auth)/privacy-policy')}
+                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+              >
+                <Text style={[styles.footerLink, { color: theme.textMuted, textDecorationLine: 'underline' }]}>
+                  Privacy Policy
+                </Text>
+              </DebouncedTouchable>
               <Text style={[styles.footerDot, { color: theme.textMuted }]}>•</Text>
-              <Text style={[styles.footerLink, { color: theme.textMuted }]}>Terms of Service</Text>
+              <DebouncedTouchable
+                onPress={() => router.push('/(auth)/terms-and-services')}
+                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+              >
+                <Text style={[styles.footerLink, { color: theme.textMuted, textDecorationLine: 'underline' }]}>
+                  Terms of Service
+                </Text>
+              </DebouncedTouchable>
               <Text style={[styles.footerDot, { color: theme.textMuted }]}>•</Text>
-              <Text style={[styles.footerLink, { color: theme.textMuted }]}>Contact</Text>
+              <DebouncedTouchable
+                onPress={() => router.push('/(auth)/contact')}
+                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+              >
+                <Text style={[styles.footerLink, { color: theme.primary, fontWeight: '600' }]}>
+                  Contact & Support
+                </Text>
+              </DebouncedTouchable>
             </View>
           </View>
         </Animated.View>

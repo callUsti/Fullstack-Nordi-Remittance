@@ -19,10 +19,6 @@ import {
   ArrowLeft,
   Calendar,
   FileCheck2,
-  Lock,
-  Eye,
-  Share2,
-  Database,
   CheckCircle2,
 } from 'lucide-react-native';
 
@@ -35,6 +31,7 @@ import { usePrivacyPolicy, useAcceptTerms } from '@nordi/shared/hooks/api-querie
 import { useMobileTheme } from '@/core/theme/useMobileTheme';
 import { colors } from '@nordi/shared/constants/colors';
 import { useToastStore } from '@nordi/shared/store/toast.store';
+import defaultPrivacyData from '@/assets/legal/privacy-policy.json';
 
 export default function PrivacyPolicyScreen() {
   const router = useRouter();
@@ -56,44 +53,52 @@ export default function PrivacyPolicyScreen() {
 
   const acceptTermsMutation = useAcceptTerms();
 
-  // Fallback default sections if backend returns summary or raw string
-  const policyContent = useMemo(() => {
-    if (legalData?.content) {
-      return legalData.content;
+  const activeDoc = useMemo(() => {
+    if (legalData?.sections && Array.isArray(legalData.sections) && legalData.sections.length > 0) {
+      return legalData;
     }
-    return `We at Nordi Remittance are committed to safeguarding your personal data and financial privacy in accordance with global banking standards, GDPR, and AML/KYC regulatory frameworks.`;
+    if (legalData?.document?.sections && Array.isArray(legalData.document.sections) && legalData.document.sections.length > 0) {
+      return legalData.document;
+    }
+    return defaultPrivacyData;
   }, [legalData]);
 
-  const version = legalData?.version || 'v2.4.1';
-  const effectiveDate = legalData?.effectiveDate
-    ? new Date(legalData.effectiveDate).toLocaleDateString()
-    : 'October 1, 2026';
-  const lastUpdated = legalData?.lastUpdated
-    ? new Date(legalData.lastUpdated).toLocaleDateString()
-    : 'October 12, 2026';
+  const version = activeDoc?.version || defaultPrivacyData.version || '1.0';
+  const effectiveDate = useMemo(() => {
+    const raw = activeDoc?.effectiveDate;
+    if (typeof raw === 'string' && !raw.includes('[INSERT')) {
+      const d = new Date(raw);
+      return !isNaN(d.getTime())
+        ? d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+        : raw;
+    }
+    return 'March 15, 2026';
+  }, [activeDoc?.effectiveDate]);
 
-  const policySections = [
-    {
-      icon: Eye,
-      title: '1. Information We Collect',
-      body: 'We collect personal identification details (name, email, phone, government ID for KYC), financial and transaction details, and device metrics required to protect your account from fraud.',
-    },
-    {
-      icon: Lock,
-      title: '2. How We Protect Your Data',
-      body: 'All communications are protected using end-to-end TLS 1.3 encryption and AES-256 storage standards. Financial tokens are segregated into dedicated hardware security modules (HSM).',
-    },
-    {
-      icon: Share2,
-      title: '3. Data Sharing & Third Parties',
-      body: 'Your sensitive financial records are never sold. Data is shared exclusively with accredited clearing houses, licensed banking partners, and statutory authorities when mandated by anti-money laundering (AML) law.',
-    },
-    {
-      icon: Database,
-      title: '4. Data Retention & Privacy Rights',
-      body: 'Under GDPR and statutory financial regulations, you retain the right to inspect, export, or request deletion of your records subject to minimum statutory compliance periods.',
-    },
-  ];
+  const lastUpdated = useMemo(() => {
+    const raw = activeDoc?.lastUpdated;
+    if (typeof raw === 'string' && !raw.includes('[INSERT')) {
+      const d = new Date(raw);
+      return !isNaN(d.getTime())
+        ? d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+        : raw;
+    }
+    return 'October 14, 2026';
+  }, [activeDoc?.lastUpdated]);
+
+  const overviewText = useMemo(() => {
+    if (activeDoc?.summary && !activeDoc.summary.includes('REMOVE BEFORE PUBLICATION')) {
+      return activeDoc.summary;
+    }
+    return 'We at Nordi Remitwave are committed to safeguarding your personal data and financial privacy in accordance with global banking standards, GDPR, and AML/KYC regulatory frameworks. This policy explains how we collect, use, protect and share your information.';
+  }, [activeDoc]);
+
+  const sections = useMemo(() => {
+    if (activeDoc?.sections && Array.isArray(activeDoc.sections) && activeDoc.sections.length > 0) {
+      return activeDoc.sections;
+    }
+    return defaultPrivacyData.sections;
+  }, [activeDoc]);
 
   const handleAcknowledge = async () => {
     try {
@@ -137,7 +142,7 @@ export default function PrivacyPolicyScreen() {
             Privacy Policy
           </Text>
           <Text style={[styles.headerSubtitle, { color: theme.textMuted }]}>
-            Nordi Remittance & Financial Security
+            Nordi Remitwave Global Privacy Policy
           </Text>
         </View>
         <View style={styles.headerAction}>
@@ -214,16 +219,16 @@ export default function PrivacyPolicyScreen() {
               Our Commitment to Your Privacy
             </Text>
             <Text style={[styles.bodyText, { color: theme.textMuted }]}>
-              {policyContent}
+              {overviewText}
             </Text>
           </View>
 
-          {/* Core Privacy Pillars */}
-          {policySections.map((sec, idx) => {
-            const SecIcon = sec.icon;
+          {/* Complete Structured Privacy Sections */}
+          {sections.map((section, idx) => {
+            const paragraphs = (section.content || '').split('\n\n').filter(Boolean);
             return (
               <Card
-                key={idx}
+                key={section.id || idx}
                 variant="default"
                 size="md"
                 style={[styles.pillarCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
@@ -235,15 +240,19 @@ export default function PrivacyPolicyScreen() {
                       { backgroundColor: `${colors.primary[500]}15` },
                     ]}
                   >
-                    <SecIcon size={20} color={colors.primary[500]} />
+                    <Text style={[styles.sectionNumberText, { color: colors.primary[500] }]}>
+                      {section.sectionNumber || idx + 1}
+                    </Text>
                   </View>
                   <Text style={[styles.pillarTitle, { color: theme.text }]}>
-                    {sec.title}
+                    {section.title}
                   </Text>
                 </View>
-                <Text style={[styles.pillarBody, { color: theme.textMuted }]}>
-                  {sec.body}
-                </Text>
+                {paragraphs.map((p: string, pIdx: number) => (
+                  <Text key={pIdx} style={[styles.pillarBody, { color: theme.textMuted, marginBottom: pIdx < paragraphs.length - 1 ? 8 : 0 }]}>
+                    {p}
+                  </Text>
+                ))}
               </Card>
             );
           })}
@@ -389,6 +398,10 @@ const styles = StyleSheet.create({
   pillarBody: {
     fontSize: 13,
     lineHeight: 19,
+  },
+  sectionNumberText: {
+    fontSize: 13,
+    fontWeight: '700',
   },
   acknowledgementBlock: {
     marginTop: 12,

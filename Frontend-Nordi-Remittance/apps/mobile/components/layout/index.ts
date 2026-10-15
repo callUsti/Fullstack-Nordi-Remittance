@@ -26,3 +26,7 @@ export type {
   SpacerProps,
   DividerProps,
 } from './Flex';
+
+// AdaptiveScreen
+export { AdaptiveScreen } from './AdaptiveScreen';
+export type { AdaptiveScreenProps } from './AdaptiveScreen';

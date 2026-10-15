@@ -6,7 +6,7 @@
 // ============================================================================
 
 import './bootstrap-storage';
-import { configureApiClient } from '@nordi/shared/core/api/client';
+import { configureApiClient, TokenManager } from '@nordi/shared/core/api/client';
 import { configureSocket } from '@nordi/shared/core/socket/socket.client';
 import { configureOnlineManager } from '@nordi/shared/core/lib/queryClient';
 import { configureAuthStore } from '@nordi/shared/store/auth.store';
@@ -23,6 +23,7 @@ export function bootstrapMobilePlatform(): void {
     tokenStorage: asyncStorageAdapter,
     networkReporter: mobileNetworkReporter,
   });
+  void TokenManager.hydrate();
   configureSocket({ url: WS_URL });
   configureOnlineManager(mobileNetworkReporter);
 

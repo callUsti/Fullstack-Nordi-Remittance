@@ -6,7 +6,7 @@ type HomeService = {
   icon: string;
   color: string;
   bg: string;
-  route: Href;
+  route: any;
 };
 
 const services = [
@@ -14,70 +14,70 @@ const services = [
     {
       id: 1,
       name: 'Send Money',
-      icon: 'send',
-      color: '#0284c7',
-      bg: '#e0f2fe',
-      route: '/screens/Homescreens/Transfer'
+      icon: 'paper-plane-outline',
+      color: '#2563eb',
+      bg: '#eff6ff',
+      route: '/screens/send-money',
     },
     {
       id: 2,
-      name: 'International Transfers',
-      icon: 'globe',
-      color: '#0ea5e9',
-      bg: '#e0f2fe',
-      route: '/screens/Transactions/AccessInternational'
+      name: 'Forex Exchange',
+      icon: 'swap-horizontal-outline',
+      color: '#0891b2',
+      bg: '#ecfeff',
+      route: '/screens/forex',
     },
     {
       id: 3,
       name: 'Cards',
-      icon: 'card',
-      color: '#c2410c',
-      bg: '#ffedd5',
-      route: '/screens/cards'
+      icon: 'card-outline',
+      color: '#d97706',
+      bg: '#fffbeb',
+      route: '/screens/cards',
     },
     {
       id: 4,
-      name: 'More',
-      icon: 'grid',
-      color: '#475569',
-      bg: '#f1f5f9',
-      route: '/screens/Homescreens/MoreOptions'
-    }
+      name: 'Investments',
+      icon: 'trending-up-outline',
+      color: '#7c3aed',
+      bg: '#f5f3ff',
+      route: '/screens/investments',
+    },
   ],
   [
     {
       id: 5,
-      name: 'Access-to-Access',
-      icon: 'business',
-      color: '#2563eb',
-      bg: '#dbeafe',
-      route: '/screens/Transactions/AccessToAccess'
+      name: 'Loans',
+      icon: 'cash-outline',
+      color: '#059669',
+      bg: '#ecfdf5',
+      route: '/screens/loans',
     },
     {
       id: 6,
-      name: 'SwiftPay',
-      icon: 'flash',
-      color: '#ef4444',
-      bg: '#fee2e2',
-      route: '/screens/Transactions/AccessSwiftPay'
+      name: 'Savings',
+      icon: 'wallet-outline',
+      color: '#4f46e5',
+      bg: '#eef2ff',
+      route: '/screens/savings',
     },
     {
       id: 7,
-      name: 'Crypto',
-      icon: 'logo-bitcoin',
-      color: '#f7931a',
-      bg: '#ffedd5',
-      route: '/screens/Transactions/AccessCrypto'
+      name: 'Pay Bills',
+      icon: 'receipt-outline',
+      color: '#e11d48',
+      bg: '#fff1f2',
+      route: '/screens/bills',
     },
     {
       id: 8,
-      name: 'Crypto Market',
-      icon: 'trending-up',
-      color: '#7c3aed',
-      bg: '#f3e8ff',
-      route: '/screens/Homescreens/CryptoListScreen'
-    }
-  ]
+      name: 'More',
+      icon: 'grid-outline',
+      color: '#64748b',
+      bg: '#f8fafc',
+      route: '/screens/Homescreens/MoreOptions',
+    },
+  ],
 ] satisfies HomeService[][];
 
 export default services;

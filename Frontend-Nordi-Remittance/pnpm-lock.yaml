@@ -429,7 +429,7 @@ importers:
         version: 1.20.0
       react:
         specifier: ^18.2.0 || ^19.0.0
-        version: 19.2.3
+        version: 18.3.1
       socket.io-client:
         specifier: ^4.8.3
         version: 4.8.4(bufferutil@4.1.0)(utf-8-validate@6.0.6)
@@ -438,11 +438,11 @@ importers:
         version: 4.6.6
       zustand:
         specifier: ^5.0.10
-        version: 5.0.15(@types/react@19.2.18)(react@19.2.3)(use-sync-external-store@1.7.0(react@19.2.3))
+        version: 5.0.15(@types/react@19.2.18)(react@18.3.1)(use-sync-external-store@1.7.0(react@18.3.1))
     devDependencies:
       '@tanstack/react-query':
         specifier: ^5.90.20
-        version: 5.104.2(react@19.2.3)
+        version: 5.104.2(react@18.3.1)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.18
@@ -14417,6 +14417,12 @@ snapshots:
   zustand@5.0.15(@types/react@18.3.31)(react@18.3.1)(use-sync-external-store@1.7.0(react@18.3.1)):
     optionalDependencies:
       '@types/react': 18.3.31
+      react: 18.3.1
+      use-sync-external-store: 1.7.0(react@18.3.1)
+
+  zustand@5.0.15(@types/react@19.2.18)(react@18.3.1)(use-sync-external-store@1.7.0(react@18.3.1)):
+    optionalDependencies:
+      '@types/react': 19.2.18
       react: 18.3.1
       use-sync-external-store: 1.7.0(react@18.3.1)
 

@@ -290,9 +290,10 @@ export const useCardSpendingStats = (
   return useQuery({
     queryKey: [...queryKeys.statistics.all, "card-spending", cardId, params],
     queryFn: async () => {
-      const response = await StatisticsRepository.getCardSpendingStats(cardId, params);
+      const response = await StatisticsRepository.getCardSpendingStats(cardId || '', params);
       return response.data;
     },
+    enabled: Boolean(cardId),
   });
 };
 
@@ -312,11 +313,12 @@ export const useCardSpendingByMerchant = (
     ],
     queryFn: async () => {
       const response = await StatisticsRepository.getCardSpendingByMerchant(
-        cardId,
+        cardId || '',
         params,
       );
       return response.data;
     },
+    enabled: Boolean(cardId),
   });
 };
 

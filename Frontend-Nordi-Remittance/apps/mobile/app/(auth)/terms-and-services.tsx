@@ -19,10 +19,6 @@ import {
   ArrowLeft,
   Calendar,
   FileCheck2,
-  DollarSign,
-  Scale,
-  AlertTriangle,
-  Send,
   CheckCircle2,
 } from 'lucide-react-native';
 
@@ -35,6 +31,8 @@ import { useTermsAndConditions, useAcceptTerms } from '@nordi/shared/hooks/api-q
 import { useMobileTheme } from '@/core/theme/useMobileTheme';
 import { colors } from '@nordi/shared/constants/colors';
 import { useToastStore } from '@nordi/shared/store/toast.store';
+
+import defaultTermsData from '@/assets/legal/terms.json';
 
 export default function TermsAndServicesScreen() {
   const router = useRouter();
@@ -56,43 +54,52 @@ export default function TermsAndServicesScreen() {
 
   const acceptMutation = useAcceptTerms();
 
-  const version = legalData?.version || 'v3.1.0';
-  const effectiveDate = legalData?.effectiveDate
-    ? new Date(legalData.effectiveDate).toLocaleDateString()
-    : 'September 1, 2026';
-  const lastUpdated = legalData?.lastUpdated
-    ? new Date(legalData.lastUpdated).toLocaleDateString()
-    : 'October 12, 2026';
-
-  const termsContent = useMemo(() => {
-    if (legalData?.content) {
-      return legalData.content;
+  const activeDoc = useMemo(() => {
+    if (legalData?.sections && Array.isArray(legalData.sections) && legalData.sections.length > 0) {
+      return legalData;
     }
-    return 'These Terms of Service govern your access to and use of Nordi Remittance mobile and web cross-border payment platforms. By maintaining an active account, you accept these terms.';
+    if (legalData?.document?.sections && Array.isArray(legalData.document.sections) && legalData.document.sections.length > 0) {
+      return legalData.document;
+    }
+    return defaultTermsData;
   }, [legalData]);
 
-  const clauses = [
-    {
-      icon: Send,
-      title: '1. Service Scope & Execution',
-      body: 'Nordi Remittance provides domestic and cross-border currency transfers, FX conversion, and account holding facilities. Transfers are initiated upon complete debit authorization and are subject to clearing system processing windows.',
-    },
-    {
-      icon: Scale,
-      title: '2. Identity Verification & Compliance',
-      body: 'Users must furnish accurate, verifiable legal identity records to satisfy Anti-Money Laundering (AML) and Counter-Financing of Terrorism (CFT) requirements. Unverified accounts cannot initiate cross-border transactions exceeding baseline thresholds.',
-    },
-    {
-      icon: DollarSign,
-      title: '3. Exchange Rates & Fees',
-      body: 'Exchange rates displayed during the transfer preview include real-time interbank spreads locked for a maximum of 60 seconds. Transaction processing fees are transparently disclosed prior to final PIN/Biometric authorization.',
-    },
-    {
-      icon: AlertTriangle,
-      title: '4. Prohibited Uses & Account Holds',
-      body: 'Accounts must not be used for illicit gambling, sanction evasion, or unauthorized high-frequency financial automation. Nordi Remittance reserves statutory authority to place temporary holds on flagged transactions.',
-    },
-  ];
+  const version = activeDoc?.version || defaultTermsData.version || '1.0';
+  const effectiveDate = useMemo(() => {
+    const raw = activeDoc?.effectiveDate;
+    if (typeof raw === 'string' && !raw.includes('[INSERT')) {
+      const d = new Date(raw);
+      return !isNaN(d.getTime())
+        ? d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+        : raw;
+    }
+    return 'March 15, 2026';
+  }, [activeDoc?.effectiveDate]);
+
+  const lastUpdated = useMemo(() => {
+    const raw = activeDoc?.lastUpdated;
+    if (typeof raw === 'string' && !raw.includes('[INSERT')) {
+      const d = new Date(raw);
+      return !isNaN(d.getTime())
+        ? d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+        : raw;
+    }
+    return 'October 14, 2026';
+  }, [activeDoc?.lastUpdated]);
+
+  const overviewText = useMemo(() => {
+    if (activeDoc?.summary && !activeDoc.summary.includes('REMOVE BEFORE PUBLICATION')) {
+      return activeDoc.summary;
+    }
+    return 'These Terms and Conditions govern access to and use of Nordi Remitwave websites, mobile applications, APIs, accounts, wallets, payment services, remittance services, credit and lending products, investment services, and digital financial solutions. By opening an account or continuing to use our services, you agree to be bound by these terms.';
+  }, [activeDoc]);
+
+  const sections = useMemo(() => {
+    if (activeDoc?.sections && Array.isArray(activeDoc.sections) && activeDoc.sections.length > 0) {
+      return activeDoc.sections;
+    }
+    return defaultTermsData.sections;
+  }, [activeDoc]);
 
   const handleAccept = async () => {
     try {
@@ -135,7 +142,7 @@ export default function TermsAndServicesScreen() {
             Terms & Services
           </Text>
           <Text style={[styles.headerSubtitle, { color: theme.textMuted }]}>
-            Nordi Remittance Master Service Agreement
+            Nordi Remitwave Global Terms and Conditions
           </Text>
         </View>
         <View style={styles.headerAction}>
@@ -193,7 +200,7 @@ export default function TermsAndServicesScreen() {
                 </View>
                 <View style={styles.versionBadge}>
                   <Badge variant="primary" size="sm">
-                    {version}
+                    {`v${version}`}
                   </Badge>
                 </View>
               </View>
@@ -212,16 +219,16 @@ export default function TermsAndServicesScreen() {
               Agreement Overview
             </Text>
             <Text style={[styles.bodyText, { color: theme.textMuted }]}>
-              {termsContent}
+              {overviewText}
             </Text>
           </View>
 
-          {/* Legal Clauses */}
-          {clauses.map((clause, index) => {
-            const ClauseIcon = clause.icon;
+          {/* Complete Structured Legal Clauses */}
+          {sections.map((section: any, index: number) => {
+            const paragraphs = (section.content || '').split('\n\n').filter(Boolean);
             return (
               <Card
-                key={index}
+                key={section.id || index}
                 variant="default"
                 size="md"
                 style={[styles.clauseCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
@@ -233,15 +240,19 @@ export default function TermsAndServicesScreen() {
                       { backgroundColor: `${colors.primary[500]}15` },
                     ]}
                   >
-                    <ClauseIcon size={18} color={colors.primary[500]} />
+                    <Text style={[styles.sectionNumberText, { color: colors.primary[500] }]}>
+                      {section.sectionNumber || index + 1}
+                    </Text>
                   </View>
                   <Text style={[styles.clauseTitle, { color: theme.text }]}>
-                    {clause.title}
+                    {section.title}
                   </Text>
                 </View>
-                <Text style={[styles.clauseBody, { color: theme.textMuted }]}>
-                  {clause.body}
-                </Text>
+                {paragraphs.map((p: string, pIdx: number) => (
+                  <Text key={pIdx} style={[styles.clauseBody, { color: theme.textMuted, marginBottom: pIdx < paragraphs.length - 1 ? 8 : 0 }]}>
+                    {p}
+                  </Text>
+                ))}
               </Card>
             );
           })}
@@ -387,6 +398,10 @@ const styles = StyleSheet.create({
   clauseBody: {
     fontSize: 13,
     lineHeight: 19,
+  },
+  sectionNumberText: {
+    fontSize: 13,
+    fontWeight: '700',
   },
   actionBlock: {
     marginTop: 12,

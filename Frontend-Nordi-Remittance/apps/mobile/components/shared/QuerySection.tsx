@@ -6,8 +6,13 @@ import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 
 export interface QuerySectionProps {
   children: ReactNode;
+  query?: any;
+  loadingRows?: number;
   isLoading?: boolean;
   isError?: boolean;
+  isEmpty?: boolean;
+  emptyTitle?: string;
+  emptyDescription?: string;
   error?: Error | unknown;
   hasData?: boolean;
   title?: string;
@@ -67,8 +72,13 @@ class SectionRenderBoundary extends Component<
 
 export const QuerySection: React.FC<QuerySectionProps> = ({
   children,
+  query,
+  loadingRows,
   isLoading = false,
   isError = false,
+  isEmpty = false,
+  emptyTitle,
+  emptyDescription,
   error,
   hasData = true,
   title,
@@ -78,14 +88,34 @@ export const QuerySection: React.FC<QuerySectionProps> = ({
 }) => {
   const { isOnline } = useNetworkStatus();
 
-  const showLoading = isLoading && !hasData;
-  const showError = isError && !hasData;
-  const showStale = isError && hasData;
-  const showOfflineStale = !isOnline && hasData && !isLoading;
+  const effectiveLoading = isLoading || Boolean(query?.isLoading);
+  const effectiveError = isError || Boolean(query?.isError);
+  const effectiveErr = error || query?.error;
+  const effectiveRetry = onRetry || query?.refetch;
+  const effectiveHasData =
+    hasData &&
+    (query !== undefined
+      ? Boolean(
+          query?.data ||
+          query?.user ||
+          query?.address ||
+          query?.employment ||
+          query?.settings ||
+          (Array.isArray(query?.accounts) && query.accounts.length > 0) ||
+          (Array.isArray(query?.goals) && query.goals.length > 0) ||
+          (Array.isArray(query?.transactions) && query.transactions.length > 0)
+        )
+      : true);
+
+  const showLoading = effectiveLoading && !effectiveHasData;
+  const showError = effectiveError && !effectiveHasData;
+  const showStale = effectiveError && effectiveHasData;
+  const showOfflineStale = !isOnline && effectiveHasData && !effectiveLoading;
+  const showEmpty = isEmpty && !effectiveLoading && !effectiveError;
 
   return (
     <View style={[styles.root, minHeight ? { minHeight } : null]}>
-      <SectionRenderBoundary title={title} onRetry={onRetry}>
+      <SectionRenderBoundary title={title} onRetry={effectiveRetry}>
         {showLoading ? (
           loadingSkeleton || (
             <View style={styles.loadingContainer}>
@@ -106,6 +136,13 @@ export const QuerySection: React.FC<QuerySectionProps> = ({
                 <Ionicons name="refresh" size={16} color="#ef4444" />
                 <Text style={styles.retryText}>Retry</Text>
               </TouchableOpacity>
+            )}
+          </View>
+        ) : showEmpty ? (
+          <View style={styles.loadingContainer}>
+            <Text style={styles.errorTitle}>{emptyTitle || 'No data available'}</Text>
+            {emptyDescription && (
+              <Text style={[styles.errorMessage, { color: '#64748B' }]}>{emptyDescription}</Text>
             )}
           </View>
         ) : (

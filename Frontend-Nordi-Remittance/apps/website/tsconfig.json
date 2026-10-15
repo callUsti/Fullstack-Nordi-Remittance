@@ -24,7 +24,8 @@
       "@constants/*": ["constants/*"],
       // "@types": ["types/index"],
       "@types/*": ["types/*"],
-
+      "@nordi/shared": ["../../../packages/shared/src/index.ts"],
+      "@nordi/shared/*": ["../../../packages/shared/src/*"],
     },
     "typeRoots": ["./node_modules/@types", "./src/types"],
 

@@ -28,6 +28,7 @@ config.resolver.extraNodeModules = {
     workspaceRoot,
     "node_modules/@tanstack/react-query"
   ),
+  "@nordi/shared": path.resolve(workspaceRoot, "packages/shared/src"),
 };
 
 module.exports = withNativeWind(config, { input: "./global.css" });

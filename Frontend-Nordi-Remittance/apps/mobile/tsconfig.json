@@ -32,6 +32,12 @@
       ],
       "@types/*": [
         "./types/*"
+      ],
+      "@nordi/shared": [
+        "../../packages/shared/src/index.ts"
+      ],
+      "@nordi/shared/*": [
+        "../../packages/shared/src/*"
       ]
     }
   },

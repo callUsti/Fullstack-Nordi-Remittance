@@ -163,6 +163,13 @@ declare global {
     internalNotes?: string;
   }
 
+  interface LegalSection {
+    id: string;
+    sectionNumber: string | null;
+    title: string;
+    content: string;
+  }
+
   interface LegalDocument extends Timestamps {
     documentId: UUID;
     title: string;
@@ -171,8 +178,12 @@ declare global {
     summary?: string;
     version: string;
     effectiveDate: ISO8601Date;
+    lastUpdated?: ISO8601Date;
     requiresConsent: boolean;
     status: 'draft' | 'active' | 'archived';
+    header?: Record<string, string>;
+    sections?: LegalSection[];
+    checksum?: string;
     createdBy?: UUID;
     updatedBy?: UUID;
   }

@@ -45,18 +45,20 @@ export type TransactionCategory =
   | 'other';
 
 export interface TransactionItemProps {
-  id: string;
-  title: string;
+  id?: string;
+  title?: string;
   description?: string;
-  amount: number;
+  amount?: number;
   currency?: string;
-  type: TransactionType;
+  type?: TransactionType;
   status?: TransactionStatus;
   category?: TransactionCategory;
-  date: string;
+  date?: string;
   time?: string;
   recipientName?: string;
   recipientAvatar?: string;
+  transaction?: any;
+  reference?: string;
   onPress?: () => void;
   onClick?: () => void;
   className?: string;
@@ -97,22 +99,20 @@ const getCategoryIcon = (category?: TransactionCategory, type?: TransactionType)
   }
 };
 
-export const TransactionItem: React.FC<TransactionItemProps> = ({
-  title,
-  description,
-  amount,
-  currency = 'USD',
-  type = 'debit',
-  status = 'completed',
-  category,
-  date,
-  time,
-  recipientName,
-  recipientAvatar,
-  onPress,
-  onClick,
-  className,
-}) => {
+export const TransactionItem: React.FC<TransactionItemProps> = (props) => {
+  const tx = props.transaction ? { ...props.transaction, ...props } : props;
+  const title = tx.title || tx.description || tx.reference || 'Transaction';
+  const description = tx.description || tx.senderName || tx.recipientName || '';
+  const amount = Number(tx.amount || 0);
+  const currency = tx.currency || 'USD';
+  const type = (tx.type as TransactionType) || (amount >= 0 ? 'credit' : 'debit');
+  const status = (tx.status as TransactionStatus) || 'completed';
+  const category = tx.category as TransactionCategory | undefined;
+  const date = tx.date || (tx.createdAt ? new Date(tx.createdAt).toLocaleDateString() : '');
+  const time = tx.time;
+  const recipientName = tx.recipientName;
+  const recipientAvatar = tx.recipientAvatar;
+  const { onPress, onClick, className } = props;
   const isCredit = type === 'credit' || type === 'refund';
   const handlePress = onPress || onClick;
 

@@ -42,7 +42,7 @@ export default function IndexPage() {
   }, []);
 
   // Show clean loader while inspecting local storage and auth store
-  if (!initialized) {
+  if (!initialized || !isInitialized) {
     return <ScreenLoader message="Starting Nordea Banking..." />;
   }
 

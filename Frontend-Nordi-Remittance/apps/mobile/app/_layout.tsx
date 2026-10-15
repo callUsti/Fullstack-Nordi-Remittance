@@ -46,6 +46,7 @@ export default function RootLayout() {
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
   const [startupInitialized, setStartupInitialized] = useState(false);
   const [startupError, setStartupError] = useState<string | null>(null);
+  const [motionSplashDone, setMotionSplashDone] = useState(false);
 
   const initializeStartup = useCallback(async () => {
     setStartupError(null);
@@ -78,14 +79,6 @@ export default function RootLayout() {
     return () => subscription.remove();
   }, []);
 
-  useEffect(() => {
-    if (fontsLoaded) {
-      void SplashScreen.hideAsync().catch((error: unknown) => {
-        console.error('Unable to hide the native splash screen:', error);
-      });
-    }
-  }, [fontsLoaded]);
-
   if (!fontsLoaded) return null;
 
   const appInitialized =
@@ -105,10 +98,17 @@ export default function RootLayout() {
               <Stack.Screen name="screens" options={{ headerShown: false }} />
               <Stack.Screen name="+not-found" />
             </Stack>
-            {!appInitialized && (
+            {!motionSplashDone && (
               <View style={StyleSheet.absoluteFill}>
                 <MotionSplashScreen
+                  ready={appInitialized}
                   error={startupError}
+                  onShown={() => {
+                    void SplashScreen.hideAsync().catch(() => {});
+                  }}
+                  onFinish={() => {
+                    setMotionSplashDone(true);
+                  }}
                   onRetry={startupError ? initializeStartup : undefined}
                 />
               </View>

@@ -1,18 +1,16 @@
 // ============================================================================
-// SEARCH INPUT - Search input with animations and optional filters
+// SEARCH INPUT - React Native search input with clear and filter options
 // ============================================================================
 
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@utils/cn';
-import { Search, X, SlidersHorizontal, Loader2 } from 'lucide-react';
+import React from 'react';
+import { View, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, StyleProp, ViewStyle } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useMobileTheme } from '@/core/theme/useMobileTheme';
 
-// ========================
-// TYPES
-// ========================
 export interface SearchInputProps {
   value?: string;
   onChange?: (value: string) => void;
+  onChangeText?: (value: string) => void;
   onSearch?: (value: string) => void;
   placeholder?: string;
   size?: 'sm' | 'md' | 'lg';
@@ -24,44 +22,21 @@ export interface SearchInputProps {
   autoFocus?: boolean;
   debounceMs?: number;
   className?: string;
+  style?: StyleProp<ViewStyle>;
 }
 
-// ========================
-// SIZE STYLES
-// ========================
-const sizeStyles = {
-  sm: {
-    input: 'h-8 text-sm pl-8 pr-8',
-    icon: 'w-4 h-4 left-2.5',
-    clearIcon: 'w-3.5 h-3.5 right-2',
-  },
-  md: {
-    input: 'h-10 text-sm pl-10 pr-10',
-    icon: 'w-5 h-5 left-3',
-    clearIcon: 'w-4 h-4 right-3',
-  },
-  lg: {
-    input: 'h-12 text-base pl-12 pr-12',
-    icon: 'w-6 h-6 left-3.5',
-    clearIcon: 'w-5 h-5 right-3.5',
-  },
-};
+export interface SearchSuggestion {
+  id: string;
+  label: string;
+  category?: string;
+}
 
-// ========================
-// VARIANT STYLES
-// ========================
-const variantStyles = {
-  default: 'bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:border-primary-500 focus:ring-2 focus:ring-primary-100',
-  filled: 'bg-neutral-100 dark:bg-neutral-700 border-transparent focus:bg-white dark:bg-neutral-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-100',
-  outlined: 'bg-transparent border-2 border-neutral-200 dark:border-neutral-700 focus:border-primary-500',
-};
+export type SearchBarProps = SearchInputProps;
 
-// ========================
-// COMPONENT
-// ========================
 export const SearchInput: React.FC<SearchInputProps> = ({
-  value: controlledValue,
+  value = '',
   onChange,
+  onChangeText,
   onSearch,
   placeholder = 'Search...',
   size = 'md',
@@ -71,273 +46,94 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   showFilterButton = false,
   onFilterClick,
   autoFocus = false,
-  debounceMs = 300,
-  className,
+  style,
 }) => {
-  const [internalValue, setInternalValue] = useState('');
-  const [isFocused, setIsFocused] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const debounceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  );
+  const theme = useMobileTheme();
 
-  const value = controlledValue !== undefined ? controlledValue : internalValue;
-  const styles = sizeStyles[size];
-
-  useEffect(() => {
-    if (autoFocus && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [autoFocus]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    
-    if (controlledValue === undefined) {
-      setInternalValue(newValue);
-    }
-    
-    onChange?.(newValue);
-
-    // Debounced search
-    if (onSearch && debounceMs > 0) {
-      clearTimeout(debounceTimer.current);
-      debounceTimer.current = setTimeout(() => {
-        onSearch(newValue);
-      }, debounceMs);
-    }
+  const handleChange = (text: string) => {
+    if (onChangeText) onChangeText(text);
+    if (onChange) onChange(text);
   };
 
   const handleClear = () => {
-    if (controlledValue === undefined) {
-      setInternalValue('');
-    }
-    onChange?.('');
-    onSearch?.('');
-    inputRef.current?.focus();
+    if (onChangeText) onChangeText('');
+    if (onChange) onChange('');
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && onSearch) {
-      clearTimeout(debounceTimer.current);
-      onSearch(value);
-    }
-    if (e.key === 'Escape') {
-      handleClear();
-    }
-  };
+  const iconSize = size === 'sm' ? 16 : size === 'lg' ? 22 : 18;
+  const height = size === 'sm' ? 36 : size === 'lg' ? 48 : 42;
 
   return (
-    <div className={cn('relative', className)}>
-      {/* Search icon */}
-      <motion.div
-        animate={{ scale: isFocused ? 1.1 : 1 }}
-        className={cn(
-          'absolute top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none',
-          styles.icon
-        )}
-      >
-        {isLoading ? (
-          <Loader2 className="animate-spin" />
-        ) : (
-          <Search />
-        )}
-      </motion.div>
-
-      {/* Input */}
-      <input
-        ref={inputRef}
-        type="text"
+    <View
+      style={[
+        styles.container,
+        {
+          height,
+          backgroundColor: variant === 'filled' ? theme.surfaceAlt : theme.surface,
+          borderColor: variant === 'outlined' ? theme.primary : theme.border,
+        },
+        style,
+      ]}
+    >
+      <Ionicons name="search-outline" size={iconSize} color={theme.textMuted} style={styles.searchIcon} />
+      <TextInput
         value={value}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
+        onChangeText={handleChange}
+        onSubmitEditing={() => onSearch?.(value)}
         placeholder={placeholder}
-        className={cn(
-          'w-full rounded-lg outline-none transition-all',
+        placeholderTextColor={theme.textMuted}
+        autoFocus={autoFocus}
+        style={[
           styles.input,
-          variantStyles[variant],
-          showFilterButton && 'pr-20'
-        )}
+          {
+            color: theme.text,
+            fontSize: size === 'sm' ? 13 : size === 'lg' ? 16 : 14,
+          },
+        ]}
       />
-
-      {/* Clear button */}
-      <AnimatePresence>
-        {showClearButton && value && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={handleClear}
-            className={cn(
-              'absolute top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 transition-colors',
-              styles.clearIcon,
-              showFilterButton && 'right-12'
-            )}
-          >
-            <X />
-          </motion.button>
-        )}
-      </AnimatePresence>
-
-      {/* Filter button */}
-      {showFilterButton && (
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          onClick={onFilterClick}
-          className={cn(
-            'absolute top-1/2 -translate-y-1/2 right-3 p-1.5 rounded-md',
-            'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:bg-neutral-700 transition-colors'
-          )}
-        >
-          <SlidersHorizontal className="w-4 h-4" />
-        </motion.button>
-      )}
-    </div>
+      {isLoading ? (
+        <ActivityIndicator size="small" color={theme.primary} style={styles.actionIcon} />
+      ) : showClearButton && value.length > 0 ? (
+        <TouchableOpacity onPress={handleClear} style={styles.actionIcon}>
+          <Ionicons name="close-circle" size={16} color={theme.textMuted} />
+        </TouchableOpacity>
+      ) : null}
+      {showFilterButton ? (
+        <TouchableOpacity onPress={onFilterClick} style={styles.filterBtn}>
+          <Ionicons name="options-outline" size={18} color={theme.primary} />
+        </TouchableOpacity>
+      ) : null}
+    </View>
   );
 };
 
-// ========================
-// SEARCH BAR WITH SUGGESTIONS
-// ========================
-export interface SearchSuggestion {
-  id: string;
-  label: string;
-  icon?: React.ReactNode;
-  category?: string;
-}
-
-export interface SearchBarProps extends Omit<SearchInputProps, 'value' | 'onChange'> {
-  suggestions?: SearchSuggestion[];
-  onSuggestionSelect?: (suggestion: SearchSuggestion) => void;
-  showRecent?: boolean;
-  recentSearches?: string[];
-  onClearRecent?: () => void;
-}
-
-export const SearchBar: React.FC<SearchBarProps> = ({
-  suggestions = [],
-  onSuggestionSelect,
-  showRecent = false,
-  recentSearches = [],
-  onClearRecent,
-  onSearch,
-  ...props
-}) => {
-  const [value, setValue] = useState('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setShowSuggestions(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleChange = (newValue: string) => {
-    setValue(newValue);
-    setShowSuggestions(true);
-  };
-
-  const handleSelect = (suggestion: SearchSuggestion) => {
-    setValue(suggestion.label);
-    setShowSuggestions(false);
-    onSuggestionSelect?.(suggestion);
-    onSearch?.(suggestion.label);
-  };
-
-  const filteredSuggestions = suggestions.filter(s => 
-    s.label.toLowerCase().includes(value.toLowerCase())
-  );
-
-  return (
-    <div ref={wrapperRef} className="relative">
-      <SearchInput
-        {...props}
-        value={value}
-        onChange={handleChange}
-        onSearch={onSearch}
-      />
-
-      <AnimatePresence>
-        {showSuggestions && (value || (showRecent && recentSearches.length > 0)) && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden z-50"
-          >
-            {/* Recent searches */}
-            {showRecent && !value && recentSearches.length > 0 && (
-              <div className="p-2">
-                <div className="flex items-center justify-between px-2 mb-1">
-                  <span className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">Recent</span>
-                  {onClearRecent && (
-                    <button
-                      onClick={onClearRecent}
-                      className="text-xs text-primary-600 hover:text-primary-700"
-                    >
-                      Clear
-                    </button>
-                  )}
-                </div>
-                {recentSearches.map((search, index) => (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      setValue(search);
-                      onSearch?.(search);
-                      setShowSuggestions(false);
-                    }}
-                    className="w-full px-3 py-2 text-left text-sm text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-700 dark:bg-neutral-700/50 rounded-md transition-colors"
-                  >
-                    {search}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Suggestions */}
-            {value && filteredSuggestions.length > 0 && (
-              <div className="max-h-64 overflow-y-auto p-2">
-                {filteredSuggestions.map((suggestion) => (
-                  <button
-                    key={suggestion.id}
-                    onClick={() => handleSelect(suggestion)}
-                    className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-neutral-50 dark:hover:bg-neutral-700 dark:bg-neutral-700/50 rounded-md transition-colors"
-                  >
-                    {suggestion.icon && (
-                      <span className="text-neutral-400">{suggestion.icon}</span>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-neutral-900 dark:text-white truncate">{suggestion.label}</p>
-                      {suggestion.category && (
-                        <p className="text-xs text-neutral-500 dark:text-neutral-400">{suggestion.category}</p>
-                      )}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* No results */}
-            {value && filteredSuggestions.length === 0 && (
-              <div className="p-4 text-center text-sm text-neutral-500 dark:text-neutral-400">
-                No results found
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
-
+export const SearchBar = SearchInput;
 export default SearchInput;
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  input: {
+    flex: 1,
+    height: '100%',
+    paddingVertical: 0,
+  },
+  actionIcon: {
+    marginLeft: 6,
+    padding: 2,
+  },
+  filterBtn: {
+    marginLeft: 8,
+    paddingLeft: 8,
+    borderLeftWidth: StyleSheet.hairlineWidth,
+    borderLeftColor: '#CBD5E1',
+  },
+});

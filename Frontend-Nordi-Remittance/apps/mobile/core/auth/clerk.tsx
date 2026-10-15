@@ -95,6 +95,7 @@ export function useClerkSocialAuth() {
 
   // If clerk is available, useOAuth flow
   const { startOAuthFlow } = useOAuth({ strategy: 'oauth_google' });
+  const { isSignedIn, signOut, getToken } = useClerkAuth();
 
   const signInWithGoogle = async (navigator: any) => {
     if (!isClerkAvailable) {
@@ -102,6 +103,15 @@ export function useClerkSocialAuth() {
     }
 
     try {
+      // 1. If previously signed in with Clerk, cleanly sign out first to prevent session collisions
+      if (isSignedIn) {
+        try {
+          await signOut();
+        } catch {
+          // non-blocking
+        }
+      }
+
       const redirectUrl = Linking.createURL('/(auth)/login', { scheme: 'nordi' });
       const { createdSessionId, setActive } = await startOAuthFlow({
         redirectUrl,
@@ -110,8 +120,16 @@ export function useClerkSocialAuth() {
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
         
-        // Retrieve session token from SecureStore or wait for Clerk session
-        const sessionToken = await tokenCache.getToken('__clerk_client_jwt') || createdSessionId;
+        // Retrieve session token from Clerk or token cache
+        let sessionToken: string | null = null;
+        try {
+          sessionToken = await getToken();
+        } catch {
+          // fallback
+        }
+        if (!sessionToken) {
+          sessionToken = (await tokenCache.getToken('__clerk_client_jwt')) || createdSessionId;
+        }
         
         // Sync with backend
         const response = await clerkSyncMutation.mutateAsync(sessionToken);

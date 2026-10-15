@@ -2,16 +2,15 @@
 // LOGIN SCREEN — Nordea Internet Banking (Mobile)
 // ============================================================================
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   Linking,
-  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Mail, Lock, ShieldAlert, Globe, ExternalLink } from 'lucide-react-native';
+import { Mail, Lock, Globe, ExternalLink } from 'lucide-react-native';
 import * as WebBrowser from 'expo-web-browser';
 
 // Reusable Components
@@ -21,6 +20,8 @@ import { Button, Input } from '@/components/ui';
 // Shared hooks & stores
 import { useLogin } from '@nordi/shared/hooks/api-queries/useAuth';
 import { useAuthStore } from '@nordi/shared/store/auth.store';
+import { useToast } from '@nordi/shared/store/toast.store';
+import { TokenManager } from '@nordi/shared/core/api/client';
 import { useClerkSocialAuth } from '@/core/auth/clerk';
 import { useMobileTheme } from '@/core/theme/useMobileTheme';
 
@@ -32,37 +33,58 @@ const WEB_SIGNUP_URL =
 export default function LoginScreen() {
   const router = useRouter();
   const theme = useMobileTheme();
-  const { setAuthenticated } = useAuthStore();
+  const toast = useToast();
+  const { isAuthenticated, user, setAuthenticated } = useAuthStore();
   const loginMutation = useLogin();
-  const { signInWithGoogle, isLoading: isSocialLoading, isClerkAvailable } = useClerkSocialAuth();
+  const { signInWithGoogle, isLoading: isSocialLoading } = useClerkSocialAuth();
 
   // Form State
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // 1. If user is already authenticated, immediately route them away from login
+  useEffect(() => {
+    if (isAuthenticated) {
+      if (user && user.isEmailVerified === false) {
+        router.replace('/(auth)/verify-email');
+      } else {
+        router.replace('/(tabs)');
+      }
+    }
+  }, [isAuthenticated, user, router]);
+
+  // 2. Clear any stale tokens if unauthenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      TokenManager.clearTokens();
+    }
+  }, [isAuthenticated]);
 
   const validate = (): boolean => {
     let valid = true;
     setEmailError('');
     setPasswordError('');
-    setErrorMessage(null);
 
     const emailTrimmed = email.trim();
     if (!emailTrimmed) {
       setEmailError('Email is required');
+      toast.error('Email address is required');
       valid = false;
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)) {
       setEmailError('Please enter a valid email address');
+      toast.error('Please enter a valid email address');
       valid = false;
     }
 
     if (!password) {
       setPasswordError('Password is required');
+      if (valid) toast.error('Password is required');
       valid = false;
     } else if (password.length < 6) {
       setPasswordError('Password must be at least 6 characters');
+      if (valid) toast.error('Password must be at least 6 characters');
       valid = false;
     }
 
@@ -72,14 +94,14 @@ export default function LoginScreen() {
   // Direct Credentials Sign In
   const handleLogin = async () => {
     if (!validate()) return;
-    setErrorMessage(null);
 
     try {
       const response = await loginMutation.mutateAsync({
         email: email.trim().toLowerCase(),
         password,
       });
-      // 1. Check for Step-Up 2FA / OTP requirement
+
+      // Step-Up 2FA / OTP requirement
       const res = response as any;
       if (res.requiresTwoFactor || res.requires2FA || res.requiresOtp) {
         router.push({
@@ -93,7 +115,7 @@ export default function LoginScreen() {
         return;
       }
 
-      // 2. Auth Store setup
+      // Update Auth Store
       if (res.user) {
         const u = res.user as any;
         setAuthenticated({
@@ -109,24 +131,24 @@ export default function LoginScreen() {
         });
       }
 
-      // 3. Navigate to Dashboard
+      // Navigate to Dashboard
       router.replace('/(tabs)');
     } catch (err: any) {
       const msg =
         err?.response?.data?.message ||
         err?.message ||
         'Authentication failed. Please verify your credentials.';
-      setErrorMessage(msg);
+      toast.error(msg);
     }
   };
 
   // Google Social Sign In via Clerk
   const handleGoogleSignIn = async () => {
-    setErrorMessage(null);
     try {
       await signInWithGoogle(router);
     } catch (err: any) {
-      setErrorMessage(err?.message || 'Google sign-in could not be completed.');
+      const msg = err?.message || 'Google sign-in could not be completed.';
+      toast.error(msg);
     }
   };
 
@@ -154,22 +176,15 @@ export default function LoginScreen() {
       }}
     >
       <View className="space-y-4">
-        {/* Error Alert */}
-        {(errorMessage || loginMutation.error) && (
-          <View className="flex-row items-center gap-2.5 p-3.5 rounded-xl bg-error-50 dark:bg-error-950/40 border border-error-200 dark:border-error-800">
-            <ShieldAlert size={18} color={theme.danger} />
-            <Text className="flex-1 text-xs font-medium text-error-700 dark:text-error-300">
-              {errorMessage || loginMutation.error?.message || 'Sign in error'}
-            </Text>
-          </View>
-        )}
-
         {/* Email Input */}
         <Input
           label="Email Address"
           placeholder="name@example.com"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(val) => {
+            setEmail(val);
+            if (emailError) setEmailError('');
+          }}
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
@@ -182,7 +197,10 @@ export default function LoginScreen() {
           label="Password"
           placeholder="Enter your account password"
           value={password}
-          onChangeText={setPassword}
+          onChangeText={(val) => {
+            setPassword(val);
+            if (passwordError) setPasswordError('');
+          }}
           isPassword
           leftIcon={<Lock size={18} color={theme.iconMuted} />}
           error={passwordError}
@@ -257,27 +275,6 @@ export default function LoginScreen() {
           >
             Register on Web Platform
           </Button>
-        </View>
-
-        {/* Legal & Support Links */}
-        <View className="mt-6 flex-row items-center justify-center flex-wrap gap-x-3 gap-y-1 pb-2">
-          <TouchableOpacity onPress={() => router.push('/(auth)/terms-and-services')}>
-            <Text className="text-[11px] text-neutral-500 dark:text-neutral-400 underline">
-              Terms of Service
-            </Text>
-          </TouchableOpacity>
-          <Text className="text-neutral-400 text-[10px]">•</Text>
-          <TouchableOpacity onPress={() => router.push('/(auth)/privacy-policy')}>
-            <Text className="text-[11px] text-neutral-500 dark:text-neutral-400 underline">
-              Privacy Policy
-            </Text>
-          </TouchableOpacity>
-          <Text className="text-neutral-400 text-[10px]">•</Text>
-          <TouchableOpacity onPress={() => router.push('/(auth)/contact')}>
-            <Text className="text-[11px] text-primary-600 dark:text-primary-400 font-medium">
-              Contact & AI Support
-            </Text>
-          </TouchableOpacity>
         </View>
       </View>
     </AuthLayout>

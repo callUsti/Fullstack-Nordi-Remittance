@@ -17,6 +17,7 @@
       "types": "./src/*.ts",
       "default": "./src/*.ts"
     },
+    "./client-usecase": "./src/client-usecase/index.ts",
     "./domain/types": "./src/domain/types/index.ts"
   },
   "scripts": {

@@ -265,21 +265,35 @@ export const LegalRepository = {
    */
   getTermsAndConditions: async (): Promise<
     ApiResponse<{
+      title?: string;
+      summary?: string;
       version: string;
       content: string;
       effectiveDate: string;
       lastUpdated: string;
+      header?: Record<string, string>;
+      sections?: Array<{ id: string; sectionNumber: string | null; title: string; content: string }>;
+      document?: any;
     }>
   > => {
-    const response = await apiClient.get<
-      ApiResponse<{
-        version: string;
-        content: string;
-        effectiveDate: string;
-        lastUpdated: string;
-      }>
-    >(ApiEndpoints.legalTerms);
-    return response.data;
+    const response = await apiClient.get<any>(ApiEndpoints.legalTerms);
+    const raw = response.data?.data || response.data;
+    const doc = raw?.document || raw;
+    return {
+      success: response.data?.success ?? true,
+      message: response.data?.message ?? "Terms retrieved successfully",
+      data: {
+        title: doc?.title || raw?.title || "Terms and Conditions",
+        summary: doc?.summary || raw?.summary,
+        version: doc?.version || raw?.version || "1.0",
+        content: doc?.content || raw?.content || "",
+        effectiveDate: doc?.effectiveDate || raw?.effectiveDate || new Date().toISOString(),
+        lastUpdated: doc?.lastUpdated || doc?.updatedAt || raw?.lastUpdated || new Date().toISOString(),
+        header: doc?.header || raw?.header,
+        sections: doc?.sections || raw?.sections,
+        document: doc,
+      },
+    };
   },
 
   /**
@@ -287,21 +301,35 @@ export const LegalRepository = {
    */
   getPrivacyPolicy: async (): Promise<
     ApiResponse<{
+      title?: string;
+      summary?: string;
       version: string;
       content: string;
       effectiveDate: string;
       lastUpdated: string;
+      header?: Record<string, string>;
+      sections?: Array<{ id: string; sectionNumber: string | null; title: string; content: string }>;
+      document?: any;
     }>
   > => {
-    const response = await apiClient.get<
-      ApiResponse<{
-        version: string;
-        content: string;
-        effectiveDate: string;
-        lastUpdated: string;
-      }>
-    >(ApiEndpoints.legalPrivacy);
-    return response.data;
+    const response = await apiClient.get<any>(ApiEndpoints.legalPrivacy);
+    const raw = response.data?.data || response.data;
+    const doc = raw?.document || raw;
+    return {
+      success: response.data?.success ?? true,
+      message: response.data?.message ?? "Privacy policy retrieved successfully",
+      data: {
+        title: doc?.title || raw?.title || "Privacy Policy",
+        summary: doc?.summary || raw?.summary,
+        version: doc?.version || raw?.version || "1.0",
+        content: doc?.content || raw?.content || "",
+        effectiveDate: doc?.effectiveDate || raw?.effectiveDate || new Date().toISOString(),
+        lastUpdated: doc?.lastUpdated || doc?.updatedAt || raw?.lastUpdated || new Date().toISOString(),
+        header: doc?.header || raw?.header,
+        sections: doc?.sections || raw?.sections,
+        document: doc,
+      },
+    };
   },
 
   /**
@@ -309,6 +337,7 @@ export const LegalRepository = {
    */
   acceptTerms: async (
     version: string,
+    documentType: string = "terms",
   ): Promise<
     ApiResponse<{
       accepted: boolean;
@@ -320,7 +349,7 @@ export const LegalRepository = {
         accepted: boolean;
         acceptedAt: string;
       }>
-    >(ApiEndpoints.legalAcceptTerms, { version });
+    >(ApiEndpoints.legalAcceptTerms, { version, documentType });
     return response.data;
   },
 

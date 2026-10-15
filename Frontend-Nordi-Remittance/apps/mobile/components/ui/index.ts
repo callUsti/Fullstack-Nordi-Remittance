@@ -5,6 +5,9 @@
 export { Button, IconButton } from './Button';
 export type { ButtonProps, ButtonVariant, ButtonSize, IconButtonProps } from './Button';
 
+export { DebouncedTouchable } from './DebouncedTouchable';
+export type { DebouncedTouchableProps } from './DebouncedTouchable';
+
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './Card';
 export type { CardProps, CardVariant, CardSize } from './Card';
 

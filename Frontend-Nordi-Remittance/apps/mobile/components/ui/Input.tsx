@@ -78,13 +78,13 @@ const variantStyles: Record<
 > = {
   default: {
     base: 'border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 rounded-xl',
-    focus: 'border-primary-500 ring-2 ring-primary-500/20',
+    focus: 'border-primary-500',
     error: 'border-error-500',
   },
   filled: {
-    base: 'border-0 bg-neutral-100 dark:bg-neutral-800 rounded-xl',
-    focus: 'bg-neutral-50 dark:bg-neutral-700 border border-primary-500',
-    error: 'border border-error-500',
+    base: 'border border-transparent bg-neutral-100 dark:bg-neutral-800 rounded-xl',
+    focus: 'border-primary-500 bg-neutral-50 dark:bg-neutral-700',
+    error: 'border-error-500',
   },
   flushed: {
     base: 'border-b-2 border-neutral-300 dark:border-neutral-700 bg-transparent rounded-none px-0',
@@ -166,14 +166,20 @@ export const Input = forwardRef<TextInput, InputProps>(
             value={value}
             editable={editable}
             secureTextEntry={isPassword && !showPassword}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
             placeholderTextColor={theme.textMuted}
+            {...props}
+            onFocus={(e) => {
+              setIsFocused(true);
+              props.onFocus?.(e);
+            }}
+            onBlur={(e) => {
+              setIsFocused(false);
+              props.onBlur?.(e);
+            }}
             className={cn(
               'flex-1 text-neutral-900 dark:text-white py-0',
               currentSize.input,
             )}
-            {...props}
           />
 
           {/* Right Action Icons */}
