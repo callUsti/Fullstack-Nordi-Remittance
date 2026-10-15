@@ -199,6 +199,13 @@ ChargebackSchema.index({ card: 1, filedDate: -1 });
 ChargebackSchema.index({ merchant: 1, status: 1 });
 
 // Legal Documents Schema - for Terms, Privacy Policy, etc.
+const LegalSectionSchema = new Schema({
+  id: { type: String, required: true },
+  sectionNumber: { type: String, default: null },
+  title: { type: String, required: true },
+  content: { type: String, required: true }
+}, { _id: false });
+
 const LegalDocumentSchema = new Schema({
   documentId: { type: String, required: true, unique: true, default: uuidv4 },
   title: { type: String, required: true },
@@ -207,12 +214,16 @@ const LegalDocumentSchema = new Schema({
     enum: ['terms', 'privacy', 'cookie', 'aml', 'kyc', 'user_agreement', 'other'], 
     required: true 
   },
-  content: { type: String, required: true },
+  content: { type: String, default: '' },
   summary: { type: String },
+  header: { type: Schema.Types.Mixed },
+  sections: [LegalSectionSchema],
   version: { type: String, required: true },
-  effectiveDate: { type: Date, required: true },
+  effectiveDate: { type: Date, required: true, default: Date.now },
+  lastUpdated: { type: Date, default: Date.now },
   requiresConsent: { type: Boolean, default: true },
   status: { type: String, enum: ['draft', 'active', 'archived'], default: 'draft' },
+  checksum: { type: String },
   createdBy: { type: String, ref: 'Users' },
   updatedBy: { type: String, ref: 'Users' },
   createdAt: { type: Date, default: Date.now },
@@ -223,7 +234,7 @@ const LegalDocumentSchema = new Schema({
 const UserConsentSchema = new Schema({
   consentId: { type: String, required: true, unique: true, default: uuidv4 },
   user: { type: String, ref: 'Users', required: true },
-  document: { type: Schema.Types.ObjectId, ref: 'LegalDocuments', required: true },
+  document: { type: Schema.Types.ObjectId, ref: 'LegalDocuments', required: false },
   documentType: { type: String, required: true },
   documentVersion: { type: String, required: true },
   consentType: { type: String, enum: ['explicit', 'implicit', 'opt_in', 'opt_out'], default: 'explicit' },

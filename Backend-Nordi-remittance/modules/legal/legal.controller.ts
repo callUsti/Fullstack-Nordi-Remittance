@@ -1,7 +1,4 @@
-// ============================================================================
-// LEGAL CONTROLLER
-// ============================================================================
-
+import mongoose from "mongoose";
 import { Response, NextFunction } from "express";
 import type { AuthenticatedRequest } from "../../types/index.js";
 import {
@@ -33,6 +30,48 @@ import { WS } from "../../core/constants/ws-events.js";
 // Initialize email content generator
 const emailGenerator = new EmailContentGenerator();
 
+import termsData from "../../core/data/terms.json" with { type: "json" };
+import privacyData from "../../core/data/privacy-policy.json" with { type: "json" };
+
+// ============================================================================
+// DEFAULT LEGAL DOCUMENTS
+// Loaded from structured JSON data files in core/data/
+// ============================================================================
+const DEFAULT_LEGAL_DOCUMENTS: Record<string, any> = {
+  terms: {
+    ...termsData,
+    effectiveDate: new Date("2026-01-01T00:00:00Z"),
+    requiresConsent: true,
+    status: "active",
+  },
+  privacy: {
+    ...privacyData,
+    effectiveDate: new Date("2026-01-01T00:00:00Z"),
+    requiresConsent: true,
+    status: "active",
+  },
+};
+
+function normalizeDocType(raw: string): "terms" | "privacy" | string {
+  const lower = raw.toLowerCase().trim();
+  if (
+    lower === "privacy" ||
+    lower === "privacy_policy" ||
+    lower === "privacy-policy"
+  ) {
+    return "privacy";
+  }
+  if (
+    lower === "terms" ||
+    lower === "terms_and_conditions" ||
+    lower === "terms-and-services" ||
+    lower === "terms-and-conditions"
+  ) {
+    return "terms";
+  }
+  return lower;
+}
+
 // ============================================================================
 // LEGAL DOCUMENTS
 // ============================================================================
@@ -46,12 +85,92 @@ export async function getLegalDocuments(
     const filter: any = { status: "active" };
     if (req.query.type) filter.documentType = req.query.type;
 
-    const documents = await LegalDocuments.find(filter)
+    let documents = await LegalDocuments.find(filter)
       .select("title documentType version effectiveDate summary")
       .sort({ documentType: 1, effectiveDate: -1 })
       .lean();
 
+    if (documents.length === 0) {
+      documents = Object.values(DEFAULT_LEGAL_DOCUMENTS).map((d) => ({
+        title: d.title,
+        documentType: d.documentType,
+        version: d.version,
+        effectiveDate: d.effectiveDate,
+        summary: d.summary,
+      })) as any;
+    }
+
     sendSuccess(res, { documents });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getPrivacyPolicy(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    let document = await LegalDocuments.findOne({
+      documentType: "privacy",
+      status: "active",
+    })
+      .sort({ effectiveDate: -1 })
+      .lean();
+
+    if (!document && DEFAULT_LEGAL_DOCUMENTS.privacy) {
+      document = DEFAULT_LEGAL_DOCUMENTS.privacy;
+    }
+
+    if (!document) throw new NotFoundError("Privacy policy document not found");
+
+    sendSuccess(res, {
+      document,
+      version: document.version,
+      content: document.content || "",
+      title: document.title,
+      summary: document.summary,
+      effectiveDate: document.effectiveDate,
+      lastUpdated: (document as any).lastUpdated || (document as any).updatedAt || document.effectiveDate,
+      sections: document.sections || [],
+      header: (document as any).header,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getTermsOfService(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    let document = await LegalDocuments.findOne({
+      documentType: "terms",
+      status: "active",
+    })
+      .sort({ effectiveDate: -1 })
+      .lean();
+
+    if (!document && DEFAULT_LEGAL_DOCUMENTS.terms) {
+      document = DEFAULT_LEGAL_DOCUMENTS.terms;
+    }
+
+    if (!document) throw new NotFoundError("Terms of service document not found");
+
+    sendSuccess(res, {
+      document,
+      version: document.version,
+      content: document.content || "",
+      title: document.title,
+      summary: document.summary,
+      effectiveDate: document.effectiveDate,
+      lastUpdated: (document as any).lastUpdated || (document as any).updatedAt || document.effectiveDate,
+      sections: document.sections || [],
+      header: (document as any).header,
+    });
   } catch (error) {
     next(error);
   }
@@ -63,12 +182,51 @@ export async function getLegalDocumentById(
   next: NextFunction,
 ): Promise<void> {
   try {
-    const { id } = req.params;
+    let rawId = req.params.documentId || req.params.id;
+    if (!rawId) {
+      const path = req.path || req.originalUrl || "";
+      if (path.includes("privacy")) rawId = "privacy";
+      else if (path.includes("terms")) rawId = "terms";
+      else throw new ValidationError("Document ID or document type is required");
+    }
 
-    const document = await LegalDocuments.findById(id).lean();
+    const docType = normalizeDocType(rawId);
+
+    let document = await LegalDocuments.findOne({
+      $or: [
+        { documentType: docType, status: "active" },
+        { documentId: rawId },
+        ...(mongoose.isValidObjectId(rawId) ? [{ _id: rawId }] : []),
+      ],
+    })
+      .sort({ effectiveDate: -1 })
+      .lean();
+
+    // Fallback to built-in default document if not yet in database
+    if (!document && DEFAULT_LEGAL_DOCUMENTS[docType]) {
+      const def = DEFAULT_LEGAL_DOCUMENTS[docType];
+      void LegalDocuments.findOneAndUpdate(
+        { documentType: def.documentType, status: "active" },
+        { $setOnInsert: def },
+        { upsert: true, new: true },
+      ).catch(() => { });
+
+      document = def as any;
+    }
+
     if (!document) throw new NotFoundError("Document not found");
 
-    sendSuccess(res, { document });
+    sendSuccess(res, {
+      document,
+      version: document.version,
+      content: document.content || "",
+      title: document.title,
+      summary: document.summary,
+      effectiveDate: document.effectiveDate,
+      lastUpdated: (document as any).lastUpdated || (document as any).updatedAt || document.effectiveDate,
+      sections: document.sections || [],
+      header: (document as any).header,
+    });
   } catch (error) {
     next(error);
   }
@@ -80,18 +238,86 @@ export async function getLegalDocumentByType(
   next: NextFunction,
 ): Promise<void> {
   try {
-    const { type } = req.params; // 'terms' | 'privacy' | 'cookie' | 'aml' | etc.
+    const rawType = req.params.type;
+    if (!rawType) {
+      throw new ValidationError("Document type is required");
+    }
 
-    const document = await LegalDocuments.findOne({
-      documentType: type,
+    const docType = normalizeDocType(rawType);
+
+    let document = await LegalDocuments.findOne({
+      documentType: docType,
       status: "active",
     })
       .sort({ effectiveDate: -1 })
       .lean();
 
+    if (!document && DEFAULT_LEGAL_DOCUMENTS[docType]) {
+      const def = DEFAULT_LEGAL_DOCUMENTS[docType];
+      void LegalDocuments.findOneAndUpdate(
+        { documentType: def.documentType, status: "active" },
+        { $setOnInsert: def },
+        { upsert: true, new: true },
+      ).catch(() => { });
+
+      document = def as any;
+    }
+
     if (!document) throw new NotFoundError("Document not found");
 
-    sendSuccess(res, { document });
+    sendSuccess(res, {
+      document,
+      version: document.version,
+      content: document.content || "",
+      title: document.title,
+      summary: document.summary,
+      effectiveDate: document.effectiveDate,
+      lastUpdated: (document as any).lastUpdated || (document as any).updatedAt || document.effectiveDate,
+      sections: document.sections || [],
+      header: (document as any).header,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function acceptTermsDocument(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const { version, documentType = "terms" } = req.body;
+    const userId = req.user?.userId;
+
+    if (userId) {
+      const activeDoc = await LegalDocuments.findOne({
+        documentType: normalizeDocType(documentType),
+        status: "active",
+      }).select("_id version");
+
+      await UserConsents.findOneAndUpdate(
+        { user: userId, documentType },
+        {
+          user: userId,
+          document: activeDoc?._id,
+          documentType,
+          documentVersion: version || activeDoc?.version || "1.0",
+          consentType: "explicit",
+          accepted: true,
+          consentDate: new Date(),
+          ipAddress: req.ip,
+          userAgent: req.headers["user-agent"],
+        },
+        { upsert: true, new: true },
+      );
+    }
+
+    sendSuccess(
+      res,
+      { accepted: true, acceptedAt: new Date().toISOString() },
+      "Terms accepted successfully",
+    );
   } catch (error) {
     next(error);
   }
@@ -757,6 +983,9 @@ export default {
   getLegalDocuments,
   getLegalDocumentById,
   getLegalDocumentByType,
+  getPrivacyPolicy,
+  getTermsOfService,
+  acceptTermsDocument,
   createLegalDocument,
   updateLegalDocument,
   getUserConsents,

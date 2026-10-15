@@ -34,11 +34,42 @@ router.use(sanitizeInput);
 router.get("/documents", LegalController.getLegalDocuments);
 
 /**
- * @route   GET /api/legal/documents/:documentId
- * @desc    Get specific legal document
+ * @route   GET /api/legal/documents/privacy
+ * @desc    Get privacy policy document
  * @access  Public
  */
-router.get("/documents/:documentId", LegalController.getLegalDocumentById);
+router.get("/documents/privacy", LegalController.getPrivacyPolicy);
+
+/**
+ * @route   GET /api/legal/documents/terms
+ * @desc    Get terms and conditions document
+ * @access  Public
+ */
+router.get("/documents/terms", LegalController.getTermsOfService);
+
+/**
+ * @route   POST /api/legal/documents/terms/accept
+ * @desc    Accept terms and conditions
+ * @access  Public / Optional Auth
+ */
+router.post(
+  "/documents/terms/accept",
+  optionalAuth,
+  auditLogMiddleware,
+  LegalController.acceptTermsDocument,
+);
+
+/**
+ * @route   POST /api/legal/documents/accept
+ * @desc    Accept legal document
+ * @access  Public / Optional Auth
+ */
+router.post(
+  "/documents/accept",
+  optionalAuth,
+  auditLogMiddleware,
+  LegalController.acceptTermsDocument,
+);
 
 /**
  * @route   GET /api/legal/documents/type/:type
@@ -46,6 +77,13 @@ router.get("/documents/:documentId", LegalController.getLegalDocumentById);
  * @access  Public
  */
 router.get("/documents/type/:type", LegalController.getLegalDocumentByType);
+
+/**
+ * @route   GET /api/legal/documents/:documentId
+ * @desc    Get specific legal document
+ * @access  Public
+ */
+router.get("/documents/:documentId", LegalController.getLegalDocumentById);
 
 /**
  * @route   GET /api/legal/documents/:documentId/versions

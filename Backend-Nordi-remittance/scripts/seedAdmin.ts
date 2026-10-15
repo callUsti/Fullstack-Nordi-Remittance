@@ -9,6 +9,7 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { AdminUsers, AdminPermissions } from '../modules/admin/admin.model.js';
 import { env } from '../config/env.config.js';
+import { seedLegalDocuments } from './seedLegal.js';
 
 /**
  * Seeds the super admin account from environment variables
@@ -250,6 +251,7 @@ export async function runSeeders(): Promise<void> {
   
   await seedSuperAdmin();
   await seedSystemSettings();
+  await seedLegalDocuments();
   
   console.log('\n✅ All seeders completed!\n');
 }
