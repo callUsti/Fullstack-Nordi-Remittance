@@ -52,19 +52,19 @@ const CardsOverview: React.FC = () => {
               label="Active Cards"
               value={String(activeCardsCount)}
               icon={<CreditCard size={20} />}
-              iconColor="from-indigo-500 to-purple-500"
+              iconColor="bg-blue-600"
             />
             <StatCard
               label="Total Limit / Balance"
               value={showBalances ? fmt(totalLimit) : "••••••"}
               icon={<TrendingUp size={20} />}
-              iconColor="from-emerald-500 to-teal-500"
+              iconColor="bg-emerald-600"
             />
             <StatCard
               label="Total Cards"
               value={String(cards.length)}
               icon={<CreditCard size={20} />}
-              iconColor="from-amber-500 to-orange-500"
+              iconColor="bg-amber-600"
             />
           </StatsGrid>
 
@@ -87,7 +87,7 @@ const CardsOverview: React.FC = () => {
                         <p className="text-[11px] text-gray-500 dark:text-gray-400">
                           {card.cardType === "credit" ? "Credit Limit" : "Balance"}
                         </p>
-                        <p className="text-sm font-bold text-gray-900 dark:text-white">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
                           {showBalances ? fmt(card.creditLimit || card.balance || 0, card.currency) : "••••••"}
                         </p>
                       </div>
@@ -110,7 +110,7 @@ const CardsOverview: React.FC = () => {
                       <span className="flex-1" />
                       <Link
                         to="/customer/cards/transactions"
-                        className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 transition-all hover:gap-1.5 dark:text-indigo-400"
+                        className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 transition-all hover:gap-1.5 dark:text-blue-400"
                       >
                         Activity <ArrowRight size={11} />
                       </Link>
