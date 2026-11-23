@@ -1,7 +1,7 @@
 # ============================================================================
 #  Nordi Remittance Backend — Makefile
 #  Runtime: Node.js | DB: MongoDB 7.x (Mongoose) | Cache: Redis | Queue: BullMQ
-#  Streaming: Kafka (KRaft) | K8s: kubectl | IaC: Terraform
+#  Kafka / K8s / Terraform: DISABLED (commented out below, kept for scalability)
 # ============================================================================
 
 .PHONY: help dev start clean install lint lint-fix typecheck validate \
@@ -60,7 +60,8 @@ help: ## Show all available commands
 install: ## Install all dependencies with npm
 	npm install
 
-dev: kafka-start ## Start dev server with hot-reload (tsx + nodemon) + Kafka
+dev: ## Start dev server with hot-reload (tsx + nodemon) - Kafka disabled
+# (Kafka disabled) original: dev: kafka-start
 	npm run dev
 
 start: ## Start production server
@@ -160,19 +161,19 @@ db-drop-stale-index: ## Drop the stale eventId_1 index from securityevents (run 
 #  DOCKER COMPOSE
 # ============================================================================
 
-docker-up: ## Start all services (app + infra + kafka) in detached mode
+docker-up: ## Start all services (app + infra) in detached mode
 	docker compose up -d
 
 # Quick start URL summary after docker-up
 	@echo ""
 	@echo "$(GREEN)✓ Stack running:$(RESET)"
 	@echo "  API:       http://localhost:$(PORT)"
-	@echo "  Kafka UI:  http://localhost:8090"
+# @echo "  Kafka UI:  http://localhost:8090"
 	@echo "  Mongo UI:  http://localhost:8081"
 
-docker-up-infra: ## Start only infrastructure (mongo, redis, kafka) — no app
-	docker compose up -d mongo redis kafka kafka-ui
-	@echo "$(GREEN)✓ Infrastructure ready (mongo, redis, kafka + Kafka UI on :8090)$(RESET)"
+docker-up-infra: ## Start only infrastructure (mongo, redis) — no app
+	docker compose up -d mongo redis
+	@echo "$(GREEN)✓ Infrastructure ready (mongo, redis)$(RESET)"
 
 docker-down: ## Stop all running services
 	docker compose down
@@ -228,160 +229,160 @@ redis-info: ## Show Redis server info and memory usage
 redis-keys: ## List all keys in Redis (dev only)
 	docker compose exec redis redis-cli KEYS '*'
 
-# ============================================================================
-#  KAFKA (Docker-based — KRaft mode, running in container)
-#  Broker: kafka:9092 (inside Docker) | localhost:9092 (from host)
-#  UI: http://localhost:8090
-#  For native binary usage, install Kafka locally and set KAFKA_BROKERS=localhost:9092
-# ============================================================================
-
-kafka-ui: ## Open Kafka UI in browser (http://localhost:8090)
-	@echo "$(CYAN)Opening Kafka UI at http://localhost:8090$(RESET)"
-	@start http://localhost:8090 2>NUL || echo "Visit http://localhost:8090"
-
-kafka-topics-docker: ## List all topics via Docker container
-	docker compose exec kafka /opt/kafka/bin/kafka-topics.sh \
-		--bootstrap-server localhost:9092 --list
-
-# ── macOS / Linux paths (commented out) ──────────────────────────────────────
-# KAFKA_CONFIG     := /usr/local/kafka/config/server.properties
-# KAFKA_LOG_DIR    := /tmp/kraft-combined-logs
-# KAFKA_STORAGE    := kafka-storage.sh
-# KAFKA_SERVER     := kafka-server-start.sh
-# KAFKA_SERVER_STOP:= kafka-server-stop.sh
-# KAFKA_TOPICS_CMD := kafka-topics.sh
-# KAFKA_CONSOLE_CMD:= kafka-console-consumer.sh
-
-# ── Windows paths (C:\kafka installed, bin\windows in PATH) ──────────────────
-KAFKA_HOME        := C:\kafka
-KAFKA_CONFIG      := $(KAFKA_HOME)\config\server.properties
-# log.dirs in server.properties is set to C:/kafka/kraft-combined-logs
-KAFKA_LOG_DIR     := $(KAFKA_HOME)\kraft-combined-logs
-KAFKA_BROKER_LOG  := $(KAFKA_HOME)\logs
-KAFKA_STORAGE     := kafka-storage.bat
-KAFKA_SERVER      := kafka-server-start.bat
-KAFKA_SERVER_STOP := kafka-server-stop.bat
-KAFKA_TOPICS_CMD  := kafka-topics.bat
-KAFKA_CONSOLE_CMD := kafka-console-consumer.bat
-KAFKA_BOOTSTRAP   := localhost:9092
+# # ============================================================================
+# #  KAFKA (Docker-based — KRaft mode, running in container)
+# #  Broker: kafka:9092 (inside Docker) | localhost:9092 (from host)
+# #  UI: http://localhost:8090
+# #  For native binary usage, install Kafka locally and set KAFKA_BROKERS=localhost:9092
+# # ============================================================================
+#
+# kafka-ui: ## Open Kafka UI in browser (http://localhost:8090)
+# @echo "$(CYAN)Opening Kafka UI at http://localhost:8090$(RESET)"
+# @start http://localhost:8090 2>NUL || echo "Visit http://localhost:8090"
+#
+# kafka-topics-docker: ## List all topics via Docker container
+# docker compose exec kafka /opt/kafka/bin/kafka-topics.sh \
+# --bootstrap-server localhost:9092 --list
+#
+# # ── macOS / Linux paths (commented out) ──────────────────────────────────────
+# # KAFKA_CONFIG     := /usr/local/kafka/config/server.properties
+# # KAFKA_LOG_DIR    := /tmp/kraft-combined-logs
+# # KAFKA_STORAGE    := kafka-storage.sh
+# # KAFKA_SERVER     := kafka-server-start.sh
+# # KAFKA_SERVER_STOP:= kafka-server-stop.sh
+# # KAFKA_TOPICS_CMD := kafka-topics.sh
+# # KAFKA_CONSOLE_CMD:= kafka-console-consumer.sh
+#
+# # ── Windows paths (C:\kafka installed, bin\windows in PATH) ──────────────────
+# KAFKA_HOME        := C:\kafka
+# KAFKA_CONFIG      := $(KAFKA_HOME)\config\server.properties
+# # log.dirs in server.properties is set to C:/kafka/kraft-combined-logs
+# KAFKA_LOG_DIR     := $(KAFKA_HOME)\kraft-combined-logs
+# KAFKA_BROKER_LOG  := $(KAFKA_HOME)\logs
+# KAFKA_STORAGE     := kafka-storage.bat
+# KAFKA_SERVER      := kafka-server-start.bat
+# KAFKA_SERVER_STOP := kafka-server-stop.bat
+# KAFKA_TOPICS_CMD  := kafka-topics.bat
+# KAFKA_CONSOLE_CMD := kafka-console-consumer.bat
+# KAFKA_BOOTSTRAP   := localhost:9092
 KAFKA_SCRIPTS_DIR := scripts
-
-NORDI_TOPICS := nordi.transaction.initiated nordi.transaction.processed \
-	nordi.transaction.completed nordi.transaction.failed \
-	nordi.kyc.submitted nordi.kyc.verified nordi.kyc.rejected \
-	nordi.security.fraud_alert \
-	nordi.user.registered nordi.user.login nordi.user.deleted \
-	nordi.notifications.push nordi.notifications.email nordi.notifications.sms \
-	nordi.dlq
-
-kafka-init: ## Format KRaft storage — clears stale data first, then formats fresh
-	@echo "$(CYAN)Clearing any stale KRaft storage...$(RESET)"
-	@powershell -NoProfile -Command "Remove-Item -Recurse -Force '$(KAFKA_LOG_DIR)' -ErrorAction SilentlyContinue; New-Item -ItemType Directory -Force -Path '$(KAFKA_LOG_DIR)' | Out-Null"
-	@echo "$(CYAN)Generating cluster UUID and formatting KRaft storage...$(RESET)"
-	$(eval CLUSTER_ID := $(shell $(KAFKA_STORAGE) random-uuid))
-	$(KAFKA_STORAGE) format -t $(CLUSTER_ID) --standalone -c $(KAFKA_CONFIG)
-	@echo "$(GREEN)✓ KRaft storage formatted with cluster ID: $(CLUSTER_ID)$(RESET)"
-
-kafka-start: ## Start Kafka broker (KRaft mode, background)
-	@powershell -NoProfile -ExecutionPolicy Bypass -File $(KAFKA_SCRIPTS_DIR)\kafka-start.ps1
-
-kafka-stop: ## Stop Kafka broker
-	@echo "$(CYAN)Stopping Kafka...$(RESET)"
-	@$(KAFKA_SERVER_STOP) 2>NUL || echo "$(YELLOW)⚠ Kafka was not running$(RESET)"
-	@echo "$(GREEN)✓ Kafka stopped$(RESET)"
-
-kafka-restart: kafka-stop kafka-start ## Restart Kafka broker
-
-kafka-status: ## Check if Kafka is running
-	@powershell -NoProfile -ExecutionPolicy Bypass -File $(KAFKA_SCRIPTS_DIR)\kafka-status.ps1
-
-kafka-logs: ## Tail Kafka server logs
-	@powershell -NoProfile -Command "Get-Content -Wait -Tail 50 '$(KAFKA_BROKER_LOG)\server.log'"
-
-kafka-topics: ## List all Kafka topics
-	$(KAFKA_TOPICS_CMD) --bootstrap-server $(KAFKA_BOOTSTRAP) --list
-
-# Windows: PowerShell foreach loop in kafka-create-topics.ps1 (replaces bash: for topic in $(NORDI_TOPICS); do kafka-topics.sh ... done)
-kafka-create-topics: ## Create all Nordi Kafka topics
-	@powershell -NoProfile -ExecutionPolicy Bypass -File $(KAFKA_SCRIPTS_DIR)\kafka-create-topics.ps1 -Bootstrap $(KAFKA_BOOTSTRAP)
-
-kafka-describe: ## Describe a Kafka topic (usage: make kafka-describe topic=nordi.user.registered)
-	$(KAFKA_TOPICS_CMD) --bootstrap-server $(KAFKA_BOOTSTRAP) --describe --topic $(topic)
-
-kafka-console: ## Consume messages from a topic (usage: make kafka-console topic=nordi.transaction.initiated)
-	$(KAFKA_CONSOLE_CMD) --bootstrap-server $(KAFKA_BOOTSTRAP) --topic $(topic) --from-beginning
-
-kafka-clean: ## Delete KRaft storage (destructive — requires kafka-init again)
-	@echo "$(YELLOW)⚠ Removing Kafka KRaft storage at $(KAFKA_LOG_DIR)$(RESET)"
-	@powershell -NoProfile -Command "Remove-Item -Recurse -Force '$(KAFKA_LOG_DIR)' -ErrorAction SilentlyContinue"
-	@echo "$(GREEN)✓ Kafka storage cleaned — run 'make kafka-init' before next start$(RESET)"
-
-kafka-setup: kafka-init kafka-start kafka-create-topics ## One-liner: init + start + create topics (first time)
-
-# ============================================================================
-#  KUBERNETES
-# ============================================================================
-
-k8s-apply: ## Apply all K8s manifests to cluster
-	kubectl apply -f k8s/namespace.yaml
-	kubectl apply -f k8s/configmap.yaml
-	kubectl apply -f k8s/secrets.yaml
-	kubectl apply -f k8s/deployment.yaml
-	kubectl apply -f k8s/service.yaml
-
-k8s-delete: ## Delete all K8s resources in the namespace
-	kubectl delete -f k8s/ --ignore-not-found
-
-k8s-status: ## Show pods, services, and deployments in namespace
-	@echo "$(CYAN)── Pods ──$(RESET)"
-	kubectl get pods -n $(K8S_NS)
-	@echo "\n$(CYAN)── Services ──$(RESET)"
-	kubectl get svc -n $(K8S_NS)
-	@echo "\n$(CYAN)── Deployments ──$(RESET)"
-	kubectl get deploy -n $(K8S_NS)
-
-k8s-logs: ## Tail logs from the app deployment
-	kubectl logs -f -n $(K8S_NS) -l app=$(APP_NAME) --tail=100
-
-k8s-port-forward: ## Forward local port to K8s service (localhost:5000)
-	kubectl port-forward -n $(K8S_NS) svc/$(APP_NAME) $(PORT):$(PORT)
-
-k8s-restart: ## Restart the deployment (rolling)
-	kubectl rollout restart deployment/$(APP_NAME) -n $(K8S_NS)
-
-k8s-rollout-status: ## Watch rollout status
-	kubectl rollout status deployment/$(APP_NAME) -n $(K8S_NS)
-
-k8s-describe: ## Describe pods for debugging
-	kubectl describe pods -n $(K8S_NS) -l app=$(APP_NAME)
-
-k8s-exec: ## Open a shell in the running K8s pod
-	kubectl exec -it -n $(K8S_NS) $$(kubectl get pod -n $(K8S_NS) -l app=$(APP_NAME) -o jsonpath='{.items[0].metadata.name}') -- sh
-
-# ============================================================================
-#  TERRAFORM
-# ============================================================================
-
-tf-init: ## Initialize Terraform working directory
-	cd terraform && terraform init
-
-tf-plan: ## Preview infrastructure changes
-	cd terraform && terraform plan
-
-tf-apply: ## Apply infrastructure changes
-	cd terraform && terraform apply
-
-tf-destroy: ## Destroy all managed infrastructure (destructive)
-	cd terraform && terraform destroy
-
-tf-output: ## Show Terraform outputs
-	cd terraform && terraform output
-
-tf-fmt: ## Format Terraform files
-	cd terraform && terraform fmt -recursive
-
-tf-validate: ## Validate Terraform configuration
-	cd terraform && terraform validate
+#
+# NORDI_TOPICS := nordi.transaction.initiated nordi.transaction.processed \
+# nordi.transaction.completed nordi.transaction.failed \
+# nordi.kyc.submitted nordi.kyc.verified nordi.kyc.rejected \
+# nordi.security.fraud_alert \
+# nordi.user.registered nordi.user.login nordi.user.deleted \
+# nordi.notifications.push nordi.notifications.email nordi.notifications.sms \
+# nordi.dlq
+#
+# kafka-init: ## Format KRaft storage — clears stale data first, then formats fresh
+# @echo "$(CYAN)Clearing any stale KRaft storage...$(RESET)"
+# @powershell -NoProfile -Command "Remove-Item -Recurse -Force '$(KAFKA_LOG_DIR)' -ErrorAction SilentlyContinue; New-Item -ItemType Directory -Force -Path '$(KAFKA_LOG_DIR)' | Out-Null"
+# @echo "$(CYAN)Generating cluster UUID and formatting KRaft storage...$(RESET)"
+# $(eval CLUSTER_ID := $(shell $(KAFKA_STORAGE) random-uuid))
+# $(KAFKA_STORAGE) format -t $(CLUSTER_ID) --standalone -c $(KAFKA_CONFIG)
+# @echo "$(GREEN)✓ KRaft storage formatted with cluster ID: $(CLUSTER_ID)$(RESET)"
+#
+# kafka-start: ## Start Kafka broker (KRaft mode, background)
+# @powershell -NoProfile -ExecutionPolicy Bypass -File $(KAFKA_SCRIPTS_DIR)\kafka-start.ps1
+#
+# kafka-stop: ## Stop Kafka broker
+# @echo "$(CYAN)Stopping Kafka...$(RESET)"
+# @$(KAFKA_SERVER_STOP) 2>NUL || echo "$(YELLOW)⚠ Kafka was not running$(RESET)"
+# @echo "$(GREEN)✓ Kafka stopped$(RESET)"
+#
+# kafka-restart: kafka-stop kafka-start ## Restart Kafka broker
+#
+# kafka-status: ## Check if Kafka is running
+# @powershell -NoProfile -ExecutionPolicy Bypass -File $(KAFKA_SCRIPTS_DIR)\kafka-status.ps1
+#
+# kafka-logs: ## Tail Kafka server logs
+# @powershell -NoProfile -Command "Get-Content -Wait -Tail 50 '$(KAFKA_BROKER_LOG)\server.log'"
+#
+# kafka-topics: ## List all Kafka topics
+# $(KAFKA_TOPICS_CMD) --bootstrap-server $(KAFKA_BOOTSTRAP) --list
+#
+# # Windows: PowerShell foreach loop in kafka-create-topics.ps1 (replaces bash: for topic in $(NORDI_TOPICS); do kafka-topics.sh ... done)
+# kafka-create-topics: ## Create all Nordi Kafka topics
+# @powershell -NoProfile -ExecutionPolicy Bypass -File $(KAFKA_SCRIPTS_DIR)\kafka-create-topics.ps1 -Bootstrap $(KAFKA_BOOTSTRAP)
+#
+# kafka-describe: ## Describe a Kafka topic (usage: make kafka-describe topic=nordi.user.registered)
+# $(KAFKA_TOPICS_CMD) --bootstrap-server $(KAFKA_BOOTSTRAP) --describe --topic $(topic)
+#
+# kafka-console: ## Consume messages from a topic (usage: make kafka-console topic=nordi.transaction.initiated)
+# $(KAFKA_CONSOLE_CMD) --bootstrap-server $(KAFKA_BOOTSTRAP) --topic $(topic) --from-beginning
+#
+# kafka-clean: ## Delete KRaft storage (destructive — requires kafka-init again)
+# @echo "$(YELLOW)⚠ Removing Kafka KRaft storage at $(KAFKA_LOG_DIR)$(RESET)"
+# @powershell -NoProfile -Command "Remove-Item -Recurse -Force '$(KAFKA_LOG_DIR)' -ErrorAction SilentlyContinue"
+# @echo "$(GREEN)✓ Kafka storage cleaned — run 'make kafka-init' before next start$(RESET)"
+#
+# kafka-setup: kafka-init kafka-start kafka-create-topics ## One-liner: init + start + create topics (first time)
+#
+# # ============================================================================
+# #  KUBERNETES
+# # ============================================================================
+#
+# k8s-apply: ## Apply all K8s manifests to cluster
+# kubectl apply -f k8s/namespace.yaml
+# kubectl apply -f k8s/configmap.yaml
+# kubectl apply -f k8s/secrets.yaml
+# kubectl apply -f k8s/deployment.yaml
+# kubectl apply -f k8s/service.yaml
+#
+# k8s-delete: ## Delete all K8s resources in the namespace
+# kubectl delete -f k8s/ --ignore-not-found
+#
+# k8s-status: ## Show pods, services, and deployments in namespace
+# @echo "$(CYAN)── Pods ──$(RESET)"
+# kubectl get pods -n $(K8S_NS)
+# @echo "\n$(CYAN)── Services ──$(RESET)"
+# kubectl get svc -n $(K8S_NS)
+# @echo "\n$(CYAN)── Deployments ──$(RESET)"
+# kubectl get deploy -n $(K8S_NS)
+#
+# k8s-logs: ## Tail logs from the app deployment
+# kubectl logs -f -n $(K8S_NS) -l app=$(APP_NAME) --tail=100
+#
+# k8s-port-forward: ## Forward local port to K8s service (localhost:5000)
+# kubectl port-forward -n $(K8S_NS) svc/$(APP_NAME) $(PORT):$(PORT)
+#
+# k8s-restart: ## Restart the deployment (rolling)
+# kubectl rollout restart deployment/$(APP_NAME) -n $(K8S_NS)
+#
+# k8s-rollout-status: ## Watch rollout status
+# kubectl rollout status deployment/$(APP_NAME) -n $(K8S_NS)
+#
+# k8s-describe: ## Describe pods for debugging
+# kubectl describe pods -n $(K8S_NS) -l app=$(APP_NAME)
+#
+# k8s-exec: ## Open a shell in the running K8s pod
+# kubectl exec -it -n $(K8S_NS) $$(kubectl get pod -n $(K8S_NS) -l app=$(APP_NAME) -o jsonpath='{.items[0].metadata.name}') -- sh
+#
+# # ============================================================================
+# #  TERRAFORM
+# # ============================================================================
+#
+# tf-init: ## Initialize Terraform working directory
+# cd terraform && terraform init
+#
+# tf-plan: ## Preview infrastructure changes
+# cd terraform && terraform plan
+#
+# tf-apply: ## Apply infrastructure changes
+# cd terraform && terraform apply
+#
+# tf-destroy: ## Destroy all managed infrastructure (destructive)
+# cd terraform && terraform destroy
+#
+# tf-output: ## Show Terraform outputs
+# cd terraform && terraform output
+#
+# tf-fmt: ## Format Terraform files
+# cd terraform && terraform fmt -recursive
+#
+# tf-validate: ## Validate Terraform configuration
+# cd terraform && terraform validate
 
 # ============================================================================
 #  HEALTH & DIAGNOSTICS
@@ -498,14 +499,14 @@ queue-flush: ## Flush all BullMQ queues - DESTRUCTIVE
 setup: install db-indexes ## First-time project setup (install + create indexes)
 	@echo "$(GREEN)✓ Setup complete. Run 'make dev' to start.$(RESET)"
 
-infra: docker-up-infra kafka-start ## Start all infrastructure (MongoDB + Redis + Kafka)
-	@echo "$(GREEN)✓ Infrastructure ready (mongo, redis, kafka)$(RESET)"
+infra: docker-up-infra ## Start all infrastructure (MongoDB + Redis)
+	@echo "$(GREEN)✓ Infrastructure ready (mongo, redis)$(RESET)"
 
-fresh: docker-up-infra kafka-start db-seed db-indexes ## Fresh start: infra + Kafka + seed + indexes
+fresh: docker-up-infra db-seed db-indexes ## Fresh start: infra + seed + indexes
 	@echo "$(GREEN)✓ Fresh environment ready$(RESET)"
 
-deploy-k8s: build docker-image k8s-apply ## Build and deploy to Kubernetes
-	@echo "$(GREEN)✓ Deployed to Kubernetes$(RESET)"
+# deploy-k8s: build docker-image k8s-apply ## Build and deploy to Kubernetes
+# @echo "$(GREEN)✓ Deployed to Kubernetes$(RESET)"
 
 ci: lint typecheck test ## CI pipeline: lint + typecheck + test
 	@echo "$(GREEN)✓ CI checks passed$(RESET)"
