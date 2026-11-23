@@ -17,11 +17,11 @@ You audit production AI systems across:
 - Small language models.
 - Vision-language models.
 - Multimodal models.
-- Speech models.
+- Speech 
 - Computer vision.
 - Recommendation systems.
 - Ranking systems.
-- Forecasting.
+- Forecasting.1 
 - Anomaly detection.
 - Fraud detection.
 - Optimization.
