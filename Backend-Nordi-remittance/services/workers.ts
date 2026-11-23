@@ -4,7 +4,8 @@
 // ============================================================================
 
 import type { Job, JobsOptions } from "bullmq";
-import { registerWorker, initQueues, addJob } from "./bullmq.service.js";
+import { registerWorker, initQueues, addJob, getQueue } from "./bullmq.service.js";
+import ActivitySimulatorService from "../modules/admin/activity-simulator.service.js";
 import { sendTemplatedMail, sendMail } from "./mailer.service.js";
 import EmailContentGenerator from "../core/mail/Mail-content.js";
 import { render } from "../core/mail/Mail-renderer.js";
@@ -348,6 +349,17 @@ async function processDocumentJob(job: Job<DocumentJobData>): Promise<void> {
 // REGISTER ALL WORKERS
 // ============================================================================
 
+async function processCleanupOrCronJob(job: Job<any>): Promise<void> {
+  if (job.name === "activity-simulator:cron") {
+    const res = await ActivitySimulatorService.runDueSimulations();
+    if (res.processedUsers > 0 || res.totalGenerated > 0) {
+      log.info("Activity simulator cron completed", res as unknown as Record<string, unknown>);
+    }
+    return;
+  }
+  log.debug("Cleanup/cron job executed", { name: job.name, jobId: job.id });
+}
+
 export function startWorkers(): void {
   initQueues();
 
@@ -357,6 +369,24 @@ export function startWorkers(): void {
   registerWorker("KYC", processKycJob as Parameters<typeof registerWorker>[1], { concurrency: 5 });
   registerWorker("FRAUD", processFraudJob as Parameters<typeof registerWorker>[1], { concurrency: 5 });
   registerWorker("DOCUMENT", processDocumentJob as Parameters<typeof registerWorker>[1], { concurrency: 3 });
+  registerWorker("CLEANUP", processCleanupOrCronJob as Parameters<typeof registerWorker>[1], { concurrency: 1 });
+
+  // Schedule repeatable cron job (every 30 mins) for admin-enabled activity simulations
+  const cleanupQueue = getQueue("CLEANUP");
+  if (cleanupQueue) {
+    cleanupQueue
+      .add(
+        "activity-simulator:cron",
+        {},
+        {
+          jobId: "activity-simulator-repeatable-cron",
+          repeat: { pattern: "*/30 * * * *" },
+          removeOnComplete: true,
+          removeOnFail: 20,
+        },
+      )
+      .catch((err) => log.warn("Failed to schedule activity simulator cron", { error: err?.message }));
+  }
 
   log.success("All Nordi workers started");
 }
