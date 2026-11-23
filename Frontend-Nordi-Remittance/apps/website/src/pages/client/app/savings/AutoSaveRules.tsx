@@ -31,8 +31,7 @@ import { StatsGridSkeleton, AccountListSkeleton, FormSkeleton } from "@component
 import { dashboardItemVariants } from "@core/animation/Animation";
 import {
   useClientSavingsGoals,
-  useCreateSavingsGoal,
-  useClientSavingsGoalProgress,
+  useUpdateAutoSave,
 } from "../../client-usecase/usesavinga-client-usecase";
 import { useUIStore } from "@store/ui.store";
 import { useToastStore } from "@store/toast.store";
@@ -46,7 +45,7 @@ const fmt = (n: number) =>
 const pct = (saved: number, target: number) => (target > 0 ? Math.min(Math.round((saved / target) * 100), 100) : 0);
 
 const inputCls =
-  "w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 transition-colors";
+  "w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors";
 
 const labelCls = "block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5";
 
@@ -73,7 +72,7 @@ const defaultRules: AutoRule[] = [
     type: "round-up",
     enabled: false,
     icon: <ArrowUpRight size={18} />,
-    color: "from-emerald-500 to-teal-500",
+    color: "bg-emerald-600",
   },
   {
     id: "weekly-save",
@@ -84,7 +83,7 @@ const defaultRules: AutoRule[] = [
     amount: 50,
     frequency: "Weekly",
     icon: <Calendar size={18} />,
-    color: "from-indigo-500 to-purple-500",
+    color: "bg-blue-600",
   },
   {
     id: "monthly-save",
@@ -95,7 +94,7 @@ const defaultRules: AutoRule[] = [
     amount: 300,
     frequency: "Monthly",
     icon: <Clock size={18} />,
-    color: "from-blue-500 to-cyan-500",
+    color: "bg-blue-600",
   },
   {
     id: "income-pct",
@@ -105,11 +104,13 @@ const defaultRules: AutoRule[] = [
     enabled: false,
     percentage: 10,
     icon: <Percent size={18} />,
-    color: "from-amber-500 to-orange-500",
+    color: "bg-amber-600",
   },
 ];
 
 const AutoSaveRules: React.FC = () => {
+  const { goals } = useClientSavingsGoals();
+  const updateAutoSave = useUpdateAutoSave();
   const [rules, setRules] = useState<AutoRule[]>(defaultRules);
   const { showToast } = useToastStore();
 
@@ -119,8 +120,28 @@ const AutoSaveRules: React.FC = () => {
     showToast(`${rule?.name} ${rule?.enabled ? "disabled" : "enabled"}`, "success");
   };
 
-  const activeCount = rules.filter((r) => r.enabled).length;
-  const totalAutoSave = rules.filter((r) => r.enabled && r.amount).reduce((s, r) => s + (r.amount ?? 0), 0);
+  const handleToggleGoalAutoSave = (goal: any) => {
+    const gid = goal._id || goal.id;
+    const isEnabled = !!(goal.autoSaveEnabled ?? goal.autoSave?.enabled);
+    const amount = Number(goal.autoSaveAmount ?? goal.autoSave?.amount ?? 100);
+    const frequency = (goal.autoSaveFrequency ?? goal.autoSave?.frequency ?? "monthly") as "daily" | "weekly" | "monthly";
+    updateAutoSave.mutate({
+      goalId: gid,
+      data: {
+        enabled: !isEnabled,
+        amount,
+        frequency,
+      },
+    });
+  };
+
+  const activeGoalRulesCount = goals.filter((g: any) => g.autoSaveEnabled ?? g.autoSave?.enabled).length;
+  const activeCount = rules.filter((r) => r.enabled).length + activeGoalRulesCount;
+  const goalAutoSaveTotal = goals
+    .filter((g: any) => g.autoSaveEnabled ?? g.autoSave?.enabled)
+    .reduce((s: number, g: any) => s + Number(g.autoSaveAmount ?? g.autoSave?.amount ?? 0), 0);
+  const totalAutoSave =
+    rules.filter((r) => r.enabled && r.amount).reduce((s, r) => s + (r.amount ?? 0), 0) + goalAutoSaveTotal;
 
   return (
     <PageContainer>
@@ -154,14 +175,58 @@ const AutoSaveRules: React.FC = () => {
         </div>
       </DashCard>
 
+      {/* Goal-specific Auto-Save Rules */}
+      {goals.length > 0 && (
+        <div className="mb-6 space-y-3">
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            Goal Auto-Save Schedules
+          </h4>
+          {goals.map((g: any, idx: number) => {
+            const gid = g._id || g.id || idx;
+            const enabled = !!(g.autoSaveEnabled ?? g.autoSave?.enabled);
+            const amount = Number(g.autoSaveAmount ?? g.autoSave?.amount ?? 100);
+            const freq = g.autoSaveFrequency ?? g.autoSave?.frequency ?? "monthly";
+            return (
+              <DashCard
+                key={gid}
+                className={`transition-colors ${enabled ? "border-blue-200 dark:border-blue-800" : ""}`}
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">{g.emoji || g.imageUrl || GOAL_EMOJIS[idx % GOAL_EMOJIS.length]}</span>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">{g.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {fmt(amount)} / {freq} • Target: {fmt(g.targetAmount ?? 0)}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleToggleGoalAutoSave(g)}
+                    disabled={updateAutoSave.isPending}
+                    aria-label={`Toggle auto-save for ${g.name}`}
+                  >
+                    {enabled ? (
+                      <ToggleRight size={28} className="text-blue-600 dark:text-blue-400" />
+                    ) : (
+                      <ToggleLeft size={28} className="text-gray-300 dark:text-gray-600" />
+                    )}
+                  </button>
+                </div>
+              </DashCard>
+            );
+          })}
+        </div>
+      )}
+
       {/* Rule cards */}
       <div className="space-y-4">
         {rules.map((rule) => (
           <motion.div key={rule.id} variants={dashboardItemVariants}>
-            <DashCard className={`transition-colors ${rule.enabled ? "border-indigo-200 dark:border-indigo-800" : ""}`}>
+            <DashCard className={`transition-colors ${rule.enabled ? "border-blue-200 dark:border-blue-800" : ""}`}>
               <div className="flex items-start gap-4">
                 {/* Icon */}
-                <div className={`rounded-xl bg-gradient-to-br p-2.5 ${rule.color} shrink-0 text-white`}>
+                <div className={`rounded-xl bg-blue-600 p-2.5 ${rule.color} shrink-0 text-white`}>
                   {rule.icon}
                 </div>
 
@@ -175,7 +240,7 @@ const AutoSaveRules: React.FC = () => {
                       aria-label={`Toggle ${rule.name}`}
                     >
                       {rule.enabled ? (
-                        <ToggleRight size={28} className="text-indigo-600 dark:text-indigo-400" />
+                        <ToggleRight size={28} className="text-blue-600 dark:text-blue-400" />
                       ) : (
                         <ToggleLeft size={28} className="text-gray-300 dark:text-gray-600" />
                       )}
