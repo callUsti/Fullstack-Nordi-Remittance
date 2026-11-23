@@ -7,9 +7,11 @@ import { KycStatus } from '../types/index.js';
 import type { AuthenticatedRequest } from '../types/index.js';
 import Users from '../modules/users/users.model.js';
 import Permissions from '../modules/permissions/permissions.model.js';
+import { LimitsService } from '../modules/accounts/limits.service.js';
 import { 
   KycNotVerifiedError, 
   ForbiddenError,
+  TransactionLimitExceededError,
   UnauthorizedError 
 } from '../core/errors/AppError.js';
 
@@ -217,30 +219,50 @@ export async function enforceKycLimits(
       return next(new UnauthorizedError('Authentication required'));
     }
 
-    const { amount } = req.body;
+    const amount = Number(req.body.amount || 0);
+    const isInternational =
+      req.path.includes('remittance') ||
+      req.body?.isInternational === true ||
+      req.body?.isInternational === 'true';
 
-    const user = await Users.findById(req.user.userId)
-      .select('kycStatus')
-      .lean();
+    const effective = await LimitsService.getEffectiveLimits(req.user.userId);
+    const scopeLimits = isInternational ? effective.international : effective.domestic;
 
-    if (!user) {
-      return next(new UnauthorizedError('User not found'));
+    if (effective.kycStatus !== 'approved' && amount > scopeLimits.perTransaction) {
+      return next(
+        new ForbiddenError(
+          `Transaction amount exceeds your limit of ${scopeLimits.perTransaction}. Complete KYC verification to increase your limits.`
+        )
+      );
     }
 
-    const limits = kycStatusLimits[user.kycStatus as KycStatus] || kycStatusLimits.pending;
-
     // Check per-transaction limit
-    if (amount > limits.perTransactionLimit) {
-      return next(new ForbiddenError(
-        `Transaction amount exceeds your limit of ${limits.perTransactionLimit}. ` +
-        (user.kycStatus !== 'approved' 
-          ? 'Complete KYC verification to increase your limits.' 
-          : 'Contact support to increase your limits.')
-      ));
+    if (amount > scopeLimits.perTransaction) {
+      return next(
+        new TransactionLimitExceededError('per-transaction', scopeLimits.perTransaction, amount)
+      );
+    }
+
+    // Check daily limit
+    if (scopeLimits.daily > 0 && scopeLimits.dailyUsed + amount > scopeLimits.daily) {
+      return next(
+        new TransactionLimitExceededError('daily', scopeLimits.daily, scopeLimits.dailyUsed + amount)
+      );
+    }
+
+    // Check monthly limit
+    if (scopeLimits.monthly > 0 && scopeLimits.monthlyUsed + amount > scopeLimits.monthly) {
+      return next(
+        new TransactionLimitExceededError('monthly', scopeLimits.monthly, scopeLimits.monthlyUsed + amount)
+      );
     }
 
     // Attach limits to request for further processing
-    req.body.kycLimits = limits;
+    req.body.kycLimits = {
+      dailyLimit: scopeLimits.daily,
+      monthlyLimit: scopeLimits.monthly,
+      perTransactionLimit: scopeLimits.perTransaction,
+    };
 
     next();
   } catch (error) {
