@@ -1,4 +1,4 @@
-# kafka-create-topics.ps1 - Create all Nordi Kafka topics on Windows
+# kafka-create-topics.ps1 - Fast bulk creation of all Nordi Kafka topics on Windows
 param([string]$Bootstrap = "localhost:9092")
 
 $topics = @(
@@ -16,32 +16,38 @@ $topics = @(
     "nordi.notifications.push",
     "nordi.notifications.email",
     "nordi.notifications.sms",
+    "nordi.document.events",
+    "nordi.audit.events",
+    "nordi.analytics.events",
     "nordi.dlq"
 )
 
-$created = 0
-$skipped = 0
+# 1. Fetch all existing topics in a single JVM call
+Write-Host "  Checking existing Kafka topics..." -ForegroundColor Cyan
+$existingRaw = cmd.exe /c "kafka-topics.bat --bootstrap-server $Bootstrap --list 2>nul"
+$existingList = @($existingRaw | ForEach-Object { "$_".Trim() } | Where-Object { $_ -ne "" })
 
-foreach ($topic in $topics) {
+$missingTopics = $topics | Where-Object { $existingList -notcontains $_ }
+
+if ($missingTopics.Count -eq 0) {
+    Write-Host "  [OK] All $($topics.Count) Nordi Kafka topics already exist." -ForegroundColor Green
+    exit 0
+}
+
+Write-Host "  Found $($missingTopics.Count) missing topics to create." -ForegroundColor Yellow
+
+$created = 0
+foreach ($topic in $missingTopics) {
     Write-Host "  Creating topic: $topic" -ForegroundColor Cyan
-    $result = (kafka-topics.bat --bootstrap-server $Bootstrap `
-        --create --topic $topic `
-        --partitions 3 --replication-factor 1 `
-        --if-not-exists 2>&1) | Out-String
+    $result = cmd.exe /c "kafka-topics.bat --bootstrap-server $Bootstrap --create --topic $topic --partitions 3 --replication-factor 1 --if-not-exists 2>&1"
 
     if ($LASTEXITCODE -eq 0) {
-        if ($result -match "already exists") {
-            Write-Host "  [SKIP] $topic already exists" -ForegroundColor Yellow
-            $skipped++
-        } else {
-            Write-Host "  [OK]   $topic created" -ForegroundColor Green
-            $created++
-        }
+        Write-Host "  [OK]   $topic created" -ForegroundColor Green
+        $created++
     } else {
         Write-Host "  [FAIL] $topic" -ForegroundColor Red
         Write-Host $result -ForegroundColor Red
     }
 }
 
-Write-Host ""
-Write-Host "[DONE] Topics: $created created, $skipped already existed" -ForegroundColor Green
+Write-Host "[DONE] Created $created missing topics." -ForegroundColor Green
