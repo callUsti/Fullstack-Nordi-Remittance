@@ -165,26 +165,25 @@ export async function checkSufficientBalance(
   next: NextFunction
 ): Promise<void> {
   try {
-    const { amount, currency, type, fromWalletId } = req.body;
+    const { amount, currency, sourceCurrency, type, fromWalletId, sourceAccountId } = req.body;
     const userId = req.user?.userId;
+    const walletId = fromWalletId || sourceAccountId;
+    const checkCurrency = (sourceCurrency || currency || 'USD').toUpperCase();
 
-    // Only check balance for debit transactions
+    // Only check balance for debit transactions (default to checking when type is omitted on transfer routes)
     const debitTypes: TransactionType[] = [
       TransactionType.WITHDRAWAL,
       TransactionType.TRANSFER,
       TransactionType.PAYMENT
     ];
-    if (!debitTypes.includes(type)) {
+    if (type && !debitTypes.includes(type)) {
       return next();
     }
 
     // Find user's wallet
-    const wallet = await Wallets.findOne({
-      $or: [
-        { _id: fromWalletId },
-        { user: userId, isPrimary: true }
-      ]
-    }).lean();
+    const wallet: any = walletId
+      ? await Wallets.findOne({ _id: walletId, user: userId }).lean()
+      : await Wallets.findOne({ user: userId, status: 'active' }).sort({ isPrimary: -1 }).lean();
 
     if (!wallet) {
       return next(new WalletNotFoundError());
@@ -199,16 +198,36 @@ export async function checkSufficientBalance(
       return next(new WalletFrozenError('Wallet is closed'));
     }
 
-    // Get balance for the currency
+    // Get balance from AccountBalances or fallback to wallet.balances map
     const balance = await AccountBalances.findOne({
       wallet: wallet._id,
-      currency: currency.toUpperCase(),
+      currency: checkCurrency,
     }).lean();
 
-    const availableBalance = balance?.availableBalance || 0;
+    let walletMapBalance = 0;
+    if (wallet.balances instanceof Map) {
+      walletMapBalance = Number(
+        wallet.balances.get(checkCurrency) ?? wallet.balances.get(checkCurrency.toLowerCase()) ?? 0
+      );
+    } else if (wallet.balances && typeof wallet.balances === 'object') {
+      const matchedKey = Object.keys(wallet.balances).find(
+        (k) => k.toUpperCase() === checkCurrency
+      );
+      walletMapBalance = matchedKey ? Number(wallet.balances[matchedKey] || 0) : 0;
+    }
 
-    if (availableBalance < amount) {
-      return next(new InsufficientBalanceError(amount, availableBalance));
+    const fallbackWalletBalance =
+      !balance && walletMapBalance === 0 ? Number((wallet as any).balance || 0) : 0;
+
+    const availableBalance = Math.max(
+      Number(balance?.availableBalance || 0),
+      walletMapBalance,
+      fallbackWalletBalance
+    );
+    const totalRequired = Number(amount) + (Number(req.body.fee) || 0);
+
+    if (availableBalance < totalRequired) {
+      return next(new InsufficientBalanceError(totalRequired, availableBalance));
     }
 
     // Attach wallet to request for later use
