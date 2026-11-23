@@ -191,7 +191,7 @@ export function useClientApplications() {
 // ELIGIBILITY & CREDIT
 // ============================================================================
 
-/** Check current user's loan eligibility (credit score, max amount) */
+/** Check current user's loan eligibility (credit score, max amount, and KYC checklist) */
 export function useClientEligibility() {
   const { data: raw, isLoading, error, refetch } = useEligibilityCheck();
 
@@ -205,6 +205,39 @@ export function useClientEligibility() {
       outstandingDebt: obj.outstandingDebt ?? 0,
       accountAgeDays: obj.accountAgeDays ?? 0,
       reason: obj.reason ?? null,
+      kycStatus: (obj.kycStatus || "pending") as string,
+      kycChecklist: (Array.isArray(obj.kycChecklist) ? obj.kycChecklist : []) as Array<{
+        key: string;
+        label: string;
+        description: string;
+        completed: boolean;
+        status: string;
+        detail: string;
+        fieldType?: string;
+      }>,
+      completedStepsCount: obj.completedStepsCount ?? 0,
+      totalStepsCount: obj.totalStepsCount ?? 6,
+      rejectionReason: obj.rejectionReason ?? null,
+      loanSuspended: Boolean(obj.loanSuspended),
+      volumeBreakdown: (obj.volumeBreakdown || null) as {
+        accountsBalance?: number;
+        transactionVolume?: number;
+        cardsVolume?: number;
+        investmentsVolume?: number;
+        totalFinancialVolume?: number;
+        paidLoansCount?: number;
+        completedRepaymentsCount?: number;
+        earlyRepaymentsCount?: number;
+        repaymentSpeedMultiplier?: number;
+        repaymentSpeedLabel?: string;
+        defaultCount?: number;
+        defaultFeePercentPerDefault?: number;
+        totalDefaultFeePercent?: number;
+        calculatedMaxLimit?: number;
+        customMaxLoanAmount?: number | null;
+        loanSuspended?: boolean;
+        suspensionReason?: string | null;
+      } | null,
     };
   }, [raw]);
 
