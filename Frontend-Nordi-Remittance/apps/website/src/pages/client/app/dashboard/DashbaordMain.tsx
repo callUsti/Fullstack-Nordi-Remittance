@@ -46,18 +46,18 @@ const SpendingAnalyticsSection: React.FC<{ spending: ClientSpendingData }> = Rea
   if (isLoading) return <ChartSkeleton />;
 
   return (
-    <DashCard>
-      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+    <DashCard className="w-full min-w-0 overflow-hidden">
+      <div className="mb-3 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <SectionHeader title="Spending Analytics" subtitle="How you're spending your money" className="!mb-0" />
-        <div className="flex items-center gap-1.5">
-          <Filter size={14} className="text-gray-400 dark:text-gray-500" />
-          <div className="flex rounded-lg bg-gray-100 p-0.5 dark:bg-gray-800">
+        <div className="flex min-w-0 max-w-full items-center gap-1.5">
+          <Filter size={14} className="shrink-0 text-gray-400 dark:text-gray-500" />
+          <div className="flex max-w-full overflow-x-auto rounded-lg bg-gray-100 p-0.5 scrollbar-hide dark:bg-gray-800">
             {SPENDING_FILTER_OPTIONS.map((opt) => (
               <button
                 key={opt}
                 className={`rounded-md px-2 py-1 text-[10px] font-medium transition-colors sm:text-xs ${
                   activeFilter === opt
-                    ? "bg-indigo-600 text-white dark:bg-indigo-500"
+                    ? "bg-blue-600 text-white dark:bg-blue-500"
                     : "text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700"
                 }`}
                 onClick={() => setActiveFilter(opt)}
@@ -74,9 +74,9 @@ const SpendingAnalyticsSection: React.FC<{ spending: ClientSpendingData }> = Rea
           No spending data available
         </p>
       ) : (
-        <div className="flex flex-wrap">
-          <div className="mb-3 w-full md:mb-0 md:w-5/12">
-            <div className="relative aspect-square">
+        <div className="flex min-w-0 flex-wrap">
+          <div className="mb-3 w-full min-w-0 md:mb-0 md:w-5/12">
+            <div className="relative aspect-square w-full min-w-0">
               <ResponsiveContainer width="100%" height="100%">
                 <RechartsPie>
                   <Pie
@@ -101,13 +101,13 @@ const SpendingAnalyticsSection: React.FC<{ spending: ClientSpendingData }> = Rea
               </ResponsiveContainer>
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
                 <p className="text-[10px] text-gray-500 dark:text-gray-400 sm:text-xs">Total</p>
-                <p className="text-lg font-bold text-gray-900 dark:text-white sm:text-xl">
+                <p className="text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
                   {formatCurrency(totalSpending)}
                 </p>
               </div>
             </div>
           </div>
-          <div className="w-full pl-0 md:w-7/12 md:pl-4">
+          <div className="w-full min-w-0 pl-0 md:w-7/12 md:pl-4">
             <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
               {categories.map((item, index) => {
                 const pct = totalSpending > 0 ? ((item.amount / totalSpending) * 100).toFixed(1) : "0";
@@ -149,7 +149,7 @@ const SpendingAnalyticsSection: React.FC<{ spending: ClientSpendingData }> = Rea
               <span>Last 6 months</span>
             </div>
           </div>
-          <div className="h-36 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+          <div className="h-36 w-full min-w-0 rounded-lg bg-gray-50 dark:bg-gray-800/50">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={trends} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
                 <defs>
@@ -209,7 +209,7 @@ const BudgetProgressSection: React.FC<{
   if (budgets.length === 0) return null;
 
   return (
-    <DashCard>
+    <DashCard className="w-full min-w-0 overflow-hidden">
       <SectionHeader
         title="Budget Progress"
         subtitle="Monthly spending limits"
@@ -221,18 +221,18 @@ const BudgetProgressSection: React.FC<{
           const pct = Math.min((b.spent / b.limit) * 100, 100);
           const isOver = pct >= 90;
           return (
-            <div key={b.id || i} className="space-y-1">
-              <div className="flex justify-between text-xs sm:text-sm">
-                <span className="font-medium text-gray-900 dark:text-white">{b.category}</span>
+            <div key={b.id || i} className="min-w-0 space-y-1">
+              <div className="flex min-w-0 items-center justify-between gap-2 text-xs sm:text-sm">
+                <span className="truncate font-medium text-gray-900 dark:text-white">{b.category}</span>
                 <span
-                  className={`font-semibold ${isOver ? "text-rose-600 dark:text-rose-400" : "text-gray-900 dark:text-white"}`}
+                  className={`shrink-0 font-semibold ${isOver ? "text-rose-600 dark:text-rose-400" : "text-gray-900 dark:text-white"}`}
                 >
                   {formatCurrency(b.spent)} / {formatCurrency(b.limit)}
                 </span>
               </div>
               <ProgressBar
                 value={pct}
-                color={isOver ? "bg-rose-500" : pct > 70 ? "bg-amber-500" : "bg-indigo-500"}
+                color={isOver ? "bg-rose-500" : pct > 70 ? "bg-amber-500" : "bg-blue-500"}
                 delay={i * 0.08}
               />
             </div>
@@ -262,7 +262,7 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
   const [budgetRef, budgetInView] = useInView();
 
   return (
-    <div className="flex-1 space-y-5">
+    <div className="w-full min-w-0 flex-1 space-y-5">
       {/* Quick Actions + Cards Panel — side by side */}
       <div className="flex flex-col items-stretch gap-5 lg:flex-row">
         {/* Quick Actions — 60% */}
