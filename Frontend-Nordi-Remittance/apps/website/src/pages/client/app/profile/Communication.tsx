@@ -61,7 +61,7 @@ const categories = [
     label: "Marketing & Promotions",
     description: "New features, special offers, and product updates",
     icon: <TrendingUp size={16} />,
-    iconBg: "bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400",
+    iconBg: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
     channels: ["email", "push"] as const,
   },
   {
@@ -86,7 +86,7 @@ const Toggle: React.FC<{ on: boolean; onChange: () => void }> = ({ on, onChange 
     type="button"
     onClick={onChange}
     className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full transition-colors ${
-      on ? "bg-indigo-600" : "bg-gray-300 dark:bg-gray-700"
+      on ? "bg-blue-600" : "bg-gray-300 dark:bg-gray-700"
     }`}
   >
     <span
@@ -153,7 +153,7 @@ const Communication: React.FC = () => {
             <motion.button
               onClick={save}
               disabled={!dirty || updatePrefs.isPending}
-              className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-50 sm:text-sm"
+              className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50 sm:text-sm"
               whileHover={{ scale: dirty ? 1.02 : 1 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -193,7 +193,7 @@ const Communication: React.FC = () => {
                         ch === "email"
                           ? "bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400"
                           : ch === "push"
-                            ? "bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400"
+                            ? "bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400"
                             : "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400"
                       }`}
                     >
