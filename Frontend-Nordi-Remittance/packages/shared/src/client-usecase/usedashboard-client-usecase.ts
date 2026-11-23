@@ -9,6 +9,8 @@ import { useMemo } from "react";
 import {
   useDashboardOverview,
   useWallets,
+  useAccountApplications,
+  useAccountSummary,
   useRecentTransactions,
   useBudgetProgress,
   useInvestmentPortfolio,
@@ -23,6 +25,7 @@ import {
 } from "../hooks/api-queries";
 import { useUserProfile } from "../hooks/api-queries/useUsers";
 import { multiKeySort, topK, extractArray, extractObject } from "../core/algo";
+import { mergeWalletsAndApplications } from "./useaccounts-client-usecase";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -30,6 +33,8 @@ export function useClientDashboard(): ClientDashboardData {
   // ── Raw queries ──────────────────────────────────────────────────────────
   const { data: overviewRaw, isLoading: overviewLoading, isError: overviewError } = useDashboardOverview();
   const { data: walletsRaw, isLoading: walletsLoading, isError: walletsError } = useWallets();
+  const { data: appsRaw, isLoading: appsLoading } = useAccountApplications();
+  const { data: summaryRaw } = useAccountSummary();
   const { data: txRaw, isLoading: txLoading, isError: txError } = useRecentTransactions(5);
   const { data: budgetRaw, isLoading: budgetLoading, isError: budgetError } = useBudgetProgress();
   const { data: portfolioRaw, isLoading: portfolioLoading, isError: portfolioError } = useInvestmentPortfolio();
@@ -43,31 +48,111 @@ export function useClientDashboard(): ClientDashboardData {
   const { data: profileRaw, isLoading: profileLoading, isError: profileError } = useUserProfile();
   const { data: tfaRaw, isLoading: tfaLoading, isError: tfaError } = useTwoFactorStatus();
 
-  // ── Account Summary ──────────────────────────────────────────────────────
+  // ── Account Summary (All Wallets + Savings, Current, Fixed Deposit Applications) ──
   const account = useMemo<AccountSummaryData>(() => {
-    const stats = extractObject(overviewRaw);
-    const walletStats = extractObject(stats?.wallets);
+    const stats = extractObject(overviewRaw, "statistics");
+    const summaryObj = extractObject(summaryRaw, "summary");
 
-    const wallets = extractArray(walletsRaw, "wallets");
+    const rawWalletsFromList = extractArray(walletsRaw, "wallets");
+    const rawWalletsFromSummary = extractArray(summaryRaw, "wallets");
+    const rawWallets = rawWalletsFromList.length > 0 ? rawWalletsFromList : rawWalletsFromSummary;
 
-    const mapped: WalletItem[] = wallets.map((w: any) => ({
-      id: w.id || w._id || "",
-      name: w.accountName || w.name || "Account",
-      accountNumber: w.accountNumber || "0000",
-      type: (w.accountType || w.type || "default").toLowerCase(),
-      balance: w.balance || 0,
-      currency: w.currency || "USD",
+    const rawAppsFromEndpoint = extractArray(appsRaw, "applications");
+    const rawAppsFromWallets = extractArray(walletsRaw, "applications");
+    const rawAppsFromSummary = extractArray(summaryRaw, "applications");
+    const rawApps =
+      rawAppsFromEndpoint.length > 0
+        ? rawAppsFromEndpoint
+        : rawAppsFromWallets.length > 0
+          ? rawAppsFromWallets
+          : rawAppsFromSummary;
+
+    const unifiedWallets = mergeWalletsAndApplications(rawWallets, rawApps);
+
+    const mapped: WalletItem[] = unifiedWallets.map((w) => ({
+      id: w.id,
+      walletId: w.isApplicationOnly ? undefined : w.id,
+      applicationId: w.applicationId,
+      name: w.displayName,
+      nickname: w.nickname,
+      accountNumber: w.walletNumber || "0000",
+      type: w.type,
+      typeLabel: w.typeLabel,
+      balance: w.rawTotalBalance,
+      currency: w.primaryCurrency || "USD",
+      balancesByCurrency: w.balancesByCurrency,
+      status: w.status,
+      isPrimary: w.isPrimary,
+      isApplicationOnly: w.isApplicationOnly,
+      initialDeposit: w.initialDeposit,
+      goal: w.goal,
+      autoSave: w.autoSave,
+      autoSaveAmount: w.autoSaveAmount,
+      purpose: w.purpose,
+      businessName: w.businessName,
+      expectedMonthlyVolume: w.expectedMonthlyVolume,
+      overdraftRequested: w.overdraftRequested,
+      overdraftLimit: w.overdraftLimit,
+      principal: w.principal,
+      termMonths: w.termMonths,
+      interestRate: w.interestRate,
+      maturityDate: w.maturityDate,
+      autoRenew: w.autoRenew,
+      recentTransactionsCount: w.recentTransactionsCount,
+      createdAt: w.createdAt,
     }));
 
-    const computedBalance = mapped.reduce((s, w) => s + w.balance, 0);
+    const computedBalance = mapped.reduce((s, w) => s + (Number(w.balance) || 0), 0);
+
+    const savingsAccounts = mapped.filter((w) => w.type === "savings");
+    const currentAccounts = mapped.filter(
+      (w) => w.type === "current" || w.type === "personal" || w.type === "business",
+    );
+    const fixedDepositAccounts = mapped.filter((w) => w.type === "fixed_deposit");
+    const personalAccounts = mapped.filter((w) => w.type === "personal" || w.type === "business");
+
+    const savingsBalance = savingsAccounts.reduce((s, w) => s + (Number(w.balance) || 0), 0);
+    const currentBalance = currentAccounts.reduce((s, w) => s + (Number(w.balance) || 0), 0);
+    const fixedDepositBalance = fixedDepositAccounts.reduce((s, w) => s + (Number(w.balance) || 0), 0);
+    const personalBalance = personalAccounts.reduce((s, w) => s + (Number(w.balance) || 0), 0);
+
+    // Compute monthly income / expenses from summary, stats, or fallback to recent transactions
+    const txArray = extractArray(txRaw, "transactions");
+    let txInflow = 0;
+    let txOutflow = 0;
+    for (const tx of txArray) {
+      const amt = Number(tx.amount) || 0;
+      if (["deposit", "credit", "funding", "bonus", "refund", "loan_disbursement"].includes(tx.type)) {
+        txInflow += amt;
+      } else {
+        txOutflow += amt;
+      }
+    }
+
+    const monthlyIncome =
+      Number(summaryObj?.monthlyStats?.incoming || stats?.monthlyIncome || stats?.totalReceived || 0) || txInflow;
+    const monthlyExpenses =
+      Number(summaryObj?.monthlyStats?.outgoing || stats?.monthlyExpenses || stats?.totalSent || 0) || txOutflow;
 
     return {
-      totalBalance: walletStats.totalBalance ?? stats.totalBalance ?? computedBalance,
-      monthlyIncome: stats.monthlyIncome ?? 0,
-      monthlyExpenses: stats.monthlyExpenses ?? 0,
+      totalBalance: Math.max(
+        computedBalance,
+        Number(summaryObj?.totalBalance || 0),
+        Number(stats?.wallets?.totalBalance || stats?.totalBalance || 0),
+      ),
+      monthlyIncome,
+      monthlyExpenses,
+      savingsBalance,
+      savingsCount: savingsAccounts.length,
+      currentBalance,
+      currentCount: currentAccounts.length,
+      fixedDepositBalance,
+      fixedDepositCount: fixedDepositAccounts.length,
+      personalBalance,
+      personalCount: personalAccounts.length,
       wallets: mapped,
     };
-  }, [overviewRaw, walletsRaw]);
+  }, [overviewRaw, walletsRaw, appsRaw, summaryRaw, txRaw]);
 
   // ── Recent Transactions (sorted by date DESC via multiKeySort) ──────────
   const recentTransactions = useMemo<TransactionItem[]>(() => {
@@ -145,18 +230,33 @@ export function useClientDashboard(): ClientDashboardData {
   const cards = useMemo<CardItem[]>(() => {
     const cardsArray = extractArray(cardsRaw, "cards");
     return cardsArray
-      .filter((c: any) => c.status === "active" || !c.status)
-      .slice(0, 2)
-      .map((c: any) => ({
-        id: c.id || c._id || "",
-        name: c.name || c.cardName || "Card",
-        lastFour: c.lastFour || c.cardNumber?.slice(-4) || "••••",
-        isVirtual: !!c.isVirtual || c.type === "virtual",
-        status: c.status || "active",
-        expiryDate: c.expiryDate || c.expiry || "••/••",
-        spendLimit: c.spendLimit || c.limit || 0,
-        usedAmount: c.usedAmount || c.currentSpend || 0,
-      }));
+      .slice(0, 5)
+      .map((c: any) => {
+        const expMonth = c.expiryMonth ? String(c.expiryMonth).padStart(2, "0") : "";
+        const expYear = c.expiryYear ? String(c.expiryYear) : "";
+        const formattedExpiry =
+          c.expiryDate || c.expiry || (expMonth && expYear ? `${expMonth}/${expYear}` : "••/••");
+        const isPhys = c.isPhysical ?? (c.cardType !== "virtual" && c.type !== "virtual");
+        return {
+          id: c._id || c.cardId || c.id || "",
+          cardId: c.cardId,
+          name: c.cardholderName || c.cardName || c.name || "Card Holder",
+          lastFour: c.last4 || c.lastFour || c.cardNumber?.slice(-4) || "••••",
+          fullCardNumber: c.fullCardNumber || "",
+          fullCvv: c.fullCvv || "",
+          isVirtual: !isPhys,
+          isPhysical: isPhys,
+          cardBrand: (c.cardBrand || c.brand || "visa").toLowerCase(),
+          cardType: (c.cardType || c.type || (isPhys ? "debit" : "virtual")).toLowerCase(),
+          balance: Number(c.balance || 0),
+          creditLimit: Number(c.creditLimit || 0),
+          currency: c.currency || "USD",
+          status: c.status || "active",
+          expiryDate: formattedExpiry,
+          spendLimit: Number(c.limits?.monthlyLimit || c.creditLimit || c.spendLimit || c.limit || 5000),
+          usedAmount: Number(c.limits?.monthlySpent || c.usedAmount || c.currentSpend || 0),
+        };
+      });
   }, [cardsRaw]);
 
   // ── Savings Goals ────────────────────────────────────────────────────────
@@ -327,7 +427,7 @@ export function useClientDashboard(): ClientDashboardData {
     cardsDetail,
 
     // Loading flags
-    isAccountLoading: overviewLoading && walletsLoading,
+    isAccountLoading: overviewLoading && walletsLoading && appsLoading,
     isTransactionsLoading: txLoading,
     isBudgetsLoading: budgetLoading,
     isInvestmentsLoading: portfolioLoading || investmentsListLoading,
