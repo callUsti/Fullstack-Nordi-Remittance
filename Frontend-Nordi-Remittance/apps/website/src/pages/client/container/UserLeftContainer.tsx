@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useLogout } from "../client-usecase/useauth-client-usecase";
 import { useAuth } from "@store/auth.store";
 import { useClientProfile } from "../client-usecase/useprofile-client-usecase";
+import { useClientUnreadCount } from "../client-usecase/usenotification-client-usecase";
 import {
   LayoutDashboard,
   Wallet,
@@ -24,19 +25,16 @@ import {
   Gift,
   Globe,
   Zap,
-  Calendar,
-  Clock,
-  FileText,
-  BanknoteIcon,
   QrCode,
   Smartphone,
   Settings,
   MessageSquare,
   Heart,
   AlertTriangle,
+  BanknoteIcon,
+  X,
 } from "lucide-react";
 
-// Expanded menu structure with more banking options
 const menuItems = [
   {
     title: "Dashboard",
@@ -48,10 +46,13 @@ const menuItems = [
     icon: <Wallet size={20} />,
     route: "/customer/accounts",
     children: [
+      { title: "All Accounts", route: "/customer/accounts" },
       { title: "Savings Account", route: "/customer/accounts/savings" },
       { title: "Current Account", route: "/customer/accounts/current" },
       { title: "Fixed Deposits", route: "/customer/accounts/fixed-deposits" },
       { title: "Account Statements", route: "/customer/accounts/statements" },
+      { title: "Account Limits", route: "/customer/accounts/limits" },
+      { title: "Applications", route: "/customer/accounts/applications" },
     ],
   },
   {
@@ -218,46 +219,30 @@ const menuItems = [
   },
 ];
 
-// Animation variants
 const sidebarVariants = {
-  expanded: {
-    width: "280px",
-    transition: { duration: 0.3, ease: "easeInOut" },
-  },
-  collapsed: {
-    width: "80px",
-    transition: { duration: 0.3, ease: "easeInOut" },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, x: -10 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: { duration: 0.2 },
-  },
+  expanded: { width: "280px", transition: { duration: 0.25, ease: "easeInOut" } },
+  collapsed: { width: "80px", transition: { duration: 0.25, ease: "easeInOut" } },
 };
 
 const dropdownVariants = {
   hidden: { height: 0, opacity: 0 },
-  visible: {
-    height: "auto",
-    opacity: 1,
-    transition: { duration: 0.3, ease: "easeOut" },
-  },
+  visible: { height: "auto", opacity: 1, transition: { duration: 0.22, ease: "easeOut" } },
 };
 
-const UserLeftContainer: React.FC = () => {
+interface UserLeftContainerProps {
+  mobileOpen?: boolean;
+  onCloseMobile?: () => void;
+}
+
+const UserLeftContainer: React.FC<UserLeftContainerProps> = ({ mobileOpen = false, onCloseMobile }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout: clearAuthState, user, userName } = useAuth();
   const { user: profileUser } = useClientProfile();
+  const { count: unreadCount } = useClientUnreadCount();
   const logoutMutation = useLogout();
   const [openDropdowns, setOpenDropdowns] = useState<string[]>([]);
   const [collapsed, setCollapsed] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(3);
-  const [alertCount, setAlertCount] = useState(2);
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
   const avatarUrl = profileUser.profilePicture || user?.avatar || null;
@@ -277,6 +262,7 @@ const UserLeftContainer: React.FC = () => {
       : "Member";
 
   const handleLogout = () => {
+    onCloseMobile?.();
     logoutMutation.mutate(undefined, {
       onSettled: () => {
         clearAuthState();
@@ -285,20 +271,14 @@ const UserLeftContainer: React.FC = () => {
     });
   };
 
-  // Automatically open dropdown for active route on mount
   useEffect(() => {
     const currentParentRoute = menuItems.find(
       (item) => item.children && item.children.some((child) => location.pathname === child.route),
     );
-
     if (currentParentRoute && currentParentRoute.route) {
       setOpenDropdowns([currentParentRoute.route]);
     }
   }, [location.pathname]);
-
-  const toggleSidebar = () => {
-    setCollapsed(!collapsed);
-  };
 
   const handleDropdown = (route: string) => {
     setOpenDropdowns((prev) => (prev.includes(route) ? prev.filter((r) => r !== route) : [...prev, route]));
@@ -307,149 +287,126 @@ const UserLeftContainer: React.FC = () => {
   const isActive = (route: string) =>
     location.pathname === route || (route !== "/" && location.pathname.startsWith(route));
 
-  const handleNavigation = (route: string) => {
+  const goTo = (route: string) => {
     navigate(route);
-    if (collapsed) {
-      setCollapsed(false);
-    }
+    if (collapsed) setCollapsed(false);
+    onCloseMobile?.();
   };
 
-  return (
-    <motion.aside
-      variants={sidebarVariants}
-      initial="expanded"
-      animate={collapsed ? "collapsed" : "expanded"}
-      className="relative flex h-screen flex-col bg-gradient-to-b from-indigo-50 to-purple-50 py-6 shadow-lg transition-colors duration-200 dark:from-gray-900 dark:to-gray-900 dark:shadow-gray-950/50"
-    >
-      {/* Toggle button */}
-      <button
-        onClick={toggleSidebar}
-        className="absolute -right-3 top-12 z-10 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 p-1 text-white shadow-lg"
-      >
-        <motion.div animate={{ rotate: collapsed ? 180 : 0 }} transition={{ duration: 0.3 }}>
-          <ChevronDown size={16} />
-        </motion.div>
-      </button>
+  const renderSidebarBody = (isMobileDrawer: boolean) => {
+    const isCollapsed = !isMobileDrawer && collapsed;
 
-      {/* Logo and User Info */}
-      <motion.div
-        className="mb-6 flex items-center px-4 text-xl font-bold"
-        animate={{ justifyContent: collapsed ? "center" : "flex-start" }}
-      >
-        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-400 text-lg font-bold text-white shadow-md">
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt={displayName}
-              className="h-full w-full object-cover"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-                (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden");
-              }}
-            />
-          ) : null}
-          <span className={avatarUrl ? "hidden" : ""}>{initials}</span>
+    return (
+      <div className="flex h-full flex-col bg-blue-50/70 py-5 transition-colors duration-200 dark:bg-gray-900">
+        {/* Header: User Info + Mobile Close Button */}
+        <div
+          className={`mb-5 flex items-center px-4 ${isCollapsed ? "justify-center" : "justify-between"}`}
+        >
+          <div className="flex min-w-0 items-center">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-lg font-semibold text-white shadow-md">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={displayName}
+                  className="h-full w-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                    (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden");
+                  }}
+                />
+              ) : null}
+              <span className={avatarUrl ? "hidden" : ""}>{initials}</span>
+            </div>
+
+            {!isCollapsed && (
+              <div className="ml-3 min-w-0">
+                <div className="max-w-[165px] truncate text-sm font-medium text-blue-900 dark:text-blue-200">
+                  {displayName}
+                </div>
+                <div className="text-xs font-medium text-blue-500 dark:text-blue-400">{memberTier}</div>
+              </div>
+            )}
+          </div>
+
+          {isMobileDrawer && onCloseMobile && (
+            <button
+              type="button"
+              aria-label="Close navigation menu"
+              onClick={onCloseMobile}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/80 text-gray-600 shadow-sm dark:bg-gray-800 dark:text-gray-300"
+            >
+              <X size={20} />
+            </button>
+          )}
         </div>
 
-        {!collapsed && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="ml-3">
-            <div className="max-w-[180px] truncate text-sm font-semibold text-indigo-900 dark:text-indigo-200">
-              {displayName}
-            </div>
-            <div className="text-xs font-medium text-purple-500 dark:text-purple-400">{memberTier}</div>
-          </motion.div>
-        )}
-      </motion.div>
-
-      {/* Quick Links */}
-      {!collapsed && (
-        <motion.div className="mb-6 px-4" variants={itemVariants} initial="hidden" animate="visible">
-          <div className="rounded-xl bg-white p-3 shadow-sm dark:bg-gray-800">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-xs font-semibold text-indigo-900 dark:text-indigo-200">Quick Actions</span>
-              <Zap size={14} className="text-purple-500 dark:text-purple-400" />
-            </div>
-            <div className="grid grid-cols-4 gap-2">
-              <motion.div
-                className="flex cursor-pointer flex-col items-center justify-center rounded-lg bg-indigo-50 p-2 hover:bg-indigo-100 dark:bg-gray-700 dark:hover:bg-gray-600"
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Send size={16} className="mb-1 text-indigo-600 dark:text-indigo-400" />
-                <span className="text-xs text-indigo-700 dark:text-indigo-300">Send</span>
-              </motion.div>
-              <motion.div
-                className="flex cursor-pointer flex-col items-center justify-center rounded-lg bg-purple-50 p-2 hover:bg-purple-100 dark:bg-gray-700 dark:hover:bg-gray-600"
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <QrCode size={16} className="mb-1 text-purple-600 dark:text-purple-400" />
-                <span className="text-xs text-purple-700 dark:text-purple-300">Scan</span>
-              </motion.div>
-              <motion.div
-                className="flex cursor-pointer flex-col items-center justify-center rounded-lg bg-pink-50 p-2 hover:bg-pink-100 dark:bg-gray-700 dark:hover:bg-gray-600"
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <BanknoteIcon size={16} className="mb-1 text-pink-600 dark:text-pink-400" />
-                <span className="text-xs text-pink-700 dark:text-pink-300">Pay</span>
-              </motion.div>
-              <motion.div
-                className="flex cursor-pointer flex-col items-center justify-center rounded-lg bg-blue-50 p-2 hover:bg-blue-100 dark:bg-gray-700 dark:hover:bg-gray-600"
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Globe size={16} className="mb-1 text-blue-600 dark:text-blue-400" />
-                <span className="text-xs text-blue-700 dark:text-blue-300">Forex</span>
-              </motion.div>
+        {/* Quick Actions */}
+        {!isCollapsed && (
+          <div className="mb-5 px-4">
+            <div className="rounded-2xl bg-white p-3 shadow-sm dark:bg-gray-800">
+              <div className="mb-2.5 flex items-center justify-between">
+                <span className="text-xs font-medium text-blue-900 dark:text-blue-200">Quick Actions</span>
+                <Zap size={14} className="text-blue-500 dark:text-blue-400" />
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { label: "Send", icon: <Send size={16} />, route: "/customer/send/domestic", cls: "bg-blue-50 text-blue-600 dark:bg-gray-700 dark:text-blue-300" },
+                  { label: "Scan", icon: <QrCode size={16} />, route: "/customer/mobile/qr", cls: "bg-blue-50 text-blue-600 dark:bg-gray-700 dark:text-blue-300" },
+                  { label: "Pay", icon: <BanknoteIcon size={16} />, route: "/customer/bills/pay", cls: "bg-blue-50 text-blue-600 dark:bg-gray-700 dark:text-blue-300" },
+                  { label: "Forex", icon: <Globe size={16} />, route: "/customer/forex/exchange", cls: "bg-blue-50 text-blue-600 dark:bg-gray-700 dark:text-blue-300" },
+                ].map((act) => (
+                  <motion.button
+                    key={act.label}
+                    type="button"
+                    onClick={() => goTo(act.route)}
+                    className={`flex min-h-[48px] cursor-pointer flex-col items-center justify-center rounded-xl p-2 transition hover:opacity-90 ${act.cls}`}
+                    whileTap={{ scale: 0.94 }}
+                  >
+                    {act.icon}
+                    <span className="mt-1 text-[11px] font-semibold">{act.label}</span>
+                  </motion.button>
+                ))}
+              </div>
             </div>
           </div>
-        </motion.div>
-      )}
+        )}
 
-      {/* Notifications & Alerts */}
-      {!collapsed && (
-        <motion.div
-          className="mb-6 flex flex-col gap-2 px-4"
-          variants={itemVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <motion.div
-            className="flex cursor-pointer items-center justify-between rounded-lg bg-white px-3 py-2 shadow-sm hover:shadow dark:bg-gray-800"
-            whileHover={{ x: 3 }}
-          >
-            <div className="flex items-center gap-2">
-              <Bell size={16} className="text-purple-500 dark:text-purple-400" />
-              <span className="text-xs font-medium text-gray-800 dark:text-gray-200">Notifications</span>
-            </div>
-            {notificationCount > 0 && (
-              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-600 text-xs text-white">
-                {notificationCount}
+        {/* Notifications & Security Alerts */}
+        {!isCollapsed && (
+          <div className="mb-4 flex flex-col gap-2 px-4">
+            <motion.button
+              type="button"
+              onClick={() => goTo("/customer/notifications")}
+              className="flex min-h-[42px] w-full cursor-pointer items-center justify-between rounded-xl bg-white px-3.5 py-2 text-left shadow-sm transition hover:shadow dark:bg-gray-800"
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="flex items-center gap-2.5">
+                <Bell size={16} className="text-blue-500 dark:text-blue-400" />
+                <span className="text-xs font-semibold text-gray-800 dark:text-gray-200">Notifications</span>
               </div>
-            )}
-          </motion.div>
+              {unreadCount > 0 && (
+                <div className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-blue-600 px-1.5 text-xs font-medium text-white">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </div>
+              )}
+            </motion.button>
 
-          <motion.div
-            className="flex cursor-pointer items-center justify-between rounded-lg bg-white px-3 py-2 shadow-sm hover:shadow dark:bg-gray-800"
-            whileHover={{ x: 3 }}
-          >
-            <div className="flex items-center gap-2">
-              <AlertTriangle size={16} className="text-amber-500 dark:text-amber-400" />
-              <span className="text-xs font-medium text-gray-800 dark:text-gray-200">Security Alerts</span>
-            </div>
-            {alertCount > 0 && (
-              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-xs text-white">
-                {alertCount}
+            <motion.button
+              type="button"
+              onClick={() => goTo("/customer/security/alerts")}
+              className="flex min-h-[42px] w-full cursor-pointer items-center justify-between rounded-xl bg-white px-3.5 py-2 text-left shadow-sm transition hover:shadow dark:bg-gray-800"
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="flex items-center gap-2.5">
+                <AlertTriangle size={16} className="text-amber-500 dark:text-amber-400" />
+                <span className="text-xs font-semibold text-gray-800 dark:text-gray-200">Security Center</span>
               </div>
-            )}
-          </motion.div>
-        </motion.div>
-      )}
+            </motion.button>
+          </div>
+        )}
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-2">
-        <AnimatePresence>
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto px-2.5" style={{ WebkitOverflowScrolling: "touch" }}>
           <ul className="m-0 list-none space-y-1 p-0">
             {menuItems.map((item) => {
               const active = isActive(item.route);
@@ -457,185 +414,171 @@ const UserLeftContainer: React.FC = () => {
               const open = openDropdowns.includes(item.route);
 
               return (
-                <motion.li key={item.title} variants={itemVariants} initial="hidden" animate="visible" exit="hidden">
-                  <motion.div
+                <li key={item.title}>
+                  <motion.button
+                    type="button"
                     onClick={() => {
                       if (item.title === "Logout") {
                         handleLogout();
                         return;
                       }
                       if (hasChildren) {
-                        if (!collapsed) handleDropdown(item.route);
-                        else handleNavigation(item.route);
+                        if (!isCollapsed) handleDropdown(item.route);
+                        else goTo(item.route);
                       } else {
-                        handleNavigation(item.route);
+                        goTo(item.route);
                       }
                     }}
-                    className={`
-                      flex cursor-pointer items-center gap-3 rounded-xl px-4 py-3 transition
-                      ${
-                        item.title === "Logout"
-                          ? "font-medium text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30"
-                          : active
-                            ? "bg-gradient-to-r from-indigo-100 to-purple-100 font-semibold text-indigo-800 dark:from-indigo-900/40 dark:to-purple-900/40 dark:text-indigo-200"
-                            : "font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-indigo-300"
-                      }
-                    `}
-                    whileHover={{ x: collapsed ? 0 : 3 }}
+                    className={`flex min-h-[44px] w-full cursor-pointer items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-sm transition ${
+                      item.title === "Logout"
+                        ? "font-semibold text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30"
+                        : active
+                          ? "bg-blue-50/70 font-medium text-blue-800 dark:bg-gray-900 dark:text-blue-200"
+                          : "font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-blue-300"
+                    }`}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <motion.div
+                    <span
                       className={
                         item.title === "Logout"
                           ? "text-rose-500 dark:text-rose-400"
                           : active
-                            ? "text-indigo-600 dark:text-indigo-400"
-                            : "text-purple-500 dark:text-purple-400"
+                            ? "text-blue-600 dark:text-blue-400"
+                            : "text-blue-500 dark:text-blue-400"
                       }
-                      animate={{
-                        scale: active ? 1.1 : 1,
-                      }}
                     >
                       {item.icon}
-                    </motion.div>
+                    </span>
 
-                    {!collapsed && <motion.span className="flex-1">{item.title}</motion.span>}
+                    {!isCollapsed && <span className="flex-1 truncate">{item.title}</span>}
 
-                    {hasChildren && !collapsed && (
-                      <motion.div
-                        initial={{ rotate: 0 }}
-                        animate={{ rotate: open ? 180 : 0 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <ChevronDown size={16} className="text-indigo-400" />
+                    {hasChildren && !isCollapsed && (
+                      <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                        <ChevronDown size={16} className="text-blue-400" />
                       </motion.div>
                     )}
-                  </motion.div>
+                  </motion.button>
 
-                  {/* Dropdown menu */}
-                  {hasChildren && !collapsed && (
+                  {hasChildren && !isCollapsed && (
                     <AnimatePresence>
                       {open && (
                         <motion.ul
-                          className="mb-1 mt-1 list-none overflow-hidden pl-8"
+                          className="mb-1 mt-1 list-none overflow-hidden pl-9"
                           variants={dropdownVariants}
                           initial="hidden"
                           animate="visible"
                           exit="hidden"
                         >
                           {item.children.map((child) => {
-                            const childActive = isActive(child.route);
+                            const childActive = location.pathname === child.route;
                             return (
-                              <motion.li key={child.title} variants={itemVariants} className="mb-1">
-                                <motion.div
-                                  onClick={() => navigate(child.route)}
-                                  className={`
-                                    cursor-pointer rounded-lg px-3 py-2 text-sm transition
-                                    ${childActive ? "bg-indigo-100 font-semibold text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300" : "font-normal text-gray-700 dark:text-gray-400"}
-                                    ${!childActive ? "hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-gray-800 dark:hover:text-indigo-300" : ""}
-                                  `}
-                                  whileHover={{ x: 3 }}
-                                  whileTap={{ scale: 0.98 }}
+                              <li key={child.title} className="mb-0.5">
+                                <button
+                                  type="button"
+                                  onClick={() => goTo(child.route)}
+                                  className={`flex min-h-[38px] w-full cursor-pointer items-center rounded-lg px-3 py-1.5 text-left text-sm transition ${
+                                    childActive
+                                      ? "bg-blue-100 font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
+                                      : "font-normal text-gray-700 hover:bg-blue-50 hover:text-blue-600 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-blue-300"
+                                  }`}
                                 >
                                   {child.title}
-                                  {childActive && (
-                                    <motion.div
-                                      className="absolute right-0 top-0 h-full w-1 rounded-l bg-indigo-600"
-                                      layoutId="activeIndicator"
-                                    />
-                                  )}
-                                </motion.div>
-                              </motion.li>
+                                </button>
+                              </li>
                             );
                           })}
                         </motion.ul>
                       )}
                     </AnimatePresence>
                   )}
-                </motion.li>
+                </li>
               );
             })}
           </ul>
-        </AnimatePresence>
-      </nav>
+        </nav>
 
-      {/* Upcoming events */}
-      {!collapsed && (
-        <motion.div
-          className="mb-4 mt-auto border-t border-indigo-100 px-4 pt-4 dark:border-gray-700"
-          variants={itemVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <div className="rounded-xl bg-white p-3 shadow-sm dark:bg-gray-800">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-xs font-semibold text-indigo-900 dark:text-indigo-200">Coming Up</span>
-              <Calendar size={14} className="text-purple-500 dark:text-purple-400" />
-            </div>
-            <motion.div
-              className="mb-2 flex items-center gap-3 rounded-lg bg-indigo-50 p-2 dark:bg-gray-700"
-              whileHover={{ x: 2 }}
+        {/* Customer Support */}
+        {!isCollapsed && (
+          <div className="mt-3 px-4">
+            <motion.button
+              type="button"
+              onClick={() => goTo("/customer/support/chat")}
+              className="flex w-full cursor-pointer items-center gap-3 rounded-xl bg-blue-50/70 p-3 text-left dark:bg-gray-900"
+              whileTap={{ scale: 0.98 }}
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400">
-                <Clock size={16} />
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
+                <MessageSquare size={16} />
               </div>
               <div>
-                <div className="text-xs font-medium text-indigo-900 dark:text-indigo-200">Loan Payment</div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">Tomorrow, 9:00 AM</div>
+                <div className="text-xs font-medium text-blue-900 dark:text-blue-200">Need assistance?</div>
+                <div className="text-xs text-blue-700 dark:text-blue-400">Chat with support</div>
               </div>
-            </motion.div>
-
-            <motion.div
-              className="flex items-center gap-3 rounded-lg bg-purple-50 p-2 dark:bg-gray-700"
-              whileHover={{ x: 2 }}
-            >
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100 text-purple-600 dark:bg-purple-900/50 dark:text-purple-400">
-                <FileText size={16} />
-              </div>
-              <div>
-                <div className="text-xs font-medium text-purple-900 dark:text-purple-200">Statement Available</div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">Apr 22, 2025</div>
-              </div>
-            </motion.div>
+            </motion.button>
           </div>
-        </motion.div>
-      )}
-
-      {/* Customer Support */}
-      {!collapsed && (
-        <motion.div className="mb-4 px-4" variants={itemVariants} initial="hidden" animate="visible">
-          <motion.div
-            className="flex cursor-pointer items-center gap-3 rounded-xl bg-gradient-to-r from-indigo-100 to-purple-100 p-3 dark:from-indigo-900/40 dark:to-purple-900/40"
-            whileHover={{ y: -2, boxShadow: "0 4px 6px rgba(79, 70, 229, 0.1)" }}
-          >
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500 text-white">
-              <MessageSquare size={16} />
-            </div>
-            <div>
-              <div className="text-xs font-medium text-indigo-900 dark:text-indigo-200">Need assistance?</div>
-              <div className="text-xs text-indigo-700 dark:text-indigo-400">Chat with support</div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-
-      {/* Footer */}
-      <motion.div
-        className="mt-2 px-4 py-3 text-center text-xs"
-        animate={{
-          justifyContent: collapsed ? "center" : "space-between",
-          opacity: 1,
-        }}
-      >
-        {!collapsed ? (
-          <div className="text-indigo-400 dark:text-indigo-500">
-            &copy; {new Date().getFullYear()} Remit Digital Banking
-          </div>
-        ) : (
-          <Heart size={16} className="mx-auto text-purple-400" />
         )}
-      </motion.div>
-    </motion.aside>
+
+        {/* Footer */}
+        <div className="mt-2 px-4 py-2 text-center text-xs">
+          {!isCollapsed ? (
+            <div className="text-blue-400 dark:text-blue-500">
+              &copy; {new Date().getFullYear()} Nordi Digital Banking
+            </div>
+          ) : (
+            <Heart size={16} className="mx-auto text-blue-400" />
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <>
+      {/* Desktop Docked Sidebar (lg+) */}
+      <motion.aside
+        variants={sidebarVariants}
+        initial="expanded"
+        animate={collapsed ? "collapsed" : "expanded"}
+        className="relative hidden h-[100dvh] shrink-0 shadow-lg lg:flex lg:flex-col"
+      >
+        <button
+          type="button"
+          aria-label="Toggle sidebar"
+          onClick={() => setCollapsed(!collapsed)}
+          className="absolute -right-3 top-12 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg"
+        >
+          <motion.div animate={{ rotate: collapsed ? 180 : 0 }} transition={{ duration: 0.25 }}>
+            <ChevronDown size={15} className="rotate-90" />
+          </motion.div>
+        </button>
+        {renderSidebarBody(false)}
+      </motion.aside>
+
+      {/* Mobile & Tablet Slide-Over Drawer (< lg) */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={onCloseMobile}
+              className="fixed inset-0 bg-black/55 backdrop-blur-sm"
+            />
+            <motion.aside
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", stiffness: 360, damping: 34 }}
+              className="fixed inset-y-0 left-0 z-50 h-[100dvh] w-[84vw] max-w-[310px] shadow-2xl"
+              style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+            >
+              {renderSidebarBody(true)}
+            </motion.aside>
+          </div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 
