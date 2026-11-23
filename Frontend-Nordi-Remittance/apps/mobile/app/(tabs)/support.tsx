@@ -1,279 +1,427 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+// ============================================================================
+// SUPPORT & CONCIERGE SCREEN — Nordi Remittance Mobile
+// Ultra-minimalist 24/7 AI assistant, live routing, emergency card locks & FAQs
+// ============================================================================
+
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
+import { AdaptiveScreen } from '@/components/layout/AdaptiveScreen';
 import { useMobileTheme } from '@/core/theme/useMobileTheme';
+import { Icon } from '@/components/ui/Icon';
+import { Card, CardContent } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { SPACING, FONT_SIZES, ICON_SIZES, RADIUS } from '@/constants/sizings';
+
+interface FAQItem {
+  id: string;
+  question: string;
+  answer: string;
+  category: string;
+}
 
 export default function SupportScreen() {
   const router = useRouter();
   const theme = useMobileTheme();
   const styles = createStyles(theme);
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedFaq, setExpandedFaq] = useState<string | null>('1');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    setRefreshing(false);
+  };
+
   const supportCategories = [
-    { icon: 'card', label: 'Cards & Payments' },
-    { icon: 'shield-checkmark', label: 'Account Security' },
-    { icon: 'cash', label: 'Transfers' },
-    { icon: 'settings', label: 'App Issues' }
+    { icon: 'CreditCard', label: 'Cards & Limits', route: '/screens/cards/index' },
+    { icon: 'ArrowRightLeft', label: 'Transfers', route: '/screens/send-money/index' },
+    { icon: 'ShieldCheck', label: 'Account Safety', route: '/screens/security/index' },
+    { icon: 'FileText', label: 'Statements', route: '/screens/accounts/AccountStatements' },
   ];
 
-  const faqItems = [
+  const faqs: FAQItem[] = [
     {
-      question: 'How do I reset my password?',
-      answer: 'To reset your password, go to the login screen and tap "Forgot Password". Follow the instructions sent to your email.'
+      id: '1',
+      category: 'Security',
+      question: 'How do I immediately freeze a compromised card?',
+      answer: 'Go to Cards tab or tap the Emergency Lock button below. Your virtual and physical card numbers will be deactivated instantly without affecting your wallet funds.',
     },
     {
-      question: 'How do I report a suspicious transaction?',
-      answer: 'If you notice any suspicious activity, immediately lock your card in the app and contact our 24/7 support.'
+      id: '2',
+      category: 'Remittances',
+      question: 'What are the cross-border delivery times?',
+      answer: 'SWIFT and SEPA transfers settle within 1-24 hours depending on the destination currency corridor. Crypto & InstantPay settle in under 60 seconds.',
     },
     {
-      question: 'What are the transfer limits?',
-      answer: 'Transfer limits vary based on your account type and verification level. Check your limits in Profile > Account Limits.'
-    }
+      id: '3',
+      category: 'Limits',
+      question: 'How do I raise my daily withdrawal limit?',
+      answer: 'Tier 2 KYC verification unlocks up to $50,000 daily limits. You can complete identity verification in Profile > Document Center in 2 minutes.',
+    },
   ];
+
+  const filteredFaqs = faqs.filter(
+    (f) =>
+      f.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      f.answer.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Support</Text>
+    <AdaptiveScreen withTabBar={true} onRefresh={onRefresh} refreshing={refreshing}>
+      {/* Top Header */}
+      <View style={styles.topHeader}>
+        <View>
+          <Text style={styles.headerSubtitle}>24/7 CONCIERGE & HELP</Text>
+          <Text style={styles.headerTitle}>Support Center</Text>
+        </View>
         <TouchableOpacity
-          style={styles.chatButton}
+          style={styles.headerBtn}
           onPress={() => router.push('/(auth)/contact')}
-          accessibilityLabel="Open 24/7 AI and Live Support"
+          activeOpacity={0.7}
         >
-          <Ionicons name="chatbubble-ellipses" size={24} color={theme.primary} />
+          <Icon name="MessageSquare" size={ICON_SIZES.sm} color={theme.primary} />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color={theme.iconMuted} />
-          <TextInput style={styles.searchInput} placeholder="Search help articles..." placeholderTextColor={theme.textMuted} />
-        </View>
+      {/* AI Assistant Banner */}
+      <Card style={styles.aiCard}>
+        <CardContent style={styles.aiContent}>
+          <View style={styles.aiRow}>
+            <View style={[styles.aiIconBox, { backgroundColor: theme.primarySoft }]}>
+              <Icon name="Sparkles" size={ICON_SIZES.md} color={theme.primary} />
+            </View>
+            <View style={styles.aiTextCol}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={styles.aiTitle}>Nordi AI Concierge</Text>
+                <Badge variant="success" size="sm" style={{ marginLeft: 6 }}>Online 24/7</Badge>
+              </View>
+              <Text style={styles.aiSub}>Instant answers for fees, transfers, and identity issues.</Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={[styles.aiLaunchBtn, { backgroundColor: theme.primary }]}
+            onPress={() => router.push('/(auth)/contact')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.aiLaunchText}>Start AI Chat</Text>
+            <Icon name="ArrowRight" size={ICON_SIZES.nano} color="#FFFFFF" style={{ marginLeft: 4 }} />
+          </TouchableOpacity>
+        </CardContent>
+      </Card>
+
+      {/* Search Input Bar */}
+      <View style={styles.searchBar}>
+        <Icon name="Search" size={ICON_SIZES.sm} color={theme.textMuted} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search questions or keywords..."
+          placeholderTextColor={theme.textMuted}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')} activeOpacity={0.7}>
+            <Icon name="X" size={ICON_SIZES.nano} color={theme.textMuted} />
+          </TouchableOpacity>
+        )}
       </View>
 
-      <View style={styles.categories}>
-        {supportCategories.map((category, index) => (
-          <TouchableOpacity key={index} style={styles.categoryItem}>
-            <View style={styles.categoryIcon}>
-              <Ionicons name={category.icon as any} size={24} color={theme.primary} />
+      {/* Quick Category Hub */}
+      <View style={styles.categoryGrid}>
+        {supportCategories.map((cat, i) => (
+          <TouchableOpacity
+            key={i}
+            style={styles.categoryTile}
+            onPress={() => router.push(cat.route as any)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.tileIconBox, { backgroundColor: theme.surfaceAlt }]}>
+              <Icon name={cat.icon} size={ICON_SIZES.sm} color={theme.primary} />
             </View>
-            <Text style={styles.categoryLabel}>{category.label}</Text>
+            <Text style={styles.tileLabel}>{cat.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
-        {faqItems.map((item, index) => (
-          <TouchableOpacity key={index} style={styles.faqItem}>
-            <View style={styles.faqHeader}>
-              <Text style={styles.faqQuestion}>{item.question}</Text>
-              <Ionicons name="chevron-down" size={20} color={theme.iconMuted} />
-            </View>
-            <Text style={styles.faqAnswer}>{item.answer}</Text>
-          </TouchableOpacity>
-        ))}
+      {/* FAQs Section */}
+      <View style={styles.sectionWrap}>
+        <Text style={styles.sectionHeading}>FREQUENTLY ASKED QUESTIONS</Text>
+        <Card style={styles.faqCard}>
+          <CardContent style={{ paddingVertical: SPACING.xs, paddingHorizontal: SPACING.md }}>
+            {filteredFaqs.map((faq, idx) => {
+              const isExpanded = expandedFaq === faq.id;
+              const isLast = idx === filteredFaqs.length - 1;
+              return (
+                <View key={faq.id} style={[styles.faqItem, !isLast && styles.faqBorder]}>
+                  <TouchableOpacity
+                    style={styles.faqHeader}
+                    onPress={() => setExpandedFaq(isExpanded ? null : faq.id)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.faqQuestion}>{faq.question}</Text>
+                    <Icon
+                      name={isExpanded ? 'ChevronUp' : 'ChevronDown'}
+                      size={ICON_SIZES.xs}
+                      color={theme.textMuted}
+                    />
+                  </TouchableOpacity>
+                  {isExpanded && (
+                    <Text style={styles.faqAnswer}>{faq.answer}</Text>
+                  )}
+                </View>
+              );
+            })}
+          </CardContent>
+        </Card>
       </View>
 
-      <View style={styles.contactSection}>
-        <Text style={styles.sectionTitle}>Contact Us</Text>
-        <View style={styles.contactOptions}>
-          <TouchableOpacity style={styles.contactOption}>
-            <View style={[styles.contactIcon, { backgroundColor: theme.primarySoft }]}>
-              <Ionicons name="call" size={24} color={theme.primary} />
+      {/* Emergency Freeze Assistance */}
+      <View style={styles.sectionWrap}>
+        <Text style={styles.sectionHeading}>URGENT DISPATCH</Text>
+        <Card style={[styles.emergencyCard, { backgroundColor: theme.dangerSoft, borderColor: `${theme.danger}40` }]}>
+          <CardContent style={styles.emergencyContent}>
+            <View style={styles.emergencyLeft}>
+              <View style={[styles.emergencyIcon, { backgroundColor: `${theme.danger}20` }]}>
+                <Icon name="ShieldAlert" size={ICON_SIZES.sm} color={theme.danger} />
+              </View>
+              <View style={{ flex: 1, marginLeft: SPACING.sm }}>
+                <Text style={[styles.emergencyTitle, { color: theme.danger }]}>Emergency Card Freeze</Text>
+                <Text style={styles.emergencySub}>Lock all physical and virtual cards in 1-tap</Text>
+              </View>
             </View>
-            <Text style={styles.contactLabel}>Call Us</Text>
-            <Text style={styles.contactDetail}>24/7 Support Line</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.contactOption}>
-            <View style={[styles.contactIcon, { backgroundColor: '#f0fdf4' }]}>
-              <Ionicons name="mail" size={24} color="#16a34a" />
-            </View>
-            <Text style={styles.contactLabel}>Email</Text>
-            <Text style={styles.contactDetail}>Response in 24h</Text>
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              style={[styles.emergencyBtn, { backgroundColor: theme.danger }]}
+              onPress={() => {
+                Alert.alert('Card Security', 'Navigating to Card Security Manager', [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Manage Cards', onPress: () => router.push('/screens/cards/CardSecurity') },
+                ]);
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.emergencyBtnText}>Lock Cards</Text>
+            </TouchableOpacity>
+          </CardContent>
+        </Card>
       </View>
-
-      <View style={styles.emergencySection}>
-        <View style={styles.emergencyHeader}>
-          <Ionicons name="warning" size={24} color="#dc2626" />
-          <Text style={styles.emergencyTitle}>Emergency Contact</Text>
-        </View>
-        <Text style={styles.emergencyText}>For urgent assistance or to report a lost/stolen card, call our emergency hotline:</Text>
-        <TouchableOpacity style={styles.emergencyButton}>
-          <Ionicons name="call" size={20} color="#fff" />
-          <Text style={styles.emergencyButtonText}>Call Emergency Support</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+    </AdaptiveScreen>
   );
 }
 
-const createStyles = (theme: ReturnType<typeof useMobileTheme>) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.background
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    paddingTop: 60
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: theme.text
-  },
-  chatButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: theme.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  searchContainer: {
-    padding: 20
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.surface,
-    borderRadius: 12,
-    padding: 12
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 8,
-    fontSize: 16,
-    color: theme.text
-  },
-  categories: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    padding: 20,
-    justifyContent: 'space-between'
-  },
-  categoryItem: {
-    width: '48%',
-    backgroundColor: theme.surface,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16
-  },
-  categoryIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: theme.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12
-  },
-  categoryLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.text
-  },
-  section: {
-    padding: 20
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: theme.text,
-    marginBottom: 16
-  },
-  faqItem: {
-    backgroundColor: theme.surface,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12
-  },
-  faqHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
-  faqQuestion: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.text,
-    flex: 1
-  },
-  faqAnswer: {
-    fontSize: 14,
-    color: theme.textMuted,
-    marginTop: 8
-  },
-  contactSection: {
-    padding: 20
-  },
-  contactOptions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between'
-  },
-  contactOption: {
-    width: '48%',
-    backgroundColor: theme.surface,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center'
-  },
-  contactIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12
-  },
-  contactLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.text,
-    marginBottom: 4
-  },
-  contactDetail: {
-    fontSize: 14,
-    color: theme.textMuted
-  },
-  emergencySection: {
-    margin: 20,
-    padding: 20,
-    backgroundColor: theme.dangerSoft,
-    borderRadius: 12
-  },
-  emergencyHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12
-  },
-  emergencyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: theme.danger,
-    marginLeft: 8
-  },
-  emergencyText: {
-    fontSize: 14,
-    color: theme.textMuted,
-    marginBottom: 16
-  },
-  emergencyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.danger,
-    borderRadius: 8,
-    padding: 12
-  },
-  emergencyButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-    marginLeft: 8
-  }
-});
+const createStyles = (theme: ReturnType<typeof useMobileTheme>) =>
+  StyleSheet.create({
+    topHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: SPACING.lg,
+      marginTop: SPACING.xs,
+    },
+    headerSubtitle: {
+      fontSize: FONT_SIZES.nano,
+      letterSpacing: 1.2,
+      fontWeight: '700',
+      color: theme.primary,
+      marginBottom: 2,
+    },
+    headerTitle: {
+      fontSize: FONT_SIZES.hero,
+      fontWeight: '800',
+      color: theme.text,
+      letterSpacing: -0.5,
+    },
+    headerBtn: {
+      width: 34,
+      height: 34,
+      borderRadius: RADIUS.lg,
+      backgroundColor: theme.surfaceAlt,
+      borderWidth: 1,
+      borderColor: theme.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    aiCard: {
+      backgroundColor: theme.surface,
+      borderRadius: RADIUS.xl,
+      borderWidth: 1,
+      borderColor: theme.border,
+      marginBottom: SPACING.md,
+    },
+    aiContent: {
+      padding: SPACING.md,
+    },
+    aiRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: SPACING.sm,
+    },
+    aiIconBox: {
+      width: 34,
+      height: 34,
+      borderRadius: RADIUS.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: SPACING.sm,
+    },
+    aiTextCol: {
+      flex: 1,
+    },
+    aiTitle: {
+      fontSize: FONT_SIZES.body,
+      fontWeight: '700',
+      color: theme.text,
+    },
+    aiSub: {
+      fontSize: FONT_SIZES.caption,
+      color: theme.textMuted,
+      marginTop: 2,
+    },
+    aiLaunchBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: SPACING.xs + 2,
+      borderRadius: RADIUS.md,
+      marginTop: SPACING.xs,
+    },
+    aiLaunchText: {
+      fontSize: FONT_SIZES.caption,
+      fontWeight: '700',
+      color: '#FFFFFF',
+    },
+    searchBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.surface,
+      borderRadius: RADIUS.lg,
+      borderWidth: 1,
+      borderColor: theme.border,
+      paddingHorizontal: SPACING.md,
+      paddingVertical: SPACING.xs + 2,
+      marginBottom: SPACING.md,
+    },
+    searchInput: {
+      flex: 1,
+      marginLeft: SPACING.xs,
+      fontSize: FONT_SIZES.body,
+      color: theme.text,
+      padding: 0,
+    },
+    categoryGrid: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: SPACING.lg,
+    },
+    tileIconBox: {
+      width: 34,
+      height: 34,
+      borderRadius: RADIUS.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: SPACING.xs,
+    },
+    categoryTile: {
+      flex: 1,
+      marginHorizontal: 3,
+      backgroundColor: theme.surface,
+      borderRadius: RADIUS.lg,
+      borderWidth: 1,
+      borderColor: theme.border,
+      alignItems: 'center',
+      paddingVertical: SPACING.sm,
+      paddingHorizontal: SPACING.xxs,
+    },
+    tileLabel: {
+      fontSize: FONT_SIZES.nano,
+      fontWeight: '600',
+      color: theme.text,
+      textAlign: 'center',
+    },
+    sectionWrap: {
+      marginBottom: SPACING.lg,
+    },
+    sectionHeading: {
+      fontSize: FONT_SIZES.micro,
+      fontWeight: '700',
+      letterSpacing: 1,
+      color: theme.textMuted,
+      marginBottom: SPACING.xs,
+      marginLeft: SPACING.xxs,
+    },
+    faqCard: {
+      backgroundColor: theme.surface,
+      borderRadius: RADIUS.lg,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    faqItem: {
+      paddingVertical: SPACING.sm,
+    },
+    faqBorder: {
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.border,
+    },
+    faqHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    faqQuestion: {
+      fontSize: FONT_SIZES.body,
+      fontWeight: '600',
+      color: theme.text,
+      flex: 1,
+      marginRight: SPACING.xs,
+    },
+    faqAnswer: {
+      fontSize: FONT_SIZES.caption,
+      color: theme.textMuted,
+      lineHeight: 18,
+      marginTop: SPACING.xs,
+    },
+    emergencyCard: {
+      borderRadius: RADIUS.lg,
+      borderWidth: 1,
+    },
+    emergencyContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: SPACING.md,
+    },
+    emergencyLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+      marginRight: SPACING.xs,
+    },
+    emergencyIcon: {
+      width: 32,
+      height: 32,
+      borderRadius: RADIUS.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    emergencyTitle: {
+      fontSize: FONT_SIZES.body,
+      fontWeight: '700',
+    },
+    emergencySub: {
+      fontSize: FONT_SIZES.nano,
+      color: theme.textMuted,
+      marginTop: 2,
+    },
+    emergencyBtn: {
+      paddingVertical: SPACING.xs + 1,
+      paddingHorizontal: SPACING.sm,
+      borderRadius: RADIUS.sm,
+    },
+    emergencyBtnText: {
+      fontSize: FONT_SIZES.nano,
+      fontWeight: '700',
+      color: '#FFFFFF',
+    },
+  });
