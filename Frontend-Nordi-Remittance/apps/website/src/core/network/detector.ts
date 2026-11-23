@@ -47,9 +47,12 @@ interface NetworkInformationLike {
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const LATENCY_SAMPLE_SIZE = 10;
-const EXCELLENT_RTT = 150;  // ms
-const GOOD_RTT = 400;       // ms
-const SLOW_RTT = 1000;      // ms
+// Note: reportLatency() measures full HTTP API round-trip + backend DB processing time,
+// not raw ICMP ping. Thresholds must account for normal server/database execution time
+// so strong Wi-Fi is never misclassified as "slow" due to a 500ms-2000ms backend query.
+const EXCELLENT_RTT = 800;   // ms
+const GOOD_RTT = 4000;       // ms
+const SLOW_RTT = 8000;       // ms
 // Above SLOW_RTT → "poor"
 
 // ─── Singleton Class ─────────────────────────────────────────────────────────
@@ -58,6 +61,7 @@ class NetworkDetector {
   private state: NetworkState;
   private listeners = new Set<Listener>();
   private latencySamples: number[] = [];
+  private consecutiveFailures = 0;
   private connectionApi: NetworkInformationLike | null = null;
 
   constructor() {
@@ -143,19 +147,25 @@ class NetworkDetector {
       return;
     }
 
-    let quality: NetworkQuality;
+    let quality: NetworkQuality = 'good';
 
-    // Prefer connection API effective type as a primary signal
+    // Check browser hardware link metrics first (Chrome/Edge Network Information API)
     const etype = this.state.effectiveType;
+    const browserRtt = typeof this.connectionApi?.rtt === 'number' ? this.connectionApi.rtt : 0;
+    const downlink = typeof this.connectionApi?.downlink === 'number' ? this.connectionApi.downlink : -1;
+
+    // If browser explicitly knows we are on a high-speed link (4g / Wi-Fi with good downlink/rtt)
+    // and we don't have repeated network-level drops, do not penalize for backend query time.
+    const hasStrongBrowserSignal =
+      etype === '4g' && (downlink < 0 || downlink >= 1.5) && (browserRtt === 0 || browserRtt <= 350);
+
     if (etype === 'slow-2g' || etype === '2g') {
       quality = 'poor';
-    } else if (etype === '3g') {
+    } else if (etype === '3g' && downlink > 0 && downlink < 1.0) {
       quality = 'slow';
-    } else if (etype === '4g') {
-      // Refine 4g with RTT measurements
-      quality = this.qualityFromRtt(this.getEffectiveRtt());
+    } else if (hasStrongBrowserSignal && this.consecutiveFailures < 3) {
+      quality = browserRtt > 0 && browserRtt <= 100 ? 'excellent' : 'good';
     } else {
-      // No connection API — rely on latency samples
       quality = this.qualityFromRtt(this.getEffectiveRtt());
     }
 
@@ -174,20 +184,27 @@ class NetworkDetector {
   }
 
   private getEffectiveRtt(): number {
-    // Prefer measured latency from actual API calls
+    // Prefer browser-reported link RTT if available and healthy
+    const browserRtt = typeof this.connectionApi?.rtt === 'number' ? this.connectionApi.rtt : 0;
+    if (browserRtt > 0 && browserRtt <= 300 && this.consecutiveFailures === 0) {
+      return browserRtt;
+    }
+
+    // Otherwise use median of recent API durations
     if (this.latencySamples.length >= 3) {
-      // Use median for robustness
       const sorted = [...this.latencySamples].sort((a, b) => a - b);
       return sorted[Math.floor(sorted.length / 2)];
     }
-    // Fall back to connection API rtt
     return this.state.rtt;
   }
 
   // ─── Public API: Report request latency (called from axios interceptor) ─
 
   reportLatency(ms: number): void {
-    this.latencySamples.push(ms);
+    this.consecutiveFailures = 0;
+    // Cap individual backend query time so a single heavy endpoint doesn't skew link quality
+    const cappedMs = Math.min(ms, GOOD_RTT);
+    this.latencySamples.push(cappedMs);
     if (this.latencySamples.length > LATENCY_SAMPLE_SIZE) {
       this.latencySamples.shift();
     }
@@ -198,21 +215,24 @@ class NetworkDetector {
 
   /** Call when a network request fails with a network error (not HTTP error) */
   reportNetworkError(): void {
-    // Push a high latency sample to degrade quality
-    this.latencySamples.push(5000);
-    if (this.latencySamples.length > LATENCY_SAMPLE_SIZE) {
-      this.latencySamples.shift();
+    this.consecutiveFailures += 1;
+    // Only degrade link quality if multiple consecutive network-level failures occur
+    if (this.consecutiveFailures >= 3) {
+      this.latencySamples.push(SLOW_RTT + 1000);
+      if (this.latencySamples.length > LATENCY_SAMPLE_SIZE) {
+        this.latencySamples.shift();
+      }
+      this.recomputeQuality();
     }
-    this.recomputeQuality();
   }
 
   /** Call when a request succeeds to confirm we're online */
   reportRequestSuccess(): void {
+    this.consecutiveFailures = 0;
     if (!this.state.hasConfirmedConnection) {
       this.updateState({ hasConfirmedConnection: true });
     }
-    if (!this.state.isOnline) {
-      // Browser thought we were offline but a request succeeded
+    if (!this.state.isOnline || this.state.quality === 'slow' || this.state.quality === 'poor') {
       this.updateState({ isOnline: true });
       this.recomputeQuality();
     }
