@@ -29,6 +29,15 @@ import {
   useExportUserData,
 } from "../hooks/api-queries/useUsers";
 
+import {
+  useKycStatus,
+  useKycDocuments,
+  useUploadKycDocument,
+  useDeleteKycDocument,
+  useStartVerification,
+  useSubmitSelfieVerification,
+} from "../hooks/api-queries/useKyc";
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // ─── Response Unwrappers ─────────────────────────────────────────────────────
@@ -92,6 +101,10 @@ export function useClientProfile() {
         role: user.role || "user",
         twoFactorEnabled: !!user.twoFactorEnabled || !!user.enableTwoFactor,
         accountType: user.accountType || "",
+        country: user.country || user.countryOfResidence || user.nationality || "",
+        preferredLanguage: user.preferredLanguage || user.language || "en",
+        preferredCurrency: user.preferredCurrency || user.currency || "USD",
+        timezone: user.timezone || "UTC+00:00",
         _raw: user,
       },
       wallets,
@@ -162,4 +175,10 @@ export {
   useUpdateUserNotificationPreferences,
   useDeleteUserAccount,
   useExportUserData,
+  useKycStatus,
+  useKycDocuments,
+  useUploadKycDocument,
+  useDeleteKycDocument,
+  useStartVerification,
+  useSubmitSelfieVerification,
 };
