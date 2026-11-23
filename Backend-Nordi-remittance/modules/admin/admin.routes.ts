@@ -132,6 +132,22 @@ router.patch(
   AdminController.updateUser,
 );
 
+router.get(
+  "/users/:userId/limits",
+  AdminController.getUserLimits,
+);
+
+router.put(
+  "/users/:userId/limits",
+  auditLogMiddleware,
+  AdminController.updateUserLimits,
+);
+
+router.get(
+  "/limit-requests",
+  AdminController.getLimitRequests,
+);
+
 /**
  * @route   DELETE /api/admin/users/:userId
  * @desc    Delete user
