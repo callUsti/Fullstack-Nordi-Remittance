@@ -7,12 +7,9 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
-  RefreshControl,
   Alert,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMobileTheme } from '@/core/theme/useMobileTheme';
 import { ScreenHeader, SubNavTabs } from '@/components/shared/ScreenHeader';
@@ -20,6 +17,9 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { QuerySection } from '@/components/shared/QuerySection';
+import { AdaptiveScreen } from '@/components/layout/AdaptiveScreen';
+import { Icon } from '@/components/ui/Icon';
+import { ICON_SIZES, SPACING, FONT_SIZES, RADIUS } from '@/constants/sizings';
 import {
   useClientPortfolio,
   useClientInvestments,
@@ -61,8 +61,6 @@ export default function InvestmentsScreen() {
     error: productsError,
   } = useClientInvestmentProducts();
 
-  const isRefreshing = portfolioLoading || investmentsLoading;
-
   const handleRefresh = () => {
     refetchPortfolio();
     refetchInvestments();
@@ -85,237 +83,218 @@ export default function InvestmentsScreen() {
   };
 
   return (
-    <View style={s.container}>
-      <ScreenHeader
-        title="Wealth & Investments"
-        subtitle="Grow your wealth with automated yields & portfolios"
-        showBack
-        onBackPress={() => router.back()}
-      />
-
-      <SubNavTabs
-        tabs={INVESTMENT_TABS}
-        activeKey={activeTab}
-        onChange={setActiveTab}
-      />
-
-      <ScrollView
-        style={s.scrollView}
-        contentContainerStyle={s.scrollContent}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={handleRefresh}
-            tintColor={theme.colors.primary}
+    <AdaptiveScreen
+      onRefresh={handleRefresh}
+      refreshing={portfolioLoading || investmentsLoading}
+      header={
+        <View>
+          <ScreenHeader
+            title="Wealth & Investments"
+            subtitle="Grow your wealth with automated yields & portfolios"
+            showBack
+            onBackPress={() => router.back()}
           />
-        }
-      >
-        {activeTab === 'portfolio' && (
-          <QuerySection
-            isLoading={portfolioLoading}
-            error={portfolioError}
-            onRetry={refetchPortfolio}
-          >
-            {/* Total Value Hero Card */}
-            <Card style={s.heroCard}>
-              <CardContent style={s.heroContent}>
-                <View style={s.heroHeader}>
-                  <Text style={s.heroLabel}>Total Portfolio Value</Text>
-                  <Badge variant="success" size="sm">
-                    +{portfolio?.returnPercentage || 12.4}% All Time
-                  </Badge>
-                </View>
-                <Text style={s.heroValue}>
-                  {formatInvestmentValue(portfolio?.totalValue || 24850)}
-                </Text>
+          <SubNavTabs
+            tabs={INVESTMENT_TABS}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
+        </View>
+      }
+    >
+      {activeTab === 'portfolio' && (
+        <QuerySection
+          isLoading={portfolioLoading}
+          error={portfolioError}
+          onRetry={refetchPortfolio}
+        >
+          {/* Total Value Hero Card */}
+          <Card style={s.heroCard}>
+            <CardContent style={s.heroContent}>
+              <View style={s.heroHeader}>
+                <Text style={s.heroLabel}>Total Portfolio Value</Text>
+                <Badge variant="success" size="sm">
+                  +{portfolio?.returnPercentage || 12.4}% All Time
+                </Badge>
+              </View>
+              <Text style={s.heroValue}>
+                {formatInvestmentValue(portfolio?.totalValue || 24850)}
+              </Text>
 
-                <View style={s.metricsRow}>
-                  <View style={s.metricItem}>
-                    <Text style={s.metricLabel}>Total Invested</Text>
-                    <Text style={s.metricVal}>
-                      {formatInvestmentValue(portfolio?.totalInvested || 21500)}
-                    </Text>
-                  </View>
-                  <View style={s.metricDivider} />
-                  <View style={s.metricItem}>
-                    <Text style={s.metricLabel}>Total Returns</Text>
-                    <Text style={[s.metricVal, { color: theme.colors.success }]}>
-                      +{formatInvestmentValue(portfolio?.totalReturns || 3350)}
-                    </Text>
-                  </View>
+              <View style={s.metricsRow}>
+                <View style={s.metricItem}>
+                  <Text style={s.metricLabel}>Total Invested</Text>
+                  <Text style={s.metricVal}>
+                    {formatInvestmentValue(portfolio?.totalInvested || 21500)}
+                  </Text>
+                </View>
+                <View style={s.metricDivider} />
+                <View style={s.metricItem}>
+                  <Text style={s.metricLabel}>Total Returns</Text>
+                  <Text style={[s.metricVal, { color: theme.colors.success }]}>
+                    +{formatInvestmentValue(portfolio?.totalReturns || 3350)}
+                  </Text>
+                </View>
+              </View>
+            </CardContent>
+          </Card>
+
+          {/* Holdings Section */}
+          <View style={s.sectionHeader}>
+            <Text style={s.sectionTitle}>Asset Holdings</Text>
+            <Text style={s.sectionCount}>
+              {(portfolio?.holdings?.length || 3)} assets
+            </Text>
+          </View>
+
+          {(portfolio?.holdings?.length ? portfolio.holdings : [
+            { id: '1', name: 'US Treasury Yield 2026', symbol: 'USTB', quantity: 15, currentValue: 15200, unrealizedGainPct: 5.4 },
+            { id: '2', name: 'Global Tech Equity Fund', symbol: 'GTEF', quantity: 40, currentValue: 6450, unrealizedGainPct: 18.2 },
+            { id: '3', name: 'Nordi High-Yield Vault', symbol: 'NHYV', quantity: 1, currentValue: 3200, unrealizedGainPct: 8.5 },
+          ]).map((asset: any) => (
+            <Card key={asset.id} style={s.holdingCard}>
+              <CardContent style={s.holdingContent}>
+                <View style={s.assetIconWrapper}>
+                  <Icon name="PieChart" size={ICON_SIZES.md} color={theme.colors.primary} />
+                </View>
+                <View style={s.assetInfo}>
+                  <Text style={s.assetName} numberOfLines={1}>{asset.name}</Text>
+                  <Text style={s.assetSymbol}>{asset.symbol} • {asset.quantity} units</Text>
+                </View>
+                <View style={s.assetValues}>
+                  <Text style={s.assetCurrentVal}>
+                    {formatInvestmentValue(asset.currentValue || 0)}
+                  </Text>
+                  <Text style={[s.assetGain, { color: (asset.unrealizedGainPct ?? 0) >= 0 ? theme.colors.success : theme.colors.error }]}>
+                    {(asset.unrealizedGainPct ?? 0) >= 0 ? '+' : ''}{asset.unrealizedGainPct || 0}%
+                  </Text>
                 </View>
               </CardContent>
             </Card>
+          ))}
+        </QuerySection>
+      )}
 
-            {/* Holdings Section */}
-            <View style={s.sectionHeader}>
-              <Text style={s.sectionTitle}>Asset Holdings</Text>
-              <Text style={s.sectionCount}>
-                {(portfolio?.holdings?.length || 3)} assets
-              </Text>
-            </View>
+      {activeTab === 'products' && (
+        <QuerySection
+          isLoading={productsLoading}
+          error={productsError}
+        >
+          <View style={s.sectionHeader}>
+            <Text style={s.sectionTitle}>Curated Investment Products</Text>
+            <Badge variant="primary" size="sm">Regulated</Badge>
+          </View>
 
-            {(portfolio?.holdings?.length ? portfolio.holdings : [
-              { id: '1', name: 'US Treasury Yield 2026', symbol: 'USTB', quantity: 15, currentValue: 15200, unrealizedGainPct: 5.4 },
-              { id: '2', name: 'Global Tech Equity Fund', symbol: 'GTEF', quantity: 40, currentValue: 6450, unrealizedGainPct: 18.2 },
-              { id: '3', name: 'Nordi High-Yield Vault', symbol: 'NHYV', quantity: 1, currentValue: 3200, unrealizedGainPct: 8.5 },
-            ]).map((asset: any) => (
-              <Card key={asset.id} style={s.holdingCard}>
-                <CardContent style={s.holdingContent}>
-                  <View style={s.assetIconWrapper}>
-                    <Ionicons name="pie-chart" size={18} color={theme.colors.primary} />
+          {(products?.length ? products : [
+            { id: 'p1', name: 'Fixed Term Savings Deposit', expectedApy: '7.5%', minInvestment: 1000, risk: 'Low', tenor: '12 Months' },
+            { id: 'p2', name: 'Nordi Balanced Remittance Growth', expectedApy: '11.8%', minInvestment: 500, risk: 'Medium', tenor: 'Flexible' },
+            { id: 'p3', name: 'Digital Asset Index Fund', expectedApy: '16.4%', minInvestment: 250, risk: 'High', tenor: 'Flexible' },
+          ]).map((prod: any) => (
+            <Card key={prod.id} style={s.productCard}>
+              <CardContent style={s.productContent}>
+                <View style={s.productHeader}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.productTitle}>{prod.name}</Text>
+                    <Text style={s.productSub}>Tenor: {prod.tenor} • Min: {formatInvestmentValue(prod.minInvestment)}</Text>
                   </View>
-                  <View style={s.assetInfo}>
-                    <Text style={s.assetName} numberOfLines={1}>{asset.name}</Text>
-                    <Text style={s.assetSymbol}>{asset.symbol} • {asset.quantity} units</Text>
-                  </View>
-                  <View style={s.assetValues}>
-                    <Text style={s.assetCurrentVal}>
-                      {formatInvestmentValue(asset.currentValue || 0)}
-                    </Text>
-                    <Text style={[s.assetGain, { color: (asset.unrealizedGainPct ?? 0) >= 0 ? theme.colors.success : theme.colors.error }]}>
-                      {(asset.unrealizedGainPct ?? 0) >= 0 ? '+' : ''}{asset.unrealizedGainPct || 0}%
-                    </Text>
-                  </View>
-                </CardContent>
-              </Card>
-            ))}
-          </QuerySection>
-        )}
+                  <Badge variant={prod.risk === 'Low' ? 'success' : prod.risk === 'Medium' ? 'warning' : 'neutral'} size="sm">
+                    {prod.risk} Risk
+                  </Badge>
+                </View>
 
-        {activeTab === 'products' && (
-          <QuerySection
-            isLoading={productsLoading}
-            error={productsError}
-          >
-            <View style={s.sectionHeader}>
-              <Text style={s.sectionTitle}>Curated Investment Products</Text>
-              <Badge variant="primary" size="sm">Regulated</Badge>
-            </View>
+                <View style={s.productApyRow}>
+                  <Text style={s.apyLabel}>Target Annual Yield (APY)</Text>
+                  <Text style={s.apyVal}>{prod.expectedApy}</Text>
+                </View>
 
-            {(products?.length ? products : [
-              { id: 'p1', name: 'Fixed Term Savings Deposit', expectedApy: '7.5%', minInvestment: 1000, risk: 'Low', tenor: '12 Months' },
-              { id: 'p2', name: 'Nordi Balanced Remittance Growth', expectedApy: '11.8%', minInvestment: 500, risk: 'Medium', tenor: 'Flexible' },
-              { id: 'p3', name: 'Digital Asset Index Fund', expectedApy: '16.4%', minInvestment: 250, risk: 'High', tenor: 'Flexible' },
-            ]).map((prod: any) => (
-              <Card key={prod.id} style={s.productCard}>
-                <CardContent style={s.productContent}>
-                  <View style={s.productHeader}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={s.productTitle}>{prod.name}</Text>
-                      <Text style={s.productSub}>Tenor: {prod.tenor} • Min: {formatInvestmentValue(prod.minInvestment)}</Text>
-                    </View>
-                    <Badge variant={prod.risk === 'Low' ? 'success' : prod.risk === 'Medium' ? 'warning' : 'neutral'} size="sm">
-                      {prod.risk} Risk
-                    </Badge>
-                  </View>
+                <Button
+                  title="Invest Now"
+                  variant="primary"
+                  size="sm"
+                  onPress={() => handleInvestInProduct(prod)}
+                  style={s.investBtn}
+                />
+              </CardContent>
+            </Card>
+          ))}
+        </QuerySection>
+      )}
 
-                  <View style={s.productApyRow}>
-                    <Text style={s.apyLabel}>Target Annual Yield (APY)</Text>
-                    <Text style={s.apyVal}>{prod.expectedApy}</Text>
-                  </View>
+      {activeTab === 'activity' && (
+        <QuerySection
+          isLoading={investmentsLoading}
+          error={investmentsError}
+          onRetry={refetchInvestments}
+        >
+          <View style={s.sectionHeader}>
+            <Text style={s.sectionTitle}>Investment Transactions</Text>
+          </View>
 
-                  <Button
-                    title="Invest Now"
-                    variant="primary"
-                    size="sm"
-                    onPress={() => handleInvestInProduct(prod)}
-                    style={s.investBtn}
+          {(investments?.length ? investments : [
+            { id: 't1', type: 'Deposit', name: 'Monthly Recurring Allocation', amount: 500, date: '2026-10-10' },
+            { id: 't2', type: 'Yield', name: 'Quarterly Dividend Payout', amount: 84.50, date: '2026-09-30' },
+            { id: 't3', type: 'Deposit', name: 'Fixed Deposit Funding', amount: 2000, date: '2026-09-15' },
+          ]).map((tx: any) => (
+            <Card key={tx.id} style={s.txCard}>
+              <CardContent style={s.txContent}>
+                <View style={[s.txIcon, { backgroundColor: tx.type === 'Yield' ? `${theme.colors.success}15` : `${theme.colors.primary}15` }]}>
+                  <Icon
+                    name={tx.type === 'Yield' ? 'TrendingUp' : 'ArrowDown'}
+                    size={ICON_SIZES.sm}
+                    color={tx.type === 'Yield' ? theme.colors.success : theme.colors.primary}
                   />
-                </CardContent>
-              </Card>
-            ))}
-          </QuerySection>
-        )}
-
-        {activeTab === 'activity' && (
-          <QuerySection
-            isLoading={investmentsLoading}
-            error={investmentsError}
-            onRetry={refetchInvestments}
-          >
-            <View style={s.sectionHeader}>
-              <Text style={s.sectionTitle}>Investment Transactions</Text>
-            </View>
-
-            {(investments?.length ? investments : [
-              { id: 't1', type: 'Deposit', name: 'Monthly Recurring Allocation', amount: 500, date: '2026-10-10' },
-              { id: 't2', type: 'Yield', name: 'Quarterly Dividend Payout', amount: 84.50, date: '2026-09-30' },
-              { id: 't3', type: 'Deposit', name: 'Fixed Deposit Funding', amount: 2000, date: '2026-09-15' },
-            ]).map((tx: any) => (
-              <Card key={tx.id} style={s.txCard}>
-                <CardContent style={s.txContent}>
-                  <View style={[s.txIcon, { backgroundColor: tx.type === 'Yield' ? `${theme.colors.success}15` : `${theme.colors.primary}15` }]}>
-                    <Ionicons
-                      name={tx.type === 'Yield' ? 'trending-up' : 'arrow-down'}
-                      size={16}
-                      color={tx.type === 'Yield' ? theme.colors.success : theme.colors.primary}
-                    />
-                  </View>
-                  <View style={{ flex: 1, marginLeft: 12 }}>
-                    <Text style={s.txTitle}>{tx.name}</Text>
-                    <Text style={s.txDate}>{tx.date}</Text>
-                  </View>
-                  <Text style={[s.txAmount, { color: tx.type === 'Yield' ? theme.colors.success : theme.colors.textPrimary }]}>
-                    +{formatInvestmentValue(tx.amount)}
-                  </Text>
-                </CardContent>
-              </Card>
-            ))}
-          </QuerySection>
-        )}
-      </ScrollView>
-    </View>
+                </View>
+                <View style={{ flex: 1, marginLeft: SPACING.md }}>
+                  <Text style={s.txTitle}>{tx.name}</Text>
+                  <Text style={s.txDate}>{tx.date}</Text>
+                </View>
+                <Text style={[s.txAmount, { color: tx.type === 'Yield' ? theme.colors.success : theme.colors.textPrimary }]}>
+                  +{formatInvestmentValue(tx.amount)}
+                </Text>
+              </CardContent>
+            </Card>
+          ))}
+        </QuerySection>
+      )}
+    </AdaptiveScreen>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useMobileTheme>) {
   return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-    },
-    scrollView: {
-      flex: 1,
-    },
-    scrollContent: {
-      padding: 16,
-      paddingBottom: 40,
-    },
     heroCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: RADIUS.xl,
       borderWidth: 1,
       borderColor: theme.colors.border,
-      marginBottom: 20,
+      marginBottom: SPACING.xl,
     },
     heroContent: {
-      padding: 18,
+      padding: SPACING.lg + 2,
     },
     heroHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 6,
+      marginBottom: SPACING.xs,
     },
     heroLabel: {
-      fontSize: 12,
+      fontSize: FONT_SIZES.bodySm,
       fontWeight: '500',
       color: theme.colors.textSecondary,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
     heroValue: {
-      fontSize: 28,
+      fontSize: FONT_SIZES.display,
       fontWeight: '800',
       color: theme.colors.textPrimary,
-      marginBottom: 16,
+      marginBottom: SPACING.lg,
     },
     metricsRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingTop: 12,
+      paddingTop: SPACING.md,
       borderTopWidth: 1,
       borderTopColor: theme.colors.border,
     },
@@ -326,15 +305,15 @@ function createStyles(theme: ReturnType<typeof useMobileTheme>) {
       width: 1,
       height: 28,
       backgroundColor: theme.colors.border,
-      marginHorizontal: 16,
+      marginHorizontal: SPACING.lg,
     },
     metricLabel: {
-      fontSize: 11,
+      fontSize: FONT_SIZES.caption,
       color: theme.colors.textSecondary,
-      marginBottom: 2,
+      marginBottom: SPACING.xxs,
     },
     metricVal: {
-      fontSize: 14,
+      fontSize: FONT_SIZES.subhead,
       fontWeight: '700',
       color: theme.colors.textPrimary,
     },
@@ -342,108 +321,108 @@ function createStyles(theme: ReturnType<typeof useMobileTheme>) {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 12,
-      marginTop: 4,
+      marginBottom: SPACING.md,
+      marginTop: SPACING.xs,
     },
     sectionTitle: {
-      fontSize: 15,
+      fontSize: FONT_SIZES.titleSm,
       fontWeight: '700',
       color: theme.colors.textPrimary,
     },
     sectionCount: {
-      fontSize: 12,
+      fontSize: FONT_SIZES.bodySm,
       color: theme.colors.textSecondary,
     },
     holdingCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 12,
+      borderRadius: RADIUS.lg,
       borderWidth: 1,
       borderColor: theme.colors.border,
-      marginBottom: 10,
+      marginBottom: SPACING.sm,
     },
     holdingContent: {
       flexDirection: 'row',
       alignItems: 'center',
-      padding: 12,
+      padding: SPACING.md,
     },
     assetIconWrapper: {
       width: 36,
       height: 36,
-      borderRadius: 10,
+      borderRadius: RADIUS.sm,
       backgroundColor: `${theme.colors.primary}15`,
       alignItems: 'center',
       justifyContent: 'center',
-      marginRight: 12,
+      marginRight: SPACING.md,
     },
     assetInfo: {
       flex: 1,
     },
     assetName: {
-      fontSize: 13,
+      fontSize: FONT_SIZES.body,
       fontWeight: '600',
       color: theme.colors.textPrimary,
-      marginBottom: 2,
+      marginBottom: SPACING.xxs,
     },
     assetSymbol: {
-      fontSize: 11,
+      fontSize: FONT_SIZES.caption,
       color: theme.colors.textSecondary,
     },
     assetValues: {
       alignItems: 'flex-end',
     },
     assetCurrentVal: {
-      fontSize: 14,
+      fontSize: FONT_SIZES.subhead,
       fontWeight: '700',
       color: theme.colors.textPrimary,
-      marginBottom: 2,
+      marginBottom: SPACING.xxs,
     },
     assetGain: {
-      fontSize: 11,
+      fontSize: FONT_SIZES.caption,
       fontWeight: '600',
     },
     productCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 14,
+      borderRadius: RADIUS.xl,
       borderWidth: 1,
       borderColor: theme.colors.border,
-      marginBottom: 12,
+      marginBottom: SPACING.md,
     },
     productContent: {
-      padding: 16,
+      padding: SPACING.lg,
     },
     productHeader: {
       flexDirection: 'row',
       alignItems: 'flex-start',
       justifyContent: 'space-between',
-      marginBottom: 12,
+      marginBottom: SPACING.md,
     },
     productTitle: {
-      fontSize: 15,
+      fontSize: FONT_SIZES.titleSm,
       fontWeight: '700',
       color: theme.colors.textPrimary,
-      marginBottom: 3,
+      marginBottom: SPACING.xxs,
     },
     productSub: {
-      fontSize: 11,
+      fontSize: FONT_SIZES.caption,
       color: theme.colors.textSecondary,
     },
     productApyRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingVertical: 10,
-      paddingHorizontal: 12,
+      paddingVertical: SPACING.sm,
+      paddingHorizontal: SPACING.md,
       backgroundColor: `${theme.colors.success}10`,
-      borderRadius: 8,
-      marginBottom: 14,
+      borderRadius: RADIUS.md,
+      marginBottom: SPACING.md,
     },
     apyLabel: {
-      fontSize: 12,
+      fontSize: FONT_SIZES.bodySm,
       fontWeight: '500',
       color: theme.colors.textPrimary,
     },
     apyVal: {
-      fontSize: 18,
+      fontSize: FONT_SIZES.headline,
       fontWeight: '800',
       color: theme.colors.success,
     },
@@ -452,35 +431,35 @@ function createStyles(theme: ReturnType<typeof useMobileTheme>) {
     },
     txCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 12,
+      borderRadius: RADIUS.lg,
       borderWidth: 1,
       borderColor: theme.colors.border,
-      marginBottom: 8,
+      marginBottom: SPACING.sm,
     },
     txContent: {
       flexDirection: 'row',
       alignItems: 'center',
-      padding: 12,
+      padding: SPACING.md,
     },
     txIcon: {
       width: 32,
       height: 32,
-      borderRadius: 8,
+      borderRadius: RADIUS.md,
       alignItems: 'center',
       justifyContent: 'center',
     },
     txTitle: {
-      fontSize: 13,
+      fontSize: FONT_SIZES.body,
       fontWeight: '600',
       color: theme.colors.textPrimary,
-      marginBottom: 2,
+      marginBottom: SPACING.xxs,
     },
     txDate: {
-      fontSize: 11,
+      fontSize: FONT_SIZES.caption,
       color: theme.colors.textSecondary,
     },
     txAmount: {
-      fontSize: 13,
+      fontSize: FONT_SIZES.body,
       fontWeight: '700',
     },
   });
