@@ -264,4 +264,16 @@ router.post(
   LegalController.submitRegulatoryFiling,
 );
 
+// ============================================================================
+// USER STATEMENT & REPORT ROUTES (PDF / CSV / EXCEL)
+// ============================================================================
+
+router.get("/reports", LegalController.getReports);
+router.post("/reports/account-statement", auditLogMiddleware, LegalController.requestAccountStatement);
+router.post("/reports/transaction-history", auditLogMiddleware, LegalController.requestTransactionHistory);
+router.get("/reports/:reportId", LegalController.getReportById);
+router.get("/reports/:reportId/download", LegalController.downloadReport);
+router.get("/reports/:reportId/file", LegalController.downloadStatementFile);
+router.get("/statements/export", LegalController.exportStatementDirect);
+
 export default router;
