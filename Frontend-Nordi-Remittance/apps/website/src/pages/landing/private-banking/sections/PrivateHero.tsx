@@ -64,12 +64,12 @@ const PrivateHero: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <span className="inline-flex items-center gap-2 px-3 sm:px-4 py-1 sm:py-2 rounded-full bg-amber-400/10 text-amber-300 text-[10px] sm:text-sm font-bold mb-4 sm:mb-6 border border-amber-500/30 uppercase tracking-widest shadow-lg">
+            <span className="inline-flex items-center gap-2 px-3 sm:px-4 py-1 sm:py-2 rounded-full bg-amber-400/10 text-amber-300 text-[10px] sm:text-sm font-medium mb-4 sm:mb-6 border border-amber-500/30 uppercase tracking-widest shadow-lg">
               <Crown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               Private Banking
             </span>
             
-            <h1 className="text-3xl sm:text-5xl lg:text-5xl xl:text-6xl font-black text-white mb-4 sm:mb-6 leading-[1.1] tracking-tight">
+            <h1 className="text-3xl sm:text-5xl lg:text-5xl xl:text-6xl font-bold text-white mb-4 sm:mb-6 leading-[1.1] tracking-tight">
               Exclusive Wealth
               <span className="block sm:inline text-amber-400"> Management</span>
             </h1>
@@ -81,11 +81,11 @@ const PrivateHero: React.FC = () => {
 
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-4 mb-8 sm:mb-12">
-              <Button variant="primary" className="w-full sm:w-auto bg-amber-400 hover:bg-amber-500 text-neutral-900 font-bold py-3 sm:py-4 px-8 shadow-xl shadow-amber-400/10">
+              <Button variant="primary" className="w-full sm:w-auto bg-amber-400 hover:bg-amber-500 text-neutral-900 font-medium py-3 sm:py-4 px-8 shadow-xl shadow-amber-400/10">
                 <Sparkles className="w-5 h-5 mr-2" />
                 Become a Member
               </Button>
-              <Button variant="outline" className="w-full sm:w-auto border-white/20 text-white hover:bg-white/5 py-3 sm:py-4 px-8 font-bold">
+              <Button variant="outline" className="w-full sm:w-auto border-white/20 text-white hover:bg-white/5 py-3 sm:py-4 px-8 font-medium">
                 Learn More
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
@@ -106,7 +106,7 @@ const PrivateHero: React.FC = () => {
                   <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-amber-400/10 text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-inner">
                     <link.icon className="w-5 h-5 sm:w-6 sm:h-6" />
                   </div>
-                  <span className="text-white font-bold text-[13px] sm:text-sm uppercase tracking-tight">{link.label}</span>
+                  <span className="text-white font-medium text-[13px] sm:text-sm uppercase tracking-tight">{link.label}</span>
                   <ChevronRight className="w-4 h-4 text-amber-400/50 group-hover:translate-x-1 transition-transform ml-auto" />
                 </a>
               ))}
@@ -121,15 +121,15 @@ const PrivateHero: React.FC = () => {
             className="w-full"
           >
             <div className="bg-white/5 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-white/10 shadow-2xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full -mr-16 -mt-16 blur-2xl font-bold" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full -mr-16 -mt-16 blur-2xl font-medium" />
               
               <div className="flex items-center gap-4 mb-8 sm:mb-10 relative z-10">
                 <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg">
                   <Crown className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                 </div>
                 <div>
-                  <p className="text-lg sm:text-2xl font-black text-white uppercase tracking-tight">Private Circle</p>
-                  <p className="text-[11px] sm:text-xs text-amber-400/80 font-bold uppercase tracking-widest">By Invitation Only</p>
+                  <p className="text-lg sm:text-2xl font-semibold text-white uppercase tracking-tight">Private Circle</p>
+                  <p className="text-[11px] sm:text-xs text-amber-400/80 font-medium uppercase tracking-widest">By Invitation Only</p>
                 </div>
               </div>
 
@@ -145,8 +145,8 @@ const PrivateHero: React.FC = () => {
                     <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto rounded-xl bg-amber-400/10 text-amber-400 flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform">
                       <stat.icon className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
-                    <p className="text-xl sm:text-3xl font-black text-white leading-tight tabular-nums">{stat.value}</p>
-                    <p className="text-[10px] sm:text-xs text-neutral-400 font-bold uppercase tracking-wider mt-1.5">{stat.label}</p>
+                    <p className="text-xl sm:text-3xl font-bold text-white leading-tight tabular-nums">{stat.value}</p>
+                    <p className="text-[10px] sm:text-xs text-neutral-400 font-medium uppercase tracking-wider mt-1.5">{stat.label}</p>
                   </motion.div>
                 ))}
               </div>
@@ -154,8 +154,8 @@ const PrivateHero: React.FC = () => {
               {/* Eligibility Note */}
               <div className="p-4 sm:p-5 rounded-2xl bg-amber-400/5 border border-amber-400/20 relative z-10">
                 <p className="text-[12px] sm:text-sm text-neutral-300 leading-relaxed">
-                  <span className="font-black text-amber-400 uppercase tracking-tighter mr-2">Exclusive Eligibility:</span>
-                  Minimum investable assets of <span className="text-white font-bold">$500,000</span> or annual verifiable income exceeding <span className="text-white font-bold">$200,000</span>.
+                  <span className="font-medium text-amber-400 uppercase tracking-tighter mr-2">Exclusive Eligibility:</span>
+                  Minimum investable assets of <span className="text-white font-medium">$500,000</span> or annual verifiable income exceeding <span className="text-white font-medium">$200,000</span>.
                 </p>
               </div>
             </div>
