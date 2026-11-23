@@ -91,6 +91,8 @@ export const useCreateVirtualCard = () => {
       cardBrand?: string;
       cardholderName?: string;
       currency?: string;
+      creditLimit?: number;
+      interestRate?: number;
     }) => {
       const response = await CardsRepository.createVirtual(data);
       return response.data;
@@ -452,23 +454,67 @@ export const useFundCard = () => {
       amount,
       fromWalletId,
       notes,
+      mode,
     }: {
       cardId: string;
       amount: number;
       fromWalletId?: string;
       notes?: string;
+      mode?: "fund" | "repay";
     }) => {
-      const response = await CardsRepository.fund(cardId, { amount, fromWalletId, notes });
+      const response = await CardsRepository.fund(cardId, { amount, fromWalletId, notes, mode });
       return response;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (res, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.cards.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.cards.detail(variables.cardId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all });
       queryClient.invalidateQueries({ queryKey: ["wallets"] as any });
-      showToast(`Successfully added funds to card`, "success");
+      showToast((res as any)?.message || `Successfully processed card transaction`, "success");
     },
-    onError: (error: Error) => {
-      showToast(error.message || "Failed to add funds to card", "error");
+    onError: (error: any) => {
+      const msg =
+        error?.response?.data?.error?.message ||
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to process card funding";
+      showToast(msg, "error");
+    },
+  });
+};
+
+/**
+ * Link card to active account mutation
+ */
+export const useLinkCardAccount = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
+
+  return useMutation({
+    mutationFn: async ({
+      cardId,
+      walletId,
+      autoDebitWhenEmpty = true,
+    }: {
+      cardId: string;
+      walletId: string;
+      autoDebitWhenEmpty?: boolean;
+    }) => {
+      return await CardsRepository.linkAccount(cardId, { walletId, autoDebitWhenEmpty });
+    },
+    onSuccess: (res, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.cards.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cards.detail(variables.cardId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all });
+      showToast((res as any)?.message || "Card linked to selected account", "success");
+    },
+    onError: (error: any) => {
+      const msg =
+        error?.response?.data?.error?.message ||
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to link card to account";
+      showToast(msg, "error");
     },
   });
 };
