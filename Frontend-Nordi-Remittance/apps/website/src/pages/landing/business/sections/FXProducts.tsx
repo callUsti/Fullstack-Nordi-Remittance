@@ -129,11 +129,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index }) => (
     </div>
 
     {/* Content */}
-    <h3 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-white mb-1.5 sm:mb-2 leading-tight">{product.name}</h3>
+    <h3 className="text-lg sm:text-xl font-semibold text-neutral-900 dark:text-white mb-1.5 sm:mb-2 leading-tight">{product.name}</h3>
     <p className="text-[13px] sm:text-sm text-neutral-500 dark:text-neutral-400 mb-3 leading-relaxed">{product.description}</p>
 
     {/* Best For Badge */}
-    <span className="inline-block px-2.5 py-0.5 bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 text-[10px] sm:text-xs font-bold rounded-lg mb-4 sm:mb-5 w-fit uppercase tracking-wider">
+    <span className="inline-block px-2.5 py-0.5 bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 text-[10px] sm:text-xs font-medium rounded-lg mb-4 sm:mb-5 w-fit uppercase tracking-wider">
       Best for: {product.bestFor}
     </span>
 
@@ -148,7 +148,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index }) => (
     </ul>
 
     {/* CTA */}
-    <Button variant="outline" className="w-full text-sm py-2 sm:py-2.5 font-bold group">
+    <Button variant="outline" className="w-full text-sm py-2 sm:py-2.5 font-medium group">
       Learn More
       <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5 sm:ml-2 group-hover:translate-x-1 transition-transform" />
     </Button>
@@ -203,8 +203,8 @@ const FXProducts: React.FC = () => {
               
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-6 sm:mb-8">
-                  <h3 className="text-lg sm:text-xl font-bold uppercase tracking-widest">Live FX Rates</h3>
-                  <span className="flex items-center gap-2 text-[10px] sm:text-xs text-emerald-400 font-black uppercase tracking-tighter bg-emerald-500/10 px-2 py-1 rounded-full">
+                  <h3 className="text-lg sm:text-xl font-semibold uppercase tracking-widest">Live FX Rates</h3>
+                  <span className="flex items-center gap-2 text-[10px] sm:text-xs text-emerald-400 font-semibold uppercase tracking-tighter bg-emerald-500/10 px-2 py-1 rounded-full">
                     <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse" />
                     LIVE
                   </span>
@@ -216,11 +216,11 @@ const FXProducts: React.FC = () => {
                       key={rate.pair}
                       className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 shadow-lg hover:bg-white/10 transition-colors group cursor-default"
                     >
-                      <span className="text-sm sm:text-lg font-bold group-hover:text-blue-400 transition-colors uppercase tracking-tight">{rate.pair}</span>
+                      <span className="text-sm sm:text-lg font-semibold group-hover:text-blue-400 transition-colors uppercase tracking-tight">{rate.pair}</span>
                       <div className="text-right">
-                        <p className="text-base sm:text-xl font-black leading-tight tabular-nums">{rate.rate}</p>
+                        <p className="text-base sm:text-xl font-semibold leading-tight tabular-nums">{rate.rate}</p>
                         <p className={cn(
-                          "text-[10px] sm:text-xs font-black py-0.5",
+                          "text-[10px] sm:text-xs font-medium py-0.5",
                           rate.change.startsWith("+") ? "text-emerald-400" : "text-red-400"
                         )}>
                           {rate.change}
@@ -231,10 +231,10 @@ const FXProducts: React.FC = () => {
                 </div>
 
                 <div className="mt-8 sm:mt-10 pt-8 sm:pt-10 border-t border-white/10">
-                  <p className="text-[11px] sm:text-[13px] text-slate-400 mb-6 leading-relaxed font-bold">
+                  <p className="text-[11px] sm:text-[13px] text-slate-400 mb-6 leading-relaxed font-medium">
                     * Rates are indicative only. Contact our professional traders for live market quotes and best spreads.
                   </p>
-                  <Button variant="primary" size="lg" className="w-full bg-blue-600 hover:bg-blue-700 text-base py-4 font-bold shadow-xl shadow-blue-500/20">
+                  <Button variant="primary" size="lg" className="w-full bg-blue-600 hover:bg-blue-700 text-base py-4 font-medium shadow-xl shadow-blue-500/20">
                     Contact FX Desk
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
@@ -246,7 +246,7 @@ const FXProducts: React.FC = () => {
                       <Shield className="w-6 h-6 text-amber-400" />
                     </div>
                     <div>
-                      <p className="text-sm sm:text-base font-bold text-amber-400 leading-tight uppercase tracking-tight">Hedging Advisory</p>
+                      <p className="text-sm sm:text-base font-medium text-amber-400 leading-tight uppercase tracking-tight">Hedging Advisory</p>
                       <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5 font-medium">Mitigate your currency exposure today.</p>
                     </div>
                   </div>
