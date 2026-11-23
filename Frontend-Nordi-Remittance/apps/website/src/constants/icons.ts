@@ -82,6 +82,7 @@ export {
   BellOff,
   Send,
   Headphones,
+  Bot,
 
   // Documents
   FileText,
