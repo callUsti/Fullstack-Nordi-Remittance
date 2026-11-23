@@ -10,7 +10,7 @@ export const FormContainer = ({
   totalSteps: number;
 }) => {
   return (
-    <div className="mx-auto w-full max-w-3xl py-8">
+    <div className="mx-auto w-full max-w-6xl px-2 py-4 sm:px-4 sm:py-6">
       {/* Progress Bar Placeholder */}
       <div className="mb-8">
         <div className="mb-2 text-sm text-neutral-500 dark:text-neutral-400">
