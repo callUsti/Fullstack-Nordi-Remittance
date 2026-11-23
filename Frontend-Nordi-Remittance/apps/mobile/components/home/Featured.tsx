@@ -157,7 +157,7 @@ export const FeaturedComponent: React.FC = () => {
           </TouchableOpacity>
 
           {/* Payee Avatars */}
-          {beneficiariesList.map((item) => (
+          {beneficiariesList.map((item: any) => (
             <TouchableOpacity
               key={item.id}
               style={styles.payeeItem}
