@@ -52,7 +52,7 @@ export default function AdminProfile() {
   ];
 
   return (
-    <PageContainer>
+    <PageContainer className="px-2 sm:px-3 lg:px-4 [&>div]:max-w-full">
       <PageHeader
         title="Admin Profile"
         subtitle="Manage your account settings, security, and active sessions"
@@ -68,7 +68,7 @@ export default function AdminProfile() {
           <DashCard>
             <div className="flex flex-col items-center text-center">
               <div className="relative">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-2xl font-semibold shadow-lg">
                   {name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
                 </div>
                 <motion.button
