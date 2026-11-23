@@ -34,12 +34,14 @@ const BANNER_MAP: Partial<Record<NetworkQuality | 'recovered', BannerConfig>> = 
     message: 'Poor connection detected. Some data may be delayed.',
     bgClass: 'nsb-poor',
     textClass: 'nsb-text-poor',
+    autoDismissMs: 6000,
   },
   slow: {
     icon: <Wifi size={18} />,
     message: 'Slow connection detected. Data may take longer to load.',
     bgClass: 'nsb-slow',
     textClass: 'nsb-text-slow',
+    autoDismissMs: 5000,
   },
   recovered: {
     icon: <CheckCircle size={18} />,
@@ -55,9 +57,9 @@ const BANNER_MAP: Partial<Record<NetworkQuality | 'recovered', BannerConfig>> = 
 export const NetworkStatusBanner: React.FC = () => {
   const { quality, isOnline } = useNetworkStatus();
   const [visible, setVisible] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
   const [config, setConfig] = useState<BannerConfig | null>(null);
   const prevQualityRef = useRef<NetworkQuality>(quality);
+  const dismissedQualityRef = useRef<NetworkQuality | null>(null);
   const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -70,36 +72,44 @@ export const NetworkStatusBanner: React.FC = () => {
       dismissTimerRef.current = null;
     }
 
+    // Reset dismissed state when connection recovers or transitions to offline
+    if (quality === 'good' || quality === 'excellent' || quality === 'offline') {
+      dismissedQualityRef.current = null;
+    }
+
     // Determine which banner to show
     let nextConfig: BannerConfig | null = null;
 
-    if (quality === 'offline') {
+    if (!isOnline || quality === 'offline') {
       nextConfig = BANNER_MAP.offline!;
-      setDismissed(false);
     } else if (quality === 'poor') {
-      nextConfig = BANNER_MAP.poor!;
-      setDismissed(false);
+      if (dismissedQualityRef.current !== 'poor') {
+        nextConfig = BANNER_MAP.poor!;
+      }
     } else if (quality === 'slow') {
-      nextConfig = BANNER_MAP.slow!;
-      setDismissed(false);
+      if (dismissedQualityRef.current !== 'slow' && dismissedQualityRef.current !== 'poor') {
+        nextConfig = BANNER_MAP.slow!;
+      }
     } else if (
-      (prev === 'offline' || prev === 'poor' || prev === 'slow') &&
+      prev === 'offline' &&
       (quality === 'good' || quality === 'excellent')
     ) {
-      // Recovery! Show green banner briefly
+      // Recovery from offline! Show green banner briefly
       nextConfig = BANNER_MAP.recovered!;
-      setDismissed(false);
     } else {
-      // Good/Excellent with no prior degradation — hide
+      // Good/Excellent — hide
       nextConfig = null;
     }
 
     setConfig(nextConfig);
-    setVisible(!!nextConfig && !dismissed);
+    setVisible(!!nextConfig);
 
-    // Auto-dismiss recovery banner
+    // Auto-dismiss transient banners (slow, poor, recovered)
     if (nextConfig?.autoDismissMs) {
       dismissTimerRef.current = setTimeout(() => {
+        if (quality === 'slow' || quality === 'poor') {
+          dismissedQualityRef.current = quality;
+        }
         setVisible(false);
         setConfig(null);
       }, nextConfig.autoDismissMs);
@@ -108,11 +118,16 @@ export const NetworkStatusBanner: React.FC = () => {
     return () => {
       if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
     };
-  }, [quality, isOnline, dismissed]);
+  }, [quality, isOnline]);
 
   const handleDismiss = () => {
-    setDismissed(true);
+    dismissedQualityRef.current = quality;
+    if (dismissTimerRef.current) {
+      clearTimeout(dismissTimerRef.current);
+      dismissTimerRef.current = null;
+    }
     setVisible(false);
+    setConfig(null);
   };
 
   return (
