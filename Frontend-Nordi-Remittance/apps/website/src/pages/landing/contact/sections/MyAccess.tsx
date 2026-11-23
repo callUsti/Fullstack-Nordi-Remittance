@@ -113,14 +113,14 @@ const MyAccess: React.FC = () => {
                   ? React.cloneElement(platform.icon as React.ReactElement, { className: "w-8 h-8 sm:w-10 sm:h-10" })
                   : platform.icon}
               </div>
-              <h3 className="text-xl sm:text-2xl font-black text-neutral-900 dark:text-white mb-3 uppercase tracking-tight">{platform.name}</h3>
-              <p className="text-[13px] sm:text-sm text-neutral-500 dark:text-neutral-400 font-bold leading-relaxed mb-8">{platform.description}</p>
+              <h3 className="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-white mb-3 uppercase tracking-tight">{platform.name}</h3>
+              <p className="text-[13px] sm:text-sm text-neutral-500 dark:text-neutral-400 font-semibold leading-relaxed mb-8">{platform.description}</p>
               
               <ul className="space-y-4">
                 {platform.features.map((feature) => (
-                  <li key={feature} className="flex items-center gap-3 text-[13px] sm:text-sm text-neutral-600 dark:text-neutral-300 font-bold group/feat">
+                  <li key={feature} className="flex items-center gap-3 text-[13px] sm:text-sm text-neutral-600 dark:text-neutral-300 font-medium group/feat">
                     <div className="w-5 h-5 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0 group-hover/feat:scale-110 transition-transform">
-                      <Check className="w-3 h-3 text-blue-500 font-black" />
+                      <Check className="w-3 h-3 text-blue-500 font-medium" />
                     </div>
                     {feature}
                   </li>
@@ -137,7 +137,7 @@ const MyAccess: React.FC = () => {
           viewport={{ once: true }}
           className="p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200"
         >
-          <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-6 text-center">Digital Services</h3>
+          <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-6 text-center">Digital Services</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {digitalServices.map((service) => (
               <div
