@@ -502,3 +502,83 @@ export const useAdminReverseTransaction = () => {
     },
   });
 };
+
+export const useUpdateAdminUser = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
+
+  return useMutation({
+    mutationFn: async ({ adminId, data }: { adminId: UUID; data: any }) =>
+      (await AdminRepository.updateAdminUser(adminId, data)).data,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.admins() });
+      showToast("Admin user updated successfully", "success");
+    },
+    onError: (e: Error) =>
+      showToast(e.message || "Failed to update admin user", "error"),
+  });
+};
+
+export const useDeactivateAdminUser = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
+
+  return useMutation({
+    mutationFn: async (adminId: UUID) =>
+      (await AdminRepository.deactivateAdminUser(adminId)).data,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.admins() });
+      showToast("Admin user status updated", "success");
+    },
+    onError: (e: Error) =>
+      showToast(e.message || "Failed to update admin user status", "error"),
+  });
+};
+
+export const useCreateOperationalTask = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
+
+  return useMutation({
+    mutationFn: async (data: any) =>
+      (await AdminRepository.createOperationalTask(data)).data,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "tasks"] });
+      showToast("Operational task created", "success");
+    },
+    onError: (e: Error) =>
+      showToast(e.message || "Failed to create task", "error"),
+  });
+};
+
+export const useUpdateOperationalTask = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
+
+  return useMutation({
+    mutationFn: async ({ taskId, data }: { taskId: UUID; data: any }) =>
+      (await AdminRepository.updateOperationalTask(taskId, data)).data,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "tasks"] });
+      showToast("Operational task updated", "success");
+    },
+    onError: (e: Error) =>
+      showToast(e.message || "Failed to update task", "error"),
+  });
+};
+
+export const useDisburseLoan = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
+
+  return useMutation({
+    mutationFn: async (loanId: UUID) =>
+      (await AdminRepository.disburseLoan(loanId)).data,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin"] });
+      showToast("Loan disbursed successfully", "success");
+    },
+    onError: (e: Error) =>
+      showToast(e.message || "Failed to disburse loan", "error"),
+  });
+};
