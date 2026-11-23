@@ -83,7 +83,7 @@ export default function SecuritySettingsScreen() {
                   <TextInput
                     style={s.input}
                     value={(passwords as any)[field.key]}
-                    onChangeText={(v) => setPasswords((p) => ({ ...p, [field.key]: v }))}
+                    onChangeText={(v) => setPasswords({ ...passwords, [field.key]: v })}
                     secureTextEntry={!field.show}
                     placeholderTextColor={theme.colors.textSecondary}
                     placeholder={field.label}
