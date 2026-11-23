@@ -145,7 +145,7 @@ const HeroCarousel: React.FC = () => {
                   {/* Heading */}
                   <h1
                     className={cn(
-                      "font-black text-white leading-[1.1] tracking-tighter uppercase",
+                      "font-medium text-white leading-[1.1] tracking-tighter uppercase",
                       "text-xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-7xl",
                       "mb-3 sm:mb-6"
                     )}
@@ -156,7 +156,7 @@ const HeroCarousel: React.FC = () => {
                   {/* Description */}
                   <p
                     className={cn(
-                      "text-neutral-300 leading-relaxed font-bold opacity-90",
+                      "text-neutral-300 leading-relaxed font-medium opacity-90",
                       "text-[10px] sm:text-base md:text-lg lg:text-xl",
                       "mb-4 sm:mb-8 md:mb-10",
                       "line-clamp-3 sm:line-clamp-none max-w-[90%] sm:max-w-full"
