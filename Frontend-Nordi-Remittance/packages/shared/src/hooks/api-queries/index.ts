@@ -3,6 +3,7 @@
 // ============================================================================
 
 export * from './useAuth';
+export * from './useAi';
 export * from './useAccounts';
 export * from './useTransactions';
 export * from './useCards';
