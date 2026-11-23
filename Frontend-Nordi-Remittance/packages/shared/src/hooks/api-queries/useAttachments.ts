@@ -225,3 +225,50 @@ export const useDeleteMultipleAttachments = () => {
     },
   });
 };
+
+export const useAdminAllAttachments = (params?: any) => {
+  return useQuery({
+    queryKey: [...queryKeys.attachments.all, "admin-all", params],
+    queryFn: async () => {
+      const response = await AttachmentsRepository.getAdminAllAttachments(params);
+      return response.data;
+    },
+  });
+};
+
+export const useAdminUserKycDocuments = (userId: string) => {
+  return useQuery({
+    queryKey: [...queryKeys.attachments.all, "admin-user-kyc", userId],
+    queryFn: async () => {
+      const response = await AttachmentsRepository.getAdminUserKycDocuments(userId);
+      return response.data;
+    },
+    enabled: !!userId,
+  });
+};
+
+export const useReviewAdminKycDocument = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
+
+  return useMutation({
+    mutationFn: async ({
+      documentId,
+      data,
+    }: {
+      documentId: string;
+      data: { status: "approved" | "rejected"; rejectionReason?: string; notes?: string };
+    }) => {
+      const response = await AttachmentsRepository.reviewAdminKycDocument(documentId, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.attachments.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.kyc.all });
+      showToast("KYC document reviewed", "success");
+    },
+    onError: (error: Error) => {
+      showToast(error.message || "Failed to review KYC document", "error");
+    },
+  });
+};
