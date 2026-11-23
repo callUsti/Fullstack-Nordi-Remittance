@@ -92,6 +92,7 @@ declare global {
     subtitle?: string;
     action?: ReactNode;
     avatar?: ReactNode;
+    icon?: ReactNode;
     children?: ReactNode;
   }
 
@@ -103,17 +104,22 @@ declare global {
   interface CardFooterProps extends BaseProps {
     children: ReactNode;
     justify?: "start" | "center" | "end" | "between";
+    align?: "left" | "center" | "right" | "between";
   }
 
   interface StatCardProps extends BaseProps {
-    title: string;
+    title?: string;
+    label?: string;
     value: string | number;
-    change?: number;
+    change?: number | { type: "increase" | "decrease" | "neutral"; value: number };
     changeLabel?: string;
     icon?: ReactNode;
+    iconColor?: string;
     trend?: "up" | "down" | "neutral";
     isLoading?: boolean;
   }
+
+  type StatsCardProps = StatCardProps;
 
   // ============================================================================
   // BADGE TYPES
