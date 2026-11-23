@@ -61,6 +61,8 @@ export const CardsRepository = {
     cardBrand?: string;
     cardholderName?: string;
     currency?: string;
+    creditLimit?: number;
+    interestRate?: number;
   }): Promise<ApiResponse<ClientCard>> => {
     const response = await apiClient.post<ApiResponse<ClientCard>>(ApiEndpoints.cardsVirtual, data);
     return response.data;
@@ -389,9 +391,17 @@ export const CardsRepository = {
 
   fund: async (
     cardId: string,
-    data: { amount: number; fromWalletId?: string; notes?: string },
+    data: { amount: number; fromWalletId?: string; notes?: string; mode?: "fund" | "repay" },
   ): Promise<ApiResponse<any>> => {
     const response = await apiClient.post<ApiResponse<any>>(ApiEndpoints.cardFund(cardId), data);
+    return response.data;
+  },
+
+  linkAccount: async (
+    cardId: string,
+    data: { walletId: string; autoDebitWhenEmpty?: boolean },
+  ): Promise<ApiResponse<any>> => {
+    const response = await apiClient.patch<ApiResponse<any>>(`/cards/${cardId}/link-account`, data);
     return response.data;
   },
 
