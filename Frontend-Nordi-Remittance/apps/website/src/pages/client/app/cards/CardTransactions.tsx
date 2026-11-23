@@ -68,7 +68,7 @@ const CardTransactions: React.FC = () => {
                 onClick={() => setSelectedCardId(c.id)}
                 className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
                   isSelected
-                    ? "bg-indigo-600 text-white shadow-md"
+                    ? "bg-blue-600 text-white shadow-md"
                     : "dark:hover:bg-gray-750 bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300"
                 }`}
               >
@@ -90,9 +90,9 @@ const CardTransactions: React.FC = () => {
         <DashCard padding="none" className="shadow-xs mt-4 border border-gray-100 dark:border-gray-800/80">
           <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50/50 p-4 dark:border-gray-800 dark:bg-gray-800/40">
             <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
-              <CreditCard size={18} className="text-indigo-600 dark:text-indigo-400" /> Card Expenditure History
+              <CreditCard size={18} className="text-blue-600 dark:text-blue-400" /> Card Expenditure History
             </h3>
-            <span className="dark:bg-gray-750 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-600 dark:text-gray-300">
+            <span className="dark:bg-gray-750 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600 dark:text-gray-300">
               {txns.length} records
             </span>
           </div>
@@ -107,18 +107,18 @@ const CardTransactions: React.FC = () => {
                   className="flex items-center justify-between p-3.5 transition-colors hover:bg-gray-50/70 dark:hover:bg-gray-800/60 sm:p-4"
                 >
                   <div className="flex min-w-0 items-center gap-3.5">
-                    <div className="shadow-2xs shrink-0 rounded-xl bg-indigo-50 p-2.5 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
+                    <div className="shadow-2xs shrink-0 rounded-xl bg-blue-50 p-2.5 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
                       <Icon size={16} />
                     </div>
                     <div className="min-w-0">
-                      <h4 className="truncate text-xs font-bold text-gray-900 dark:text-white sm:text-sm">
+                      <h4 className="truncate text-xs font-medium text-gray-900 dark:text-white sm:text-sm">
                         {tx.merchantName || txnTypeLabel[type]}
                       </h4>
                       <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 sm:text-xs">
                         {fmtDate(tx.createdAt)}
                         {tx.status && tx.status !== "completed" && (
                           <span
-                            className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${STATUS_STYLE[tx.status as CardTransactionStatus] || ""}`}
+                            className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${STATUS_STYLE[tx.status as CardTransactionStatus] || ""}`}
                           >
                             {tx.status}
                           </span>
@@ -126,7 +126,7 @@ const CardTransactions: React.FC = () => {
                       </p>
                     </div>
                   </div>
-                  <p className="shrink-0 pl-3 text-xs font-extrabold text-gray-900 dark:text-white sm:text-sm">
+                  <p className="shrink-0 pl-3 text-xs font-semibold text-gray-900 dark:text-white sm:text-sm">
                     {showBalances ? (
                       <span
                         className={
