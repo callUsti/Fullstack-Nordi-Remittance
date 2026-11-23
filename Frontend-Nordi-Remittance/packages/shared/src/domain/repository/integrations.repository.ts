@@ -88,7 +88,7 @@ export const IntegrationsRepository = {
    * Update a webhook
    */
   updateWebhook: async (webhookId: UUID, data: Partial<CreateWebhookRequest>): Promise<ApiResponse<Webhook>> => {
-    const response = await apiClient.patch<ApiResponse<Webhook>>(ApiEndpoints.integrationWebhook(webhookId), data);
+    const response = await apiClient.put<ApiResponse<Webhook>>(ApiEndpoints.integrationWebhook(webhookId), data);
     return response.data;
   },
 
@@ -386,7 +386,41 @@ export const IntegrationsRepository = {
         message: string;
         syncedAt: string;
       }>
-    >(ApiEndpoints.integrationExternalAccountSync(integrationId));
+    >(ApiEndpoints.integrationTest(integrationId));
+    return response.data;
+  },
+
+  // ==========================================================================
+  // ADMIN PLATFORM INTEGRATIONS (/integrations)
+  // ==========================================================================
+
+  getAdminIntegrations: async (params?: any): Promise<ApiResponse<any>> => {
+    const response = await apiClient.get<ApiResponse<any>>(ApiEndpoints.integrations, { params });
+    return response.data;
+  },
+
+  createAdminIntegration: async (data: any): Promise<ApiResponse<any>> => {
+    const response = await apiClient.post<ApiResponse<any>>(ApiEndpoints.integrations, data);
+    return response.data;
+  },
+
+  updateAdminIntegration: async (integrationId: string, data: any): Promise<ApiResponse<any>> => {
+    const response = await apiClient.put<ApiResponse<any>>(ApiEndpoints.integration(integrationId), data);
+    return response.data;
+  },
+
+  deleteAdminIntegration: async (integrationId: string): Promise<ApiResponse<any>> => {
+    const response = await apiClient.delete<ApiResponse<any>>(ApiEndpoints.integration(integrationId));
+    return response.data;
+  },
+
+  testAdminIntegration: async (integrationId: string): Promise<ApiResponse<any>> => {
+    const response = await apiClient.post<ApiResponse<any>>(ApiEndpoints.integrationTest(integrationId));
+    return response.data;
+  },
+
+  getAdminIntegrationLogs: async (integrationId: string, params?: any): Promise<ApiResponse<any>> => {
+    const response = await apiClient.get<ApiResponse<any>>(ApiEndpoints.integrationLogs(integrationId), { params });
     return response.data;
   },
 };
