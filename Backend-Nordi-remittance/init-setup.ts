@@ -13,7 +13,8 @@ import { initializeWebSocket, disconnectWebSocket } from './services/websocket.s
 import { getRedisClient, disconnectRedis } from './services/redis.service.js';
 import { startWorkers } from './services/workers.js';
 import { disconnectBullMQ } from './services/bullmq.service.js';
-import { initializeKafka, getKafkaService } from './services/kafka.service.js';
+// Kafka disabled — re-enable together with the bootstrap/shutdown blocks below
+// import { initializeKafka, getKafkaService } from './services/kafka.service.js';
 
 // Seeders
 import { runSeeders } from './scripts/seedAdmin.js';
@@ -26,7 +27,7 @@ import { initializeElk } from './logs/elkstack.logs.js';
 // SERVICE STATUS TRACKER
 // ============================================================================
 
-export type ServiceHealth = 'up' | 'degraded' | 'down';
+export type ServiceHealth = 'up' | 'degraded' | 'down' | 'disabled';
 
 export const serviceStatus: Record<string, ServiceHealth> = {
   database: 'down',
@@ -119,18 +120,23 @@ export async function bootstrapServices(server: Server): Promise<void> {
     'caching / sessions degraded',
   );
 
-  // ── Kafka (non-critical) ───────────────────────────────────────────────
-  if (env.KAFKA_BROKERS) {
-    await initOptionalService(
-      'Kafka',
-      'kafka',
-      () => initializeKafka(),
-      'event streaming unavailable',
-    );
-  } else {
-    serviceStatus.kafka = 'down';
-    Logger.warn('[Startup] KAFKA_BROKERS not set — Kafka disabled');
-  }
+  // ── Kafka — DISABLED (heavy tooling not needed at this stage) ──────────
+  // Kept for easy scalability. To re-enable: restore the real implementation in
+  // services/kafka.service.ts, set KAFKA_ENABLED=true and uncomment below.
+  //
+  // if (env.KAFKA_BROKERS) {
+  //   await initOptionalService(
+  //     'Kafka',
+  //     'kafka',
+  //     () => initializeKafka(),
+  //     'event streaming unavailable',
+  //   );
+  // } else {
+  //   serviceStatus.kafka = 'down';
+  //   Logger.warn('[Startup] KAFKA_BROKERS not set — Kafka disabled');
+  // }
+  serviceStatus.kafka = 'disabled';
+  Logger.info('[Startup] Kafka disabled — events handled by no-op adapter (BullMQ + Redis remain active)');
 
   // ── BullMQ Workers (non-critical) ──────────────────────────────────────
   await initOptionalService(
@@ -156,7 +162,7 @@ export function printStartupBanner(port: number, apiPrefix: string): void {
   Logger.info('─'.repeat(60));
 
   for (const [name, status] of Object.entries(serviceStatus)) {
-    const icon = status === 'up' ? '✅' : status === 'degraded' ? '⚠️' : '❌';
+    const icon = status === 'up' ? '✅' : status === 'degraded' ? '⚠️' : status === 'disabled' ? '⏸️' : '❌';
     Logger.info(`  ${icon}  ${name}: ${status}`);
   }
 
@@ -188,16 +194,17 @@ export async function gracefulShutdown(
   // 2. Tear down services in reverse-init order
   const shutdownSteps: Array<{ name: string; fn: () => unknown | Promise<unknown> }> = [
     { name: 'WebSocket', fn: async () => { await disconnectWebSocket(); } },
-    { name: 'BullMQ',    fn: async () => { await disconnectBullMQ(); } },
-    { name: 'Redis',     fn: async () => { await disconnectRedis(); } },
-    {
-      name: 'Kafka',
-      fn: async () => {
-        const kafka = getKafkaService();
-        await kafka.disconnect();
-      },
-    },
-    { name: 'MongoDB',   fn: async () => { await disconnectDB(); } },
+    { name: 'BullMQ', fn: async () => { await disconnectBullMQ(); } },
+    { name: 'Redis', fn: async () => { await disconnectRedis(); } },
+    // Kafka shutdown step disabled along with Kafka bootstrap (see above).
+    // {
+    //   name: 'Kafka',
+    //   fn: async () => {
+    //     const kafka = getKafkaService();
+    //     await kafka.disconnect();
+    //   },
+    // },
+    { name: 'MongoDB', fn: async () => { await disconnectDB(); } },
   ];
 
   for (const step of shutdownSteps) {
