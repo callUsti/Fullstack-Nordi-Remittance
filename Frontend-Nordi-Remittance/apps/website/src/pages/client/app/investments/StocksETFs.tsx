@@ -40,8 +40,11 @@ import {
   useClientInvestmentProducts,
   useClientPortfolio,
   useClientInvestmentPerformance,
+  useCreateInvestment,
 } from "../../client-usecase/useinvestments-client-usecase";
+import { useClientWallets } from "../../client-usecase/useaccounts-client-usecase";
 import { useUIStore } from "@store/ui.store";
+import { useToastStore } from "@store/toast.store";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -64,6 +67,38 @@ const pct = (n: number) => `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
 const StocksETFs: React.FC = () => {
   const [search, setSearch] = useState("");
   const { products: apiStocks, isLoading } = useClientInvestmentProducts({ type: "stock" as any });
+  const { wallets } = useClientWallets();
+  const createInvestment = useCreateInvestment();
+  const { showToast } = useToastStore();
+
+  const [selectedStock, setSelectedStock] = useState<any | null>(null);
+  const [shares, setShares] = useState("1");
+  const [selectedWalletId, setSelectedWalletId] = useState("");
+
+  const defaultWalletId = wallets[0]?._id || wallets[0]?.id || "";
+  const walletIdToUse = selectedWalletId || defaultWalletId;
+
+  const handleTradeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedStock || !shares || Number(shares) <= 0) {
+      showToast("Enter a valid number of shares", "error");
+      return;
+    }
+    const qty = Number(shares);
+    const price = Number(selectedStock.price ?? selectedStock.currentPrice ?? 0);
+    try {
+      await createInvestment.mutateAsync({
+        productId: selectedStock._id || selectedStock.id || selectedStock.assetId || selectedStock.symbol,
+        quantity: qty,
+        amount: qty * price,
+        sourceAccountId: walletIdToUse,
+      } as any);
+      setSelectedStock(null);
+      setShares("1");
+    } catch {
+      // handled by mutation onError
+    }
+  };
 
   const defaultStocks = [
     { symbol: "AAPL", name: "Apple Inc.", price: 189.25, change: 2.34, pctChange: 1.25, marketCap: 2940000000000 },
@@ -116,7 +151,7 @@ const StocksETFs: React.FC = () => {
                 placeholder="Search stocks or ETFs..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-xl border border-gray-200 bg-white py-2 pl-9 pr-4 text-xs text-gray-900 transition-colors placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/40 sm:text-sm"
+                className="w-full rounded-xl border border-gray-200 bg-white py-2 pl-9 pr-4 text-xs text-gray-900 transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/40 sm:text-sm"
               />
             </div>
           </DashCard>
@@ -202,7 +237,11 @@ const StocksETFs: React.FC = () => {
                           </td>
                           <td className="whitespace-nowrap px-4 py-3 text-right">
                             <motion.button
-                              className="rounded-lg bg-indigo-600 px-3 py-1.5 text-[10px] font-medium text-white transition-colors hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400 sm:text-xs"
+                              onClick={() => {
+                                setSelectedStock(stock);
+                                setShares("1");
+                              }}
+                              className="rounded-lg bg-blue-600 px-3 py-1.5 text-[10px] font-medium text-white transition-colors hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400 sm:text-xs"
                               whileHover={{ scale: 1.03 }}
                               whileTap={{ scale: 0.97 }}
                             >
@@ -217,6 +256,79 @@ const StocksETFs: React.FC = () => {
               </div>
             )}
           </DashCard>
+
+          {/* Trade Modal */}
+          {selectedStock && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+              <DashCard className="w-full max-w-md">
+                <h3 className="mb-1 text-base font-semibold text-gray-900 dark:text-white">
+                  Buy {selectedStock.symbol} ({selectedStock.name})
+                </h3>
+                <p className="mb-4 text-xs text-gray-500 dark:text-gray-400">
+                  Market Price: {fmt(selectedStock.price ?? selectedStock.currentPrice ?? 0)} per share
+                </p>
+                <form onSubmit={handleTradeSubmit} className="space-y-4">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                      Quantity (Shares)
+                    </label>
+                    <input
+                      type="number"
+                      min={0.01}
+                      step="any"
+                      value={shares}
+                      onChange={(e) => setShares(e.target.value)}
+                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                      required
+                    />
+                  </div>
+                  <div className="rounded-xl bg-gray-50 p-3 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                    Estimated Total:{" "}
+                    <strong className="text-gray-900 dark:text-white">
+                      {fmt(Number(shares || 0) * Number(selectedStock.price ?? selectedStock.currentPrice ?? 0))}
+                    </strong>
+                  </div>
+                  {wallets.length > 0 && (
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                        Source Wallet
+                      </label>
+                      <select
+                        value={walletIdToUse}
+                        onChange={(e) => setSelectedWalletId(e.target.value)}
+                        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                      >
+                        {wallets.map((w: any) => {
+                          const wid = w._id || w.id;
+                          return (
+                            <option key={wid} value={wid}>
+                              {w.name || `${w.currency || "USD"} Wallet`} ({fmt(w.balance ?? w.availableBalance ?? 0)})
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
+                  )}
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedStock(null)}
+                      className="rounded-xl border border-gray-200 px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={createInvestment.isPending}
+                      className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {createInvestment.isPending ? "Executing…" : "Confirm Order"}
+                    </button>
+                  </div>
+                </form>
+              </DashCard>
+            </div>
+          )}
         </motion.div>
       )}
     </PageContainer>
