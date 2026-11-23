@@ -37,9 +37,9 @@ const RevenueChart: React.FC<{ data: { name: string; value: number }[] }> = ({ d
   }
 
   return (
-    <DashCard className="lg:col-span-2" hover onClick={() => navigate("/admin/reports/financial")}>
+    <DashCard className="w-full min-w-0 overflow-hidden lg:col-span-2" hover onClick={() => navigate("/admin/reports/financial")}>
       <SectionHeader title="Revenue Trend" subtitle="Monthly revenue overview" />
-      <div className="h-64">
+      <div className="h-56 w-full min-w-0 lg:h-64">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
             <defs>
@@ -67,9 +67,9 @@ const WeeklyTransactionsChart: React.FC<{ data: { name: string; value: number }[
   const navigate = useNavigate();
 
   return (
-    <DashCard hover onClick={() => navigate("/admin/transactions/all")}>
+    <DashCard className="w-full min-w-0 overflow-hidden" hover onClick={() => navigate("/admin/transactions/all")}>
       <SectionHeader title="Weekly Transactions" onActionClick={() => navigate("/admin/transactions/all")} />
-      <div className="h-56">
+      <div className="h-56 w-full min-w-0">
         {data.length === 0 ? (
           <p className="text-xs text-gray-500 dark:text-gray-400 text-center py-12">No data</p>
         ) : (
@@ -95,20 +95,20 @@ const AccountDistributionChart: React.FC<{ data: { name: string; value: number }
   const navigate = useNavigate();
 
   return (
-    <DashCard hover onClick={() => navigate("/admin/accounts")}>
+    <DashCard className="w-full min-w-0 overflow-hidden" hover onClick={() => navigate("/admin/accounts")}>
       <SectionHeader title="Account Distribution" onActionClick={() => navigate("/admin/accounts")} />
-      <div className="h-56">
+      <div className="h-56 w-full min-w-0">
         {data.length === 0 ? (
           <p className="text-xs text-gray-500 dark:text-gray-400 text-center py-12">No data</p>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <RechartsPie>
-              <Pie data={data} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={3} dataKey="value">
+              <Pie data={data} cx="50%" cy="45%" innerRadius={48} outerRadius={72} paddingAngle={3} dataKey="value">
                 {data.map((_, i) => (
                   <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                 ))}
               </Pie>
-              <Legend layout="vertical" verticalAlign="middle" align="right" iconSize={10} iconType="circle"
+              <Legend verticalAlign="bottom" align="center" iconSize={10} iconType="circle"
                 formatter={(value: string) => <span className="text-xs text-gray-700 dark:text-gray-300">{value}</span>} />
               <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
             </RechartsPie>
@@ -164,32 +164,51 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
   const [activityRef, activityInView] = useInView();
 
   return (
-    <div className="flex-1 space-y-4">
-      {/* Revenue Chart (always visible) */}
-      {isChartsLoading ? <ChartSkeleton /> : <RevenueChart data={revenueData} />}
-
-      {/* Weekly Transactions + Account Distribution — lazy */}
-      <div ref={chartsRef}>
-        {chartsInView ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <WeeklyTransactionsChart data={weeklyTransactions} />
-            <AccountDistributionChart data={accountDistribution} />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <ChartSkeleton />
-            <ChartSkeleton />
-          </div>
-        )}
+    <div className="w-full min-w-0 flex-1 space-y-4">
+      {/* Mobile & Tablet (< lg): Horizontally slidable charts */}
+      <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 touch-pan-x scrollbar-hide lg:hidden">
+        <div className="min-w-[88%] shrink-0 snap-center sm:min-w-[72%]">
+          {isChartsLoading ? <ChartSkeleton /> : <RevenueChart data={revenueData} />}
+        </div>
+        <div className="min-w-[88%] shrink-0 snap-center sm:min-w-[72%]">
+          {isChartsLoading ? <ChartSkeleton /> : <WeeklyTransactionsChart data={weeklyTransactions} />}
+        </div>
+        <div className="min-w-[88%] shrink-0 snap-center sm:min-w-[72%]">
+          {isChartsLoading ? <ChartSkeleton /> : <AccountDistributionChart data={accountDistribution} />}
+        </div>
+        <div className="min-w-[88%] shrink-0 snap-center sm:min-w-[72%]">
+          {isChartsLoading ? <ChartSkeleton /> : <UserActivityChart data={activityData} />}
+        </div>
       </div>
 
-      {/* User Activity — lazy */}
-      <div ref={activityRef}>
-        {activityInView ? (
-          <UserActivityChart data={activityData} />
-        ) : (
-          <ChartSkeleton />
-        )}
+      {/* Desktop (lg+): Original stacked + grid layout */}
+      <div className="hidden space-y-4 lg:block">
+        {/* Revenue Chart (always visible) */}
+        {isChartsLoading ? <ChartSkeleton /> : <RevenueChart data={revenueData} />}
+
+        {/* Weekly Transactions + Account Distribution — lazy */}
+        <div ref={chartsRef}>
+          {chartsInView ? (
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <WeeklyTransactionsChart data={weeklyTransactions} />
+              <AccountDistributionChart data={accountDistribution} />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <ChartSkeleton />
+              <ChartSkeleton />
+            </div>
+          )}
+        </div>
+
+        {/* User Activity — lazy */}
+        <div ref={activityRef}>
+          {activityInView ? (
+            <UserActivityChart data={activityData} />
+          ) : (
+            <ChartSkeleton />
+          )}
+        </div>
       </div>
     </div>
   );
