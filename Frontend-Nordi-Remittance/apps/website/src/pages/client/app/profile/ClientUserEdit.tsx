@@ -24,7 +24,7 @@ import {
 
 /* ── Helpers ─────────────────────────────────────────────────────────── */
 const inputCls =
-  "w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors";
+  "w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors";
 const labelCls =
   "block text-[10px] sm:text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1.5";
 
@@ -185,10 +185,10 @@ const ClientUserEdit: React.FC = () => {
         <DashCard>
           <div className="flex items-center gap-4">
             <div className="relative">
-              <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-lg font-bold text-white">
+              <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-lg font-semibold text-white">
                 {avatarSrc ? <img src={avatarSrc} alt="" className="h-full w-full object-cover" /> : initials}
               </div>
-              <label className="absolute -bottom-1 -right-1 cursor-pointer rounded-full bg-indigo-600 p-1.5 text-white transition-colors hover:bg-indigo-700">
+              <label className="absolute -bottom-1 -right-1 cursor-pointer rounded-full bg-blue-600 p-1.5 text-white transition-colors hover:bg-blue-700">
                 <Edit3 size={11} />
                 <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
               </label>
@@ -218,7 +218,7 @@ const ClientUserEdit: React.FC = () => {
               onClick={() => setActiveTab(t.key)}
               className={`flex flex-1 items-center gap-1.5 rounded-lg px-3 py-2.5 text-xs font-medium transition-all sm:text-sm ${
                 activeTab === t.key
-                  ? "border border-gray-200 bg-white text-indigo-600 dark:border-gray-700 dark:bg-gray-900 dark:text-indigo-400"
+                  ? "border border-gray-200 bg-white text-blue-600 dark:border-gray-700 dark:bg-gray-900 dark:text-blue-400"
                   : "text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
               }`}
             >
@@ -299,7 +299,7 @@ const ClientUserEdit: React.FC = () => {
               <motion.button
                 onClick={savePersonal}
                 disabled={updateProfile.isPending}
-                className="flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-xs font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-50 sm:text-sm"
+                className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50 sm:text-sm"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -367,7 +367,7 @@ const ClientUserEdit: React.FC = () => {
               <motion.button
                 onClick={saveAddress}
                 disabled={updateAddress.isPending}
-                className="flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-xs font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-50 sm:text-sm"
+                className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50 sm:text-sm"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -451,7 +451,7 @@ const ClientUserEdit: React.FC = () => {
               <motion.button
                 onClick={saveEmployment}
                 disabled={updateEmployment.isPending}
-                className="flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-xs font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-50 sm:text-sm"
+                className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50 sm:text-sm"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
