@@ -6,7 +6,7 @@ import { Response, NextFunction } from 'express';
 import type { AuthenticatedRequest, UserRole } from '../types/index.js';
 import { verifyAccessToken } from '../core/helpers/token.helper.js';
 import Users from '../modules/users/users.model.js';
-import { AdminUsers } from '../modules/admin/admin.model.js';
+import { AdminUsers, AdminPermissions } from '../modules/admin/admin.model.js';
 import { 
   UnauthorizedError, 
   ForbiddenError, 
