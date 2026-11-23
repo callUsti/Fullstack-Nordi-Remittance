@@ -128,8 +128,8 @@ const AmexCard: React.FC = () => {
                 <benefit.icon className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <div>
-                <p className="font-black text-[13px] sm:text-sm text-neutral-900 dark:text-white uppercase tracking-tight leading-tight mb-1">{benefit.title}</p>
-                <p className="text-[10px] sm:text-xs text-neutral-500 dark:text-neutral-400 font-bold leading-relaxed">{benefit.description}</p>
+                <p className="font-medium text-[13px] sm:text-sm text-neutral-900 dark:text-white uppercase tracking-tight leading-tight mb-1">{benefit.title}</p>
+                <p className="text-[10px] sm:text-xs text-neutral-500 dark:text-neutral-400 font-medium leading-relaxed">{benefit.description}</p>
               </div>
             </div>
           ))}
@@ -164,11 +164,11 @@ const AmexCard: React.FC = () => {
                   <div className="relative h-full flex flex-col justify-between z-10">
                     <div className="flex items-start justify-between">
                       <Star className="w-6 h-6 sm:w-8 sm:h-8 animate-pulse text-white/50" />
-                      <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest bg-black/20 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10">{card.fee}</span>
+                      <span className="text-[10px] sm:text-xs font-medium uppercase tracking-widest bg-black/20 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10">{card.fee}</span>
                     </div>
                     <div>
-                      <p className="text-[10px] sm:text-xs font-black text-white/70 uppercase tracking-widest mb-1">American Express</p>
-                      <p className="text-lg sm:text-2xl font-black uppercase tracking-tighter leading-none">{card.name.replace('American Express ', '')}</p>
+                      <p className="text-[10px] sm:text-xs font-medium text-white/70 uppercase tracking-widest mb-1">American Express</p>
+                      <p className="text-lg sm:text-2xl font-semibold uppercase tracking-tighter leading-none">{card.name.replace('American Express ', '')}</p>
                     </div>
                   </div>
                 </div>
@@ -177,22 +177,22 @@ const AmexCard: React.FC = () => {
               {/* Card Details */}
               <div className="p-8 pt-4 flex-1 flex flex-col">
                 <div className="p-4 sm:p-5 rounded-2xl bg-blue-500/5 border-2 border-blue-500/10 mb-6 text-center group-hover:bg-blue-500/10 transition-colors">
-                  <p className="text-[10px] sm:text-xs text-neutral-400 font-black uppercase tracking-[0.2em] mb-1">Welcome Bonus</p>
-                  <p className="text-xl sm:text-2xl font-black text-blue-600 dark:text-blue-400 tabular-nums tracking-tighter">{card.rewards}</p>
+                  <p className="text-[10px] sm:text-xs text-neutral-400 font-medium uppercase tracking-[0.2em] mb-1">Welcome Bonus</p>
+                  <p className="text-xl sm:text-2xl font-semibold text-blue-600 dark:text-blue-400 tabular-nums tracking-tighter">{card.rewards}</p>
                 </div>
 
                 <ul className="space-y-3 flex-1 mb-8">
                   {card.benefits.map((benefit) => (
                     <li key={benefit} className="flex items-center gap-3 group/benefit">
                       <div className="w-5 h-5 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0 group-hover/benefit:scale-110 transition-transform">
-                        <Check className="w-3 h-3 text-blue-600 font-bold" />
+                        <Check className="w-3 h-3 text-blue-600 font-medium" />
                       </div>
-                      <span className="text-[13px] sm:text-sm text-neutral-600 dark:text-neutral-300 font-bold group-hover:text-neutral-900 dark:group-hover:text-white transition-colors">{benefit}</span>
+                      <span className="text-[13px] sm:text-sm text-neutral-600 dark:text-neutral-300 font-medium group-hover:text-neutral-900 dark:group-hover:text-white transition-colors">{benefit}</span>
                     </li>
                   ))}
                 </ul>
 
-                <Button variant="outline" size="lg" className="w-full rounded-2xl border-2 font-black py-4 uppercase tracking-widest text-xs group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all duration-300">
+                <Button variant="outline" size="lg" className="w-full rounded-2xl border-2 font-medium py-4 uppercase tracking-widest text-xs group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all duration-300">
                   Secure The Legacy
                   <ArrowRight className="w-5 h-5 ml-3" />
                 </Button>
@@ -208,7 +208,7 @@ const AmexCard: React.FC = () => {
           viewport={{ once: true }}
           className="mt-12 p-6 rounded-2xl bg-blue-900 dark:bg-blue-950 text-white text-center"
         >
-          <h3 className="text-xl font-bold mb-2">Already Have an AMEX?</h3>
+          <h3 className="text-xl font-semibold mb-2">Already Have an AMEX?</h3>
           <p className="text-blue-200 mb-4">
             Link your existing American Express card to your account for enhanced benefits.
           </p>
