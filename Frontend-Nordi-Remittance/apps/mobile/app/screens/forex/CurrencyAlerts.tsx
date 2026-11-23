@@ -6,18 +6,17 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TextInput,
-  Switch,
   Alert,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMobileTheme } from '@/core/theme/useMobileTheme';
 import { ScreenHeader } from '@/components/shared/ScreenHeader';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { AdaptiveScreen } from '@/components/layout/AdaptiveScreen';
+import { SPACING, FONT_SIZES, RADIUS } from '@/constants/sizings';
 
 export default function CurrencyAlertsScreen() {
   const router = useRouter();
@@ -35,117 +34,107 @@ export default function CurrencyAlertsScreen() {
   };
 
   return (
-    <View style={s.container}>
-      <ScreenHeader
-        title="FX Rate Triggers & Alerts"
-        subtitle="Get notified when currencies reach your target exchange rate"
-        showBack
-        onBackPress={() => router.back()}
-      />
+    <AdaptiveScreen
+      keyboardAvoiding
+      header={
+        <ScreenHeader
+          title="FX Rate Triggers & Alerts"
+          subtitle="Get notified when currencies reach your target exchange rate"
+          showBack
+          onBackPress={() => router.back()}
+        />
+      }
+    >
+      <Card style={s.createCard}>
+        <CardContent style={s.createContent}>
+          <Text style={s.label}>Notify me when EUR/USD reaches:</Text>
+          <TextInput
+            value={targetRate}
+            onChangeText={setTargetRate}
+            style={s.input}
+            keyboardType="decimal-pad"
+          />
+          <Button
+            title="+ Set Rate Trigger"
+            variant="primary"
+            size="md"
+            onPress={handleAddAlert}
+            style={{ marginTop: SPACING.md }}
+          />
+        </CardContent>
+      </Card>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={s.scrollContent}
-      >
-        <Card style={s.createCard}>
-          <CardContent style={s.createContent}>
-            <Text style={s.label}>Notify me when EUR/USD reaches:</Text>
-            <TextInput
-              value={targetRate}
-              onChangeText={setTargetRate}
-              style={s.input}
-              keyboardType="decimal-pad"
-            />
-            <Button
-              title="+ Set Rate Trigger"
-              variant="primary"
-              size="md"
-              onPress={handleAddAlert}
-              style={{ marginTop: 12 }}
-            />
+      <Text style={s.sectionTitle}>Active Watchlist Alerts</Text>
+
+      {alerts.map((al) => (
+        <Card key={al.id} style={s.alertCard}>
+          <CardContent style={s.alertContent}>
+            <View style={{ flex: 1 }}>
+              <Text style={s.pairName}>{al.pair}</Text>
+              <Text style={s.targetVal}>Target: {al.target}</Text>
+            </View>
+            <Badge variant="success" size="sm">Active Alert</Badge>
           </CardContent>
         </Card>
-
-        <Text style={s.sectionTitle}>Active Watchlist Alerts</Text>
-
-        {alerts.map((al) => (
-          <Card key={al.id} style={s.alertCard}>
-            <CardContent style={s.alertContent}>
-              <View style={{ flex: 1 }}>
-                <Text style={s.pairName}>{al.pair}</Text>
-                <Text style={s.targetVal}>Target: {al.target}</Text>
-              </View>
-              <Badge variant="success" size="sm">Active Alert</Badge>
-            </CardContent>
-          </Card>
-        ))}
-      </ScrollView>
-    </View>
+      ))}
+    </AdaptiveScreen>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useMobileTheme>) {
   return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-    },
-    scrollContent: {
-      padding: 16,
-      paddingBottom: 40,
-    },
     createCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 14,
+      borderRadius: RADIUS.xl,
       borderWidth: 1,
       borderColor: theme.colors.border,
-      marginBottom: 20,
+      marginBottom: SPACING.xl,
     },
     createContent: {
-      padding: 16,
+      padding: SPACING.lg,
     },
     label: {
-      fontSize: 13,
+      fontSize: FONT_SIZES.body,
       fontWeight: '600',
       color: theme.colors.textPrimary,
-      marginBottom: 8,
+      marginBottom: SPACING.sm,
     },
     input: {
       height: 46,
-      borderRadius: 10,
+      borderRadius: RADIUS.sm,
       backgroundColor: `${theme.colors.textSecondary}10`,
-      paddingHorizontal: 12,
-      fontSize: 16,
+      paddingHorizontal: SPACING.md,
+      fontSize: FONT_SIZES.title,
       fontWeight: '700',
       color: theme.colors.textPrimary,
     },
     sectionTitle: {
-      fontSize: 14,
+      fontSize: FONT_SIZES.subhead,
       fontWeight: '700',
       color: theme.colors.textPrimary,
-      marginBottom: 10,
+      marginBottom: SPACING.sm,
     },
     alertCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 12,
+      borderRadius: RADIUS.lg,
       borderWidth: 1,
       borderColor: theme.colors.border,
-      marginBottom: 10,
+      marginBottom: SPACING.sm,
     },
     alertContent: {
       flexDirection: 'row',
       alignItems: 'center',
-      padding: 14,
+      padding: SPACING.md,
     },
     pairName: {
-      fontSize: 14,
+      fontSize: FONT_SIZES.subhead,
       fontWeight: '700',
       color: theme.colors.textPrimary,
     },
     targetVal: {
-      fontSize: 12,
+      fontSize: FONT_SIZES.bodySm,
       color: theme.colors.textSecondary,
-      marginTop: 2,
+      marginTop: SPACING.xxs,
     },
   });
 }
