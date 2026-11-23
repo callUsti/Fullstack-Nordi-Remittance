@@ -5,6 +5,7 @@
 
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   TrendingUp,
   TrendingDown,
@@ -62,6 +63,7 @@ const fmtCompact = (n: number) =>
 const pct = (n: number) => `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
 
 const InvestmentOverview: React.FC = () => {
+  const navigate = useNavigate();
   const show = useUIStore((s) => s.preferences.showBalances);
   const { portfolio, isLoading: pLoading } = useClientPortfolio();
   const { investments, isLoading: iLoading } = useClientInvestments();
@@ -71,13 +73,45 @@ const InvestmentOverview: React.FC = () => {
   const totalReturns = portfolio?.totalReturns ?? 0;
   const returnPct = portfolio?.returnPercentage ?? (portfolio?._raw as any)?.dailyChangePercent ?? 0;
 
-  // Allocation breakdown (dummy if API doesn't return)
-  const allocation = (portfolio?._raw as any)?.allocation ?? [
-    { label: "Equities", pct: 45, color: "bg-indigo-500 dark:bg-indigo-400" },
-    { label: "Fixed Income", pct: 25, color: "bg-emerald-500 dark:bg-emerald-400" },
-    { label: "Mutual Funds", pct: 20, color: "bg-amber-500 dark:bg-amber-400" },
-    { label: "Cash", pct: 10, color: "bg-gray-400 dark:bg-gray-500" },
-  ];
+  // Dynamic allocation breakdown computed from real holdings
+  const allocation = useMemo(() => {
+    const rawAlloc = (portfolio?._raw as any)?.allocation;
+    if (Array.isArray(rawAlloc) && rawAlloc.length > 0) return rawAlloc;
+
+    const list = investments.length > 0 ? investments : portfolio?.holdings || [];
+    if (list.length === 0) return [];
+
+    const colorMap: Record<string, string> = {
+      Equities: "bg-blue-500 dark:bg-blue-400",
+      "Fixed Income": "bg-emerald-500 dark:bg-emerald-400",
+      "Mutual Funds": "bg-amber-500 dark:bg-amber-400",
+      Other: "bg-blue-500 dark:bg-blue-400",
+    };
+
+    const groups: Record<string, number> = {};
+    let sum = 0;
+    for (const item of list) {
+      const val = Number(item.currentValue ?? item.amount ?? item.totalInvested ?? 0);
+      const rawType = String(item.assetType ?? item.type ?? item.category ?? "").toLowerCase();
+      const label =
+        rawType.includes("stock") || rawType.includes("equit") || rawType.includes("etf")
+          ? "Equities"
+          : rawType.includes("bond") || rawType.includes("fixed") || rawType.includes("treasury")
+            ? "Fixed Income"
+            : rawType.includes("mutual") || rawType.includes("fund")
+              ? "Mutual Funds"
+              : "Other";
+      groups[label] = (groups[label] || 0) + val;
+      sum += val;
+    }
+
+    if (sum <= 0) return [];
+    return Object.entries(groups).map(([label, val]) => ({
+      label,
+      pct: Math.round((val / sum) * 100),
+      color: colorMap[label] || colorMap.Other,
+    }));
+  }, [investments, portfolio]);
 
   return (
     <PageContainer>
@@ -91,7 +125,8 @@ const InvestmentOverview: React.FC = () => {
         ]}
         actions={
           <motion.button
-            className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400 sm:text-sm"
+            onClick={() => navigate("/customer/investments/mutual-funds")}
+            className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400 sm:text-sm"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
@@ -113,7 +148,7 @@ const InvestmentOverview: React.FC = () => {
               label="Portfolio Value"
               value={show ? fmt(totalValue) : "••••••"}
               icon={<PieChart size={20} />}
-              iconColor="from-indigo-500 to-purple-500"
+              iconColor="bg-blue-600"
               change={returnPct ? pct(returnPct) : undefined}
               positive={returnPct >= 0}
               index={0}
@@ -122,21 +157,21 @@ const InvestmentOverview: React.FC = () => {
               label="Total Returns"
               value={show ? fmt(totalReturns) : "••••••"}
               icon={totalReturns >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
-              iconColor={totalReturns >= 0 ? "from-emerald-500 to-teal-500" : "from-rose-500 to-pink-500"}
+              iconColor={totalReturns >= 0 ? "bg-emerald-600" : "bg-rose-600"}
               index={1}
             />
             <StatCard
               label="Today's Change"
               value={show ? pct((portfolio?._raw as any)?.dailyChangePercent ?? 0) : "••"}
               icon={<BarChart3 size={20} />}
-              iconColor="from-blue-500 to-cyan-500"
+              iconColor="bg-blue-600"
               index={2}
             />
             <StatCard
               label="Holdings"
               value={String(investments.length)}
               icon={<Layers size={20} />}
-              iconColor="from-amber-500 to-orange-500"
+              iconColor="bg-amber-600"
               index={3}
             />
           </StatsGrid>
@@ -153,28 +188,34 @@ const InvestmentOverview: React.FC = () => {
               <PieChart size={18} className="text-gray-400 dark:text-gray-500" />
             </div>
 
-            <div className="space-y-3">
-              {allocation.map((item: any, idx: number) => (
-                <div key={idx}>
-                  <div className="mb-1 flex items-center justify-between">
-                    <span className="text-xs text-gray-700 dark:text-gray-300 sm:text-sm">{item.label}</span>
-                    <span className="text-xs font-medium text-gray-900 dark:text-white sm:text-sm">{item.pct}%</span>
+            {allocation.length === 0 ? (
+              <p className="py-4 text-center text-xs text-gray-500 dark:text-gray-400">
+                No asset allocation data yet. Invest in a product to see your portfolio breakdown.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {allocation.map((item: any, idx: number) => (
+                  <div key={idx}>
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="text-xs text-gray-700 dark:text-gray-300 sm:text-sm">{item.label}</span>
+                      <span className="text-xs font-medium text-gray-900 dark:text-white sm:text-sm">{item.pct}%</span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-gray-100 dark:bg-gray-800">
+                      <motion.div
+                        className={`h-2 rounded-full ${item.color}`}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${item.pct}%` }}
+                        transition={{
+                          duration: 0.7,
+                          delay: idx * 0.1,
+                          ease: "easeOut",
+                        }}
+                      />
+                    </div>
                   </div>
-                  <div className="h-2 w-full rounded-full bg-gray-100 dark:bg-gray-800">
-                    <motion.div
-                      className={`h-2 rounded-full ${item.color}`}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${item.pct}%` }}
-                      transition={{
-                        duration: 0.7,
-                        delay: idx * 0.1,
-                        ease: "easeOut",
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </DashCard>
 
           {/* ── Holdings List ──────────────────────────────────────── */}
