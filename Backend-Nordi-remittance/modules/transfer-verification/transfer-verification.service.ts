@@ -122,9 +122,11 @@ async function completeVerifiedTransaction(
   if (!transaction) throw new NotFoundError("Transaction not found");
 
   const senderWallet = await Wallets.findById(transaction.wallet).session(session);
-  const recipientWallet = await Wallets.findById(transaction.recipientWallet).session(session);
+  const recipientWallet = transaction.recipientWallet
+    ? await Wallets.findById(transaction.recipientWallet).session(session)
+    : null;
 
-  if (!senderWallet || !recipientWallet) {
+  if (!senderWallet || (!transaction.isInternational && !recipientWallet)) {
     throw new NotFoundError("Wallet not found");
   }
 
@@ -148,35 +150,41 @@ async function completeVerifiedTransaction(
         amount: grossAmount,
         currency,
         balance: senderBalanceAfter,
-        description: `Secure transfer to ${transaction.recipientAccountNumber} (incl. 20% tax)`,
+        description: transaction.isInternational
+          ? `International transfer to ${transaction.recipientName || transaction.recipientAccountNumber}`
+          : `Secure transfer to ${transaction.recipientAccountNumber} (incl. 20% tax)`,
         accountingDate: new Date(),
       },
     ],
     { session },
   );
 
-  const recipientBalanceBefore = getWalletBalance(recipientWallet, currency);
-  updateWalletBalance(recipientWallet, currency, amount);
-  recipientWallet.updatedAt = new Date();
-  recipientWallet.lastTransactionAt = new Date();
-  await recipientWallet.save({ session });
-  const recipientBalanceAfter = getWalletBalance(recipientWallet, currency);
+  let recipientBalanceBefore = 0;
+  let recipientBalanceAfter = 0;
+  if (recipientWallet) {
+    recipientBalanceBefore = getWalletBalance(recipientWallet, currency);
+    updateWalletBalance(recipientWallet, currency, amount);
+    recipientWallet.updatedAt = new Date();
+    recipientWallet.lastTransactionAt = new Date();
+    await recipientWallet.save({ session });
+    recipientBalanceAfter = getWalletBalance(recipientWallet, currency);
 
-  await LedgerEntries.create(
-    [
-      {
-        wallet: recipientWallet._id,
-        transaction: transaction._id,
-        entryType: "credit",
-        amount,
-        currency,
-        balance: recipientBalanceAfter,
-        description: `Secure transfer received`,
-        accountingDate: new Date(),
-      },
-    ],
-    { session },
-  );
+    await LedgerEntries.create(
+      [
+        {
+          wallet: recipientWallet._id,
+          transaction: transaction._id,
+          entryType: "credit",
+          amount,
+          currency,
+          balance: recipientBalanceAfter,
+          description: `Secure transfer received`,
+          accountingDate: new Date(),
+        },
+      ],
+      { session },
+    );
+  }
 
   transaction.status = "completed";
   transaction.completedAt = new Date();
@@ -198,7 +206,9 @@ async function completeVerifiedTransaction(
   );
 
   const sender = await Users.findById(verification.user).session(session);
-  const recipient = await Users.findById(verification.transactionDetails.recipientId).session(session);
+  const recipient = recipientWallet
+    ? await Users.findById(verification.transactionDetails.recipientId).session(session)
+    : null;
 
   if (sender) {
     await Notifications.create({
