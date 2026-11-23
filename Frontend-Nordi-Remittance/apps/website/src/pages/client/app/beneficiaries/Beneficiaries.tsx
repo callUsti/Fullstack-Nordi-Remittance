@@ -111,28 +111,28 @@ const Beneficiaries: React.FC = () => {
             label="Total"
             value={stats.total}
             icon={<Users size={20} />}
-            iconColor="from-indigo-500 to-purple-500"
+            iconColor="bg-blue-600"
             index={0}
           />
           <StatCard
             label="Favorites"
             value={stats.favorites}
             icon={<Star size={20} />}
-            iconColor="from-amber-500 to-orange-500"
+            iconColor="bg-amber-600"
             index={1}
           />
           <StatCard
             label="International"
             value={stats.international}
             icon={<Globe size={20} />}
-            iconColor="from-blue-500 to-cyan-500"
+            iconColor="bg-blue-600"
             index={2}
           />
           <StatCard
             label="Recent"
             value={stats.recent}
             icon={<Clock size={20} />}
-            iconColor="from-emerald-500 to-teal-500"
+            iconColor="bg-emerald-600"
             index={3}
           />
         </StatsGrid>
@@ -176,10 +176,10 @@ const Beneficiaries: React.FC = () => {
               initial="hidden"
               animate="visible"
             >
-              <DashCard className="transition-all hover:border-indigo-300 dark:hover:border-indigo-700" hover>
+              <DashCard className="transition-all hover:border-blue-300 dark:hover:border-blue-700" hover>
                 <div className="mb-3 flex items-start justify-between">
                   <div className="flex items-center gap-2.5 sm:gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-xs font-semibold text-white sm:h-10 sm:w-10 sm:text-sm">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white sm:h-10 sm:w-10 sm:text-sm">
                       {(b.name || "U").charAt(0).toUpperCase()}
                     </div>
                     <div>
@@ -222,7 +222,7 @@ const Beneficiaries: React.FC = () => {
 
                 <div className="flex gap-2">
                   <motion.button
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-indigo-50 py-1.5 text-[10px] font-medium text-indigo-600 transition-colors hover:bg-indigo-100 dark:bg-indigo-950/50 dark:text-indigo-400 dark:hover:bg-indigo-950/80 sm:py-2 sm:text-xs"
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-blue-50 py-1.5 text-[10px] font-medium text-blue-600 transition-colors hover:bg-blue-100 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-950/80 sm:py-2 sm:text-xs"
                     whileTap={{ scale: 0.95 }}
                     onClick={() => navigate("/customer/send/domestic")}
                   >
@@ -254,7 +254,7 @@ const Beneficiaries: React.FC = () => {
           label="All Beneficiaries"
           icon={<Users size={20} />}
           route="/customer/beneficiaries/all"
-          iconColor="text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50"
+          iconColor="text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50"
         />
         <QuickLinkCard
           label="Add New"
@@ -266,7 +266,7 @@ const Beneficiaries: React.FC = () => {
           label="Categories"
           icon={<Tag size={20} />}
           route="/customer/beneficiaries/categories"
-          iconColor="text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/50"
+          iconColor="text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50"
         />
         <QuickLinkCard
           label="Recent"
