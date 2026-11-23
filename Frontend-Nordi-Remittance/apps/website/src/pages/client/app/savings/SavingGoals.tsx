@@ -38,40 +38,40 @@ import { dashboardItemVariants, cardRevealVariants } from "@core/animation/Anima
 
 const goalColors = [
   {
-    gradient: "from-indigo-500 to-purple-600",
-    light: "bg-indigo-50 dark:bg-indigo-950/50",
-    text: "text-indigo-600 dark:text-indigo-400",
-    bar: "from-indigo-500 to-purple-500",
-  },
-  {
-    gradient: "from-emerald-500 to-teal-600",
-    light: "bg-emerald-50 dark:bg-emerald-950/50",
-    text: "text-emerald-600 dark:text-emerald-400",
-    bar: "from-emerald-500 to-teal-500",
-  },
-  {
-    gradient: "from-amber-500 to-orange-600",
-    light: "bg-amber-50 dark:bg-amber-950/50",
-    text: "text-amber-600 dark:text-amber-400",
-    bar: "from-amber-500 to-orange-500",
-  },
-  {
-    gradient: "from-rose-500 to-pink-600",
-    light: "bg-rose-50 dark:bg-rose-950/50",
-    text: "text-rose-600 dark:text-rose-400",
-    bar: "from-rose-500 to-pink-500",
-  },
-  {
-    gradient: "from-blue-500 to-cyan-600",
+    gradient: "bg-blue-600",
     light: "bg-blue-50 dark:bg-blue-950/50",
     text: "text-blue-600 dark:text-blue-400",
-    bar: "from-blue-500 to-cyan-500",
+    bar: "bg-blue-600",
   },
   {
-    gradient: "from-violet-500 to-purple-600",
-    light: "bg-violet-50 dark:bg-violet-950/50",
-    text: "text-violet-600 dark:text-violet-400",
-    bar: "from-violet-500 to-purple-500",
+    gradient: "bg-emerald-600",
+    light: "bg-emerald-50 dark:bg-emerald-950/50",
+    text: "text-emerald-600 dark:text-emerald-400",
+    bar: "bg-emerald-600",
+  },
+  {
+    gradient: "bg-amber-600",
+    light: "bg-amber-50 dark:bg-amber-950/50",
+    text: "text-amber-600 dark:text-amber-400",
+    bar: "bg-amber-600",
+  },
+  {
+    gradient: "bg-rose-600",
+    light: "bg-rose-50 dark:bg-rose-950/50",
+    text: "text-rose-600 dark:text-rose-400",
+    bar: "bg-rose-600",
+  },
+  {
+    gradient: "bg-blue-600",
+    light: "bg-blue-50 dark:bg-blue-950/50",
+    text: "text-blue-600 dark:text-blue-400",
+    bar: "bg-blue-600",
+  },
+  {
+    gradient: "bg-blue-600",
+    light: "bg-blue-50 dark:bg-blue-950/50",
+    text: "text-blue-600 dark:text-blue-400",
+    bar: "bg-blue-600",
   },
 ];
 
@@ -115,28 +115,28 @@ const SavingGoals: React.FC = () => {
             label="Total Saved"
             value={showBalances ? formatCurrency(totalSaved) : "••••••"}
             icon={<PiggyBank size={20} />}
-            iconColor="from-indigo-500 to-purple-500"
+            iconColor="bg-blue-600"
             index={0}
           />
           <StatCard
             label="Target Amount"
             value={showBalances ? formatCurrency(totalTarget) : "••••••"}
             icon={<Target size={20} />}
-            iconColor="from-emerald-500 to-teal-500"
+            iconColor="bg-emerald-600"
             index={1}
           />
           <StatCard
             label="Active Goals"
             value={goals.length}
             icon={<Star size={20} />}
-            iconColor="from-amber-500 to-orange-500"
+            iconColor="bg-amber-600"
             index={2}
           />
           <StatCard
             label="Overall Progress"
             value={`${overallProgress.toFixed(0)}%`}
             icon={<TrendingUp size={20} />}
-            iconColor="from-violet-500 to-purple-500"
+            iconColor="bg-blue-600"
             index={3}
           />
         </StatsGrid>
@@ -170,10 +170,10 @@ const SavingGoals: React.FC = () => {
               >
                 <DashCard
                   padding="none"
-                  className="cursor-pointer overflow-hidden transition-all hover:border-indigo-300 dark:hover:border-indigo-700"
+                  className="cursor-pointer overflow-hidden transition-all hover:border-blue-300 dark:hover:border-blue-700"
                   hover
                 >
-                  <div className={`h-1.5 bg-gradient-to-r ${colorSet.gradient}`} />
+                  <div className={`h-1.5 ${colorSet.gradient}`} />
                   <div className="p-4 sm:p-5" onClick={() => navigate("/customer/savings/goals")}>
                     <div className="mb-3 flex items-center justify-between sm:mb-4">
                       <div className="flex items-center gap-2.5 sm:gap-3">
@@ -206,7 +206,7 @@ const SavingGoals: React.FC = () => {
                     {/* Progress */}
                     <div className="mb-3">
                       <div className="mb-1.5 flex justify-between text-xs sm:text-sm">
-                        <span className="font-bold text-gray-900 dark:text-white">
+                        <span className="font-medium text-gray-900 dark:text-white">
                           {showBalances ? formatCurrency(saved) : "••••••"}
                         </span>
                         <span className="text-gray-500 dark:text-gray-400">
@@ -215,7 +215,7 @@ const SavingGoals: React.FC = () => {
                       </div>
                       <div className="h-2 w-full rounded-full bg-gray-100 dark:bg-gray-800 sm:h-2.5">
                         <motion.div
-                          className={`bg-gradient-to-r ${colorSet.bar} h-2 rounded-full sm:h-2.5`}
+                          className={`${colorSet.bar} h-2 rounded-full sm:h-2.5`}
                           initial={{ width: 0 }}
                           animate={{ width: `${progress}%` }}
                           transition={{ duration: 1, ease: "easeOut" }}
@@ -229,7 +229,7 @@ const SavingGoals: React.FC = () => {
                     {/* Quick Actions */}
                     <div className="flex gap-2">
                       <motion.button
-                        className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-indigo-50 py-1.5 text-[10px] font-medium text-indigo-600 transition-colors hover:bg-indigo-100 dark:bg-indigo-950/50 dark:text-indigo-400 dark:hover:bg-indigo-950/80 sm:py-2 sm:text-xs"
+                        className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-blue-50 py-1.5 text-[10px] font-medium text-blue-600 transition-colors hover:bg-blue-100 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-950/80 sm:py-2 sm:text-xs"
                         whileTap={{ scale: 0.95 }}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -240,7 +240,7 @@ const SavingGoals: React.FC = () => {
                         Add Funds
                       </motion.button>
                       <motion.button
-                        className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-purple-50 py-1.5 text-[10px] font-medium text-purple-600 transition-colors hover:bg-purple-100 dark:bg-purple-950/50 dark:text-purple-400 dark:hover:bg-purple-950/80 sm:py-2 sm:text-xs"
+                        className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-blue-50 py-1.5 text-[10px] font-medium text-blue-600 transition-colors hover:bg-blue-100 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-950/80 sm:py-2 sm:text-xs"
                         whileTap={{ scale: 0.95 }}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -265,7 +265,7 @@ const SavingGoals: React.FC = () => {
           label="My Goals"
           icon={<Target size={20} />}
           route="/customer/savings/goals"
-          iconColor="text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50"
+          iconColor="text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50"
         />
         <QuickLinkCard
           label="Create Goal"
@@ -283,7 +283,7 @@ const SavingGoals: React.FC = () => {
           label="Analytics"
           icon={<BarChart3 size={20} />}
           route="/customer/savings/analytics"
-          iconColor="text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/50"
+          iconColor="text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50"
         />
       </QuickLinksGrid>
     </PageContainer>
