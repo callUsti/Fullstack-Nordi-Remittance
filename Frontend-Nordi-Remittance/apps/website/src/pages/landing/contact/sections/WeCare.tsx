@@ -122,8 +122,8 @@ const WeCare: React.FC = () => {
         >
           {impactStats.map((stat) => (
             <div key={stat.label} className="text-center p-4 sm:p-8 rounded-[2rem] bg-white dark:bg-neutral-800 border border-rose-100 dark:border-rose-900/30 shadow-sm hover:shadow-xl transition-all group">
-              <p className="text-xl sm:text-3xl font-black text-rose-600 dark:text-rose-400 tabular-nums tracking-tighter group-hover:scale-110 transition-transform">{stat.value}</p>
-              <p className="text-[10px] sm:text-xs text-neutral-400 font-bold uppercase tracking-widest mt-1">{stat.label}</p>
+              <p className="text-xl sm:text-3xl font-bold text-rose-600 dark:text-rose-400 tabular-nums tracking-tighter group-hover:scale-110 transition-transform">{stat.value}</p>
+              <p className="text-[10px] sm:text-xs text-neutral-400 font-medium uppercase tracking-widest mt-1">{stat.label}</p>
             </div>
           ))}
         </motion.div>
@@ -151,10 +151,10 @@ const WeCare: React.FC = () => {
                   ? React.cloneElement(pillar.icon as React.ReactElement, { className: "w-6 h-6" })
                   : pillar.icon}
               </div>
-              <h3 className="text-lg sm:text-xl font-black text-neutral-900 dark:text-white mb-3 uppercase tracking-tight">{pillar.name}</h3>
-              <p className="text-[13px] sm:text-sm text-neutral-500 dark:text-neutral-400 font-bold leading-relaxed mb-6">{pillar.description}</p>
+              <h3 className="text-lg sm:text-xl font-semibold text-neutral-900 dark:text-white mb-3 uppercase tracking-tight">{pillar.name}</h3>
+              <p className="text-[13px] sm:text-sm text-neutral-500 dark:text-neutral-400 font-semibold leading-relaxed mb-6">{pillar.description}</p>
               <div className="pt-4 border-t border-neutral-100 dark:border-neutral-700">
-                <p className="text-[11px] sm:text-xs font-black text-rose-600 uppercase tracking-widest">{pillar.impact}</p>
+                <p className="text-[11px] sm:text-xs font-medium text-rose-600 uppercase tracking-widest">{pillar.impact}</p>
               </div>
             </div>
           ))}
@@ -172,7 +172,7 @@ const WeCare: React.FC = () => {
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center text-white">
                 <HeartHandshake className="w-16 h-16 mx-auto mb-4 opacity-80" />
-                <p className="text-xl font-bold">Together We Rise</p>
+                <p className="text-xl font-semibold">Together We Rise</p>
                 <p className="text-rose-100">Building stronger communities</p>
               </div>
             </div>
@@ -181,7 +181,7 @@ const WeCare: React.FC = () => {
 
           {/* Content */}
           <div>
-            <h3 className="text-2xl font-bold text-neutral-900 dark:text-white mb-4">Our Ongoing Initiatives</h3>
+            <h3 className="text-2xl font-semibold text-neutral-900 dark:text-white mb-4">Our Ongoing Initiatives</h3>
             <p className="text-neutral-600 dark:text-neutral-300 mb-6">
               We're committed to sustainable development and creating lasting positive impact 
               in the communities we serve. Here are some of our key programs:
@@ -219,7 +219,7 @@ const WeCare: React.FC = () => {
           className="mt-12 p-6 rounded-2xl bg-white dark:bg-neutral-800 border border-rose-200 text-center"
         >
           <Users className="w-10 h-10 text-rose-500 mx-auto mb-3" />
-          <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">Partner With Us</h3>
+          <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">Partner With Us</h3>
           <p className="text-neutral-600 dark:text-neutral-300 max-w-xl mx-auto mb-4">
             Are you an NGO, community organization, or social enterprise? 
             Let's collaborate to create meaningful impact together.
