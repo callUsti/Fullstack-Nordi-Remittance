@@ -28,7 +28,7 @@ const TransactionSchema = new Schema({
   },
   category: {
     type: String,
-    enum: ["cards", "bankAccounts", "cryptoWallets", "loans", "investments"],
+    enum: ["cards", "bankAccounts", "cryptoWallets", "loans", "investments", "international"],
     required: true,
   },
   categoryItemId: { type: String },
@@ -36,7 +36,7 @@ const TransactionSchema = new Schema({
   currency: { type: String, required: true },
   status: {
     type: String,
-    enum: ["pending", "completed", "failed", "cancelled", "reversed"],
+    enum: ["pending", "processing", "completed", "failed", "cancelled", "reversed"],
     default: "pending",
   },
   description: { type: String },
@@ -50,6 +50,11 @@ const TransactionSchema = new Schema({
   recipientAccountNumber: { type: String },
   recipientBankName: { type: String },
   recipientName: { type: String },
+  routingNumber: { type: String },
+  transferType: {
+    type: String,
+    enum: ["standard", "same_day", "wire", "instant", "internal", "international"],
+  },
   exchangeRate: { type: Number },
   fee: { type: Number },
   feeCurrency: { type: String },
