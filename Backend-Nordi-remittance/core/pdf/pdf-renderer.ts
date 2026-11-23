@@ -321,9 +321,220 @@ export const generateLoanDocument = async (options: LoanDocumentOptions): Promis
   });
 };
 
+export interface LoanDecisionPDFOptions {
+  application: Record<string, any>;
+  decision: 'approve' | 'reject';
+  applicantName: string;
+  sponsorName?: string;
+  amount: number;
+  requestedAmount: number;
+  interestRate: number;
+  defaultFeePercentage?: number;
+  termMonths: number;
+  monthlyPayment: number;
+  totalInterest: number;
+  totalRepayment: number;
+  currency?: string;
+  reason?: string;
+  notes?: string;
+  isThirdParty?: boolean;
+  thirdPartyApplicant?: Record<string, any>;
+  schedule?: any[];
+}
+
+/**
+ * Pure-Node fallback PDF builder (%PDF-1.4) so PDF generation succeeds even if headless Chromium is unavailable.
+ */
+function buildFallbackLoanPDF(lines: string[], title: string): Buffer {
+  const esc = (s: string) =>
+    String(s || '')
+      .replace(/\\/g, '\\\\')
+      .replace(/\(/g, '\\(')
+      .replace(/\)/g, '\\)')
+      .replace(/[^\x20-\x7E]/g, ' ');
+
+  const textOps: string[] = [
+    'BT',
+    '/F1 16 Tf',
+    '50 785 Td',
+    `(${esc('NORDI REMITTANCE - OFFICIAL LOAN DECISION STATEMENT')}) Tj`,
+    '/F1 12 Tf',
+    '0 -22 Td',
+    `(${esc(title)}) Tj`,
+    '/F1 10 Tf',
+    '0 -16 Td',
+    `(${esc('--------------------------------------------------------------------------------')}) Tj`,
+  ];
+
+  for (const line of lines.slice(0, 42)) {
+    textOps.push('0 -15 Td');
+    textOps.push(`(${esc(line)}) Tj`);
+  }
+  textOps.push('ET');
+  const streamContent = textOps.join('\n');
+
+  const objects: string[] = [
+    '1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n',
+    '2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n',
+    '3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>\nendobj\n',
+    '4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n',
+    `5 0 obj\n<< /Length ${Buffer.byteLength(streamContent, 'utf8')} >>\nstream\n${streamContent}\nendstream\nendobj\n`,
+  ];
+
+  let pdf = '%PDF-1.4\n';
+  const offsets: number[] = [0];
+  for (const obj of objects) {
+    offsets.push(Buffer.byteLength(pdf, 'utf8'));
+    pdf += obj;
+  }
+  const xrefOffset = Buffer.byteLength(pdf, 'utf8');
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (let i = 1; i < offsets.length; i++) {
+    pdf += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`;
+  }
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+  return Buffer.from(pdf, 'utf8');
+}
+
+export const generateLoanDecisionPDF = async (options: LoanDecisionPDFOptions): Promise<Buffer> => {
+  const {
+    application,
+    decision,
+    applicantName,
+    sponsorName,
+    amount,
+    requestedAmount,
+    interestRate,
+    defaultFeePercentage = 2.5,
+    termMonths,
+    monthlyPayment,
+    totalInterest,
+    totalRepayment,
+    currency = 'USD',
+    reason,
+    notes,
+    isThirdParty = false,
+    thirdPartyApplicant,
+    schedule = [],
+  } = options;
+
+  const isApproved = decision === 'approve';
+  const refId = application.applicationId || application._id?.toString() || `LN-${Date.now()}`;
+  const decisionReason =
+    reason ||
+    notes ||
+    (isApproved
+      ? 'Approved following credit capacity, KYC verification, and financial ecosystem volume assessment.'
+      : 'Application did not meet current credit underwriting or verification requirements.');
+
+  const summary = [
+    { label: 'Application Reference', value: refId },
+    {
+      label: 'Decision Status',
+      value: isApproved ? 'APPROVED' : 'DECLINED / REJECTED',
+      class: isApproved ? 'success' : 'danger',
+    },
+    { label: 'Applicant Name', value: applicantName },
+    ...(isThirdParty && sponsorName
+      ? [
+          {
+            label: 'Application Type',
+            value: `Third-Party Sponsored (${thirdPartyApplicant?.relationshipToSponsor || 'Beneficiary'})`,
+          },
+          { label: 'Sponsoring Account Holder', value: sponsorName },
+        ]
+      : [{ label: 'Application Type', value: 'Primary Account Holder' }]),
+    { label: 'Requested Amount', value: `${currency} ${Number(requestedAmount || amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}` },
+    {
+      label: isApproved ? 'Approved Loan Amount' : 'Evaluated Amount',
+      value: `${currency} ${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+      class: 'primary',
+    },
+    { label: 'Annual Interest Rate (APR)', value: `${interestRate}% p.a.` },
+    { label: 'Default Penalty Fee Policy', value: `+${defaultFeePercentage}% per default` },
+    { label: 'Loan Duration / Tenure', value: `${termMonths} Months` },
+    {
+      label: 'Minimum Monthly Requirement (EMI)',
+      value: `${currency} ${Number(monthlyPayment).toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+    },
+    {
+      label: 'Total Interest Payable',
+      value: `${currency} ${Number(totalInterest).toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+    },
+    {
+      label: 'Total Cumulative Repayment',
+      value: `${currency} ${Number(totalRepayment).toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+    },
+    { label: 'Loan Purpose', value: application.purpose || 'Personal / Business Financing' },
+    { label: 'Repayment Mode', value: 'Manual Repayment Only (Auto-Debit Disabled)' },
+    { label: isApproved ? 'Approval Notes / Reason' : 'Reason for Rejection', value: decisionReason },
+  ];
+
+  const tableData = schedule.slice(0, 60).map((s: any, idx: number) => ({
+    installment: s.installmentNumber || idx + 1,
+    dueDate: s.dueDate ? new Date(s.dueDate).toLocaleDateString('en-GB') : `Month ${idx + 1}`,
+    principal: `${currency} ${Number(s.principalAmount ?? s.principal ?? amount / Math.max(1, termMonths)).toFixed(2)}`,
+    interest: `${currency} ${Number(s.interestAmount ?? s.interest ?? totalInterest / Math.max(1, termMonths)).toFixed(2)}`,
+    total: `${currency} ${Number(s.totalAmount ?? s.total ?? monthlyPayment).toFixed(2)}`,
+    status: (s.status || 'SCHEDULED').toUpperCase(),
+  }));
+
+  try {
+    return await generatePDFFromTemplate({
+      templateName: 'pdf-base',
+      data: {
+        DOCUMENT_TITLE: isApproved ? 'Loan Approval & Terms Statement' : 'Loan Application Decision Notice',
+        DOCUMENT_SUBTITLE: isThirdParty
+          ? `Third-Party Sponsored Loan Application (${applicantName})`
+          : `Official Credit Underwriting Decision`,
+        REFERENCE_ID: refId,
+        SUMMARY: summary,
+        SUMMARY_TITLE: 'Loan Financial Summary & Decision Details',
+        INFO_BOX: {
+          type: isApproved ? 'success' : 'danger',
+          title: isApproved ? 'Loan Application Approved' : 'Loan Application Declined',
+          content: decisionReason,
+        },
+        ...(isApproved && tableData.length > 0
+          ? {
+              TABLE_TITLE: 'Monthly Repayment Schedule',
+              TABLE_COLUMNS: [
+                { header: 'No.', key: 'installment' },
+                { header: 'Due Date', key: 'dueDate' },
+                { header: 'Principal', key: 'principal' },
+                { header: 'Interest', key: 'interest' },
+                { header: 'Monthly Payment', key: 'total' },
+                { header: 'Status', key: 'status' },
+              ],
+              TABLE_DATA: tableData,
+            }
+          : {}),
+        DOC_STATUS: isApproved ? 'Approved' : 'Declined',
+        SHOW_SIGNATURE: true,
+        SIGNER1_NAME: 'Nordi Remittance Credit Committee',
+        SIGNER1_TITLE: 'Lending & Underwriting Operations',
+        SIGNER2_NAME: applicantName,
+        SIGNER2_TITLE: isThirdParty ? 'Third-Party Borrower' : 'Account Holder',
+      },
+    });
+  } catch (_err) {
+    const lines = [
+      `Decision Date: ${new Date().toUTCString()}`,
+      `Application Reference: ${refId}`,
+      `Decision Status: ${isApproved ? 'APPROVED' : 'DECLINED / REJECTED'}`,
+      ...summary.map((s) => `${s.label}: ${s.value}`),
+    ];
+    return buildFallbackLoanPDF(
+      lines,
+      isApproved ? 'Loan Approval & Repayment Terms' : 'Loan Application Decision Notice',
+    );
+  }
+};
+
 export default {
   generatePDFFromTemplate,
   generateAccountStatement,
   generateTransactionReceipt,
-  generateLoanDocument
+  generateLoanDocument,
+  generateLoanDecisionPDF,
 };
