@@ -88,7 +88,7 @@ const SectionCard: React.FC<{
   children: React.ReactNode;
 }> = ({
   icon,
-  iconBg = "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400",
+  iconBg = "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
   title,
   action,
   children,
@@ -233,7 +233,7 @@ const PersonalInformation: React.FC = () => {
           actions={
             <motion.button
               onClick={() => navigate("/customer/profile/edit")}
-              className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-indigo-700 sm:text-sm"
+              className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-blue-700 sm:text-sm"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -248,7 +248,7 @@ const PersonalInformation: React.FC = () => {
         <DashCard>
           <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
             {/* Avatar */}
-            <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-lg font-bold text-white sm:h-20 sm:w-20 sm:text-2xl">
+            <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-lg font-semibold text-white sm:h-20 sm:w-20 sm:text-2xl">
               {avatar ? <img src={avatar} alt="" className="h-full w-full rounded-full object-cover" /> : initials}
             </div>
             {/* Name & info */}
@@ -302,7 +302,7 @@ const PersonalInformation: React.FC = () => {
             label="Member Since"
             value={fmtDate(p.createdAt) || "—"}
             icon={<Calendar size={20} />}
-            iconColor="text-purple-600 dark:text-purple-400"
+            iconColor="text-blue-600 dark:text-blue-400"
           />
           <StatCard
             label="Last Login"
@@ -318,7 +318,7 @@ const PersonalInformation: React.FC = () => {
         {/* Personal Details */}
         <SectionCard
           icon={<User size={16} />}
-          iconBg="bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400"
+          iconBg="bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400"
           title="Personal Details"
         >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -378,7 +378,7 @@ const PersonalInformation: React.FC = () => {
         {/* Employment & Financial */}
         <SectionCard
           icon={<Briefcase size={16} />}
-          iconBg="bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400"
+          iconBg="bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400"
           title="Employment & Financial"
         >
           {eLoad ? (
@@ -435,7 +435,7 @@ const PersonalInformation: React.FC = () => {
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
                 <motion.div
-                  className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500"
+                  className="h-full rounded-full bg-blue-600"
                   initial={{ width: 0 }}
                   animate={{ width: `${kycPercent}%` }}
                   transition={{ duration: 0.8, ease: "easeOut" }}
@@ -490,7 +490,7 @@ const PersonalInformation: React.FC = () => {
               <p className="text-sm text-gray-500 dark:text-gray-400">No bank accounts linked yet</p>
               <button
                 onClick={() => navigate("/customer/profile/edit")}
-                className="mt-2 text-xs font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+                className="mt-2 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
               >
                 Add a bank account →
               </button>
@@ -512,7 +512,7 @@ const PersonalInformation: React.FC = () => {
                           {bank.bankName || "Bank Account"}
                         </p>
                         {bank.isPrimary && (
-                          <span className="rounded-full bg-indigo-100 px-1.5 py-0.5 text-[9px] font-semibold text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300">
+                          <span className="rounded-full bg-blue-100 px-1.5 py-0.5 text-[9px] font-semibold text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
                             PRIMARY
                           </span>
                         )}
