@@ -78,7 +78,7 @@ export default function AdminInvestments() {
   const avgReturn = portfolio.returnPercentage;
 
   return (
-    <PageContainer>
+    <PageContainer className="px-2 sm:px-3 lg:px-4 [&>div]:max-w-full">
       <PageHeader
         title="Investment Products"
         subtitle="Manage investment portfolios, monitor performance, and approve applications"
@@ -207,7 +207,7 @@ export default function AdminInvestments() {
       </div>
 
       {/* Filters */}
-      <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-1 touch-pan-x scrollbar-hide">
         {statusFilters.map((s) => (
           <FilterPill key={s} label={s} active={activeStatus === s} onClick={() => setActiveStatus(s as any)} />
         ))}
@@ -229,7 +229,7 @@ export default function AdminInvestments() {
 
       {/* Investments Table */}
       <DashCard padding="none">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto touch-pan-x scrollbar-hide">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-800">

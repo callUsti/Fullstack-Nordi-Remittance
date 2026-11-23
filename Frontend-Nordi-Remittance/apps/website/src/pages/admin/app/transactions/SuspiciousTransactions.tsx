@@ -57,7 +57,7 @@ export default function SuspiciousTransactions() {
   }
 
   return (
-    <PageContainer>
+    <PageContainer className="px-2 sm:px-3 lg:px-4 [&>div]:max-w-full">
       <PageHeader
         title="Suspicious Transactions"
         subtitle="Flagged transactions requiring fraud review"
@@ -96,7 +96,7 @@ export default function SuspiciousTransactions() {
         </DashCard>
       ) : (
         <DashCard padding="none">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto touch-pan-x scrollbar-hide">
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-800">

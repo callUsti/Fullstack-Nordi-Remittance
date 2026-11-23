@@ -43,7 +43,7 @@ const KycPending: React.FC = () => {
   };
 
   return (
-    <PageContainer className="[&>div]:max-w-full">
+    <PageContainer className="px-2 sm:px-3 lg:px-4 [&>div]:max-w-full">
       <PageHeader
         title="KYC Pending Reviews"
         subtitle="Review and approve user verification requests"
@@ -99,7 +99,7 @@ const KycPending: React.FC = () => {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto touch-pan-x scrollbar-hide">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-200 dark:border-gray-800">

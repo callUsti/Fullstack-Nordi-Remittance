@@ -73,7 +73,7 @@ export default function FraudMonitoring() {
   const activeStatus = statusFilter === "all" ? "All" : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1);
 
   return (
-    <PageContainer>
+    <PageContainer className="px-2 sm:px-3 lg:px-4 [&>div]:max-w-full">
       <PageHeader
         title="Fraud Monitoring"
         subtitle="Real-time fraud detection, alerts, and AML compliance monitoring"
@@ -120,7 +120,7 @@ export default function FraudMonitoring() {
         />
       </StatsGrid>
 
-      <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-1 touch-pan-x scrollbar-hide">
         {filterStatuses.map((s) => (
           <FilterPill
             key={s}

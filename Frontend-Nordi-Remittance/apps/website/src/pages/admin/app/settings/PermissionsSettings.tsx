@@ -100,7 +100,7 @@ export default function PermissionsSettings() {
   };
 
   return (
-    <PageContainer>
+    <PageContainer className="px-2 sm:px-3 lg:px-4 [&>div]:max-w-full">
       <PageHeader
         title="Permissions & Roles"
         subtitle="Manage access controls, feature toggles, and administrative roles"

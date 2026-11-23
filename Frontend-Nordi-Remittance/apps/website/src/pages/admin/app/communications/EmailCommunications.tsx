@@ -58,7 +58,7 @@ export default function EmailCommunications() {
   } = useCommunications();
 
   return (
-    <PageContainer>
+    <PageContainer className="px-2 sm:px-3 lg:px-4 [&>div]:max-w-full">
       <PageHeader
         title="Communications"
         subtitle="Manage email templates, SMS, push notifications, and marketing campaigns"
@@ -104,7 +104,7 @@ export default function EmailCommunications() {
       </StatsGrid>
 
       {/* Section Tabs */}
-      <div className="mb-6 flex gap-2 overflow-x-auto pb-1">
+      <div className="mb-6 flex gap-2 overflow-x-auto pb-1 touch-pan-x scrollbar-hide">
         {sections.map((s) => (
           <motion.button
             key={s.id}
@@ -297,7 +297,7 @@ export default function EmailCommunications() {
             subtitle="Multi-channel marketing campaigns and performance tracking"
           />
           <DashCard className="mt-3">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto touch-pan-x scrollbar-hide">
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-gray-100 dark:border-gray-800">

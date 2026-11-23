@@ -62,7 +62,7 @@ export default function InternationalTransactions() {
   const eligibility = useEligibilityError();
 
   return (
-    <PageContainer>
+    <PageContainer className="px-2 sm:px-3 lg:px-4 [&>div]:max-w-full">
       <PageHeader
         title="International Transactions"
         subtitle="Cross-border remittances and international transfers"
@@ -140,7 +140,7 @@ export default function InternationalTransactions() {
         </DashCard>
       ) : (
         <DashCard padding="none">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto touch-pan-x scrollbar-hide">
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-800">
