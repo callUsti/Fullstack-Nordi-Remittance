@@ -13,7 +13,7 @@ import {
   CardLimits,
   CardApplications,
 } from './cards.model.js';
-import { Wallets, LedgerEntries } from '../accounts/accounts.model.js';
+import { Wallets, LedgerEntries, AccountBalances } from '../accounts/accounts.model.js';
 import Users from '../users/users.model.js';
 import Transactions from '../transactions/transactions.model.js';
 import {
@@ -40,13 +40,15 @@ const emailGenerator = new EmailContentGenerator();
 
 // Helper functions for wallet balance operations (Map-based)
 function getWalletBalance(wallet: any, currency: string): number {
+  const upper = currency.toUpperCase();
   if (wallet.balances instanceof Map) {
-    return wallet.balances.get(currency) || 0;
+    const val = wallet.balances.get(upper) ?? wallet.balances.get(currency.toLowerCase());
+    if (val !== undefined) return Number(val) || 0;
+  } else if (wallet.balances && typeof wallet.balances === 'object') {
+    const key = Object.keys(wallet.balances).find((k) => k.toUpperCase() === upper);
+    if (key) return Number(wallet.balances[key]) || 0;
   }
-  if (wallet.balances && typeof wallet.balances === 'object') {
-    return wallet.balances[currency] || 0;
-  }
-  return 0;
+  return Number(wallet.balance || 0);
 }
 
 function updateWalletBalance(wallet: any, currency: string, newBalance: number): void {
@@ -70,6 +72,16 @@ function getWalletCurrency(wallet: any): string {
   return 'USD';
 }
 
+function safeDecrypt(value?: string): string {
+  if (!value) return '';
+  if (/^\d{3,19}$/.test(value.trim())) return value.trim();
+  try {
+    return decrypt(value);
+  } catch {
+    return value;
+  }
+}
+
 // ============================================================================
 // GET USER CARDS
 // ============================================================================
@@ -83,18 +95,26 @@ export async function getCards(
     if (!req.user) throw new UnauthorizedError('Authentication required');
 
     const cards = await Cards.find({ user: req.user.userId })
-      .populate('wallet', 'walletNumber currency balance')
+      .populate('wallet', 'walletNumber walletType currency balances status isPrimary')
+      .populate('fundingSource', 'walletNumber walletType currency balances status isPrimary')
       .populate('limits')
       .populate('controls')
       .lean();
 
-    // Mask card numbers for security
-    const maskedCards = cards.map((card) => ({
-      ...card,
-      cardNumber: maskCardNumber(card.cardNumber),
-      cvv: '***',
-      pin: undefined,
-    }));
+    // Mask card numbers for default display, and include decrypted fullCardNumber & fullCvv for owner's "See Details"
+    const maskedCards = cards.map((card) => {
+      const plainNumber = safeDecrypt(card.cardNumber);
+      const plainCvv = safeDecrypt(card.cvv);
+      return {
+        ...card,
+        cardNumber: maskCardNumber(plainNumber),
+        fullCardNumber: plainNumber,
+        last4: plainNumber.slice(-4),
+        cvv: '***',
+        fullCvv: plainCvv,
+        pin: undefined,
+      };
+    });
 
     sendSuccess(res, { cards: maskedCards });
   } catch (error) {
@@ -115,12 +135,13 @@ export async function getCardById(
     if (!req.user) throw new UnauthorizedError('Authentication required');
 
     const id = req.params.cardId || req.params.id;
+    const findQuery: any = mongoose.isValidObjectId(id)
+      ? { $or: [{ _id: id }, { cardId: id }], user: req.user.userId }
+      : { cardId: id, user: req.user.userId };
 
-    const card = await Cards.findOne({
-      $or: [{ _id: id }, { cardId: id }],
-      user: req.user.userId,
-    })
-      .populate('wallet', 'walletNumber currency balance availableBalance')
+    const card = await Cards.findOne(findQuery)
+      .populate('wallet', 'walletNumber walletType currency balances status isPrimary')
+      .populate('fundingSource', 'walletNumber walletType currency balances status isPrimary')
       .populate('limits')
       .populate('controls')
       .lean();
@@ -134,11 +155,16 @@ export async function getCardById(
       .limit(10)
       .lean();
 
+    const plainNumber = safeDecrypt(card.cardNumber);
+    const plainCvv = safeDecrypt(card.cvv);
     sendSuccess(res, {
       card: {
         ...card,
-        cardNumber: maskCardNumber(card.cardNumber),
+        cardNumber: maskCardNumber(plainNumber),
+        fullCardNumber: plainNumber,
+        last4: plainNumber.slice(-4),
         cvv: '***',
+        fullCvv: plainCvv,
         pin: undefined,
       },
       recentTransactions,
@@ -172,12 +198,19 @@ export async function createVirtualCard(
     const user = await Users.findById(req.user.userId).session(session);
     if (!user) throw new NotFoundError('User not found');
 
-    // Verify wallet
-    const wallet = await Wallets.findOne({
-      _id: walletId,
-      userId: req.user.userId,
-      status: 'active',
-    }).session(session);
+    // Verify wallet (Wallets schema uses `user`, not `userId`)
+    const wallet = walletId
+      ? await Wallets.findOne({
+          _id: walletId,
+          user: req.user.userId,
+          status: 'active',
+        }).session(session)
+      : await Wallets.findOne({
+          user: req.user.userId,
+          status: 'active',
+        })
+          .sort({ isPrimary: -1 })
+          .session(session);
 
     if (!wallet) throw new NotFoundError('Wallet not found');
 
@@ -193,20 +226,41 @@ export async function createVirtualCard(
     const expiryDate = new Date();
     expiryDate.setFullYear(expiryDate.getFullYear() + 3);
 
-    // Create card
+    // Create card (supports virtual debit and virtual credit cards)
     const walletCurrency = currency || getWalletCurrency(wallet);
+    const isCredit = cardType === 'credit';
+    const initialCreditLimit = isCredit ? Number(req.body.creditLimit) || 10000 : undefined;
+    const initialInterestRate = isCredit ? Number(req.body.interestRate) || 5.0 : 0;
+
     const card = new Cards({
       user: req.user.userId,
       wallet: wallet._id,
+      fundingSource: wallet._id,
+      linkedWallets: [
+        {
+          wallet: wallet._id,
+          addedAt: new Date(),
+          addedBy: req.user.userId,
+          isActive: true,
+        },
+      ],
       cardNumber: encrypt(cardNumber),
       cardholderName: cardholderName || `${(user as any).firstName} ${(user as any).lastName}`,
-      cardType: cardType || 'debit',
+      cardType: isCredit ? 'credit' : cardType || 'virtual',
       cardBrand: cardBrand || 'visa',
       expiryMonth: expiryDate.getMonth() + 1,
       expiryYear: expiryDate.getFullYear(),
       cvv: encrypt(cvv),
       status: 'active',
       isPhysical: false,
+      creditLimit: initialCreditLimit,
+      availableCredit: initialCreditLimit,
+      interestRate: initialInterestRate,
+      creditUsed: 0,
+      accruedInterest: 0,
+      totalDebt: 0,
+      totalRepaid: 0,
+      autoDebitWhenEmpty: true,
       currency: walletCurrency,
       isInternationalEnabled: false,
       isOnlineEnabled: true,
@@ -329,11 +383,18 @@ export async function requestPhysicalCard(
       throw new ValidationError('Complete shipping address required');
     }
 
-    const wallet = await Wallets.findOne({
-      _id: walletId,
-      userId: req.user.userId,
-      status: 'active',
-    }).session(session);
+    const wallet = walletId
+      ? await Wallets.findOne({
+          _id: walletId,
+          user: req.user.userId,
+          status: 'active',
+        }).session(session)
+      : await Wallets.findOne({
+          user: req.user.userId,
+          status: 'active',
+        })
+          .sort({ isPrimary: -1 })
+          .session(session);
 
     if (!wallet) throw new NotFoundError('Wallet not found');
 
@@ -961,19 +1022,18 @@ export async function getCardDetails(
     if (!req.user) throw new UnauthorizedError('Authentication required');
 
     const id = req.params.cardId || req.params.id;
+    const findQuery: any = mongoose.isValidObjectId(id)
+      ? { $or: [{ _id: id }, { cardId: id }], user: req.user.userId }
+      : { cardId: id, user: req.user.userId };
 
-    const card = await Cards.findOne({
-      $or: [{ _id: id }, { cardId: id }],
-      user: req.user.userId,
-      status: 'active',
-    });
+    const card = await Cards.findOne(findQuery);
 
     if (!card) throw new NotFoundError('Card not found');
 
     // Return full card details (for in-app display with proper security)
     sendSuccess(res, {
-      cardNumber: decrypt(card.cardNumber),
-      cvv: decrypt(card.cvv),
+      cardNumber: safeDecrypt(card.cardNumber),
+      cvv: safeDecrypt(card.cvv),
       expiryMonth: card.expiryMonth,
       expiryYear: card.expiryYear,
       cardholderName: card.cardholderName,
@@ -1014,12 +1074,16 @@ export async function getAllCards(
       Cards.countDocuments(filter),
     ]);
 
-    const maskedCards = cards.map((card) => ({
-      ...card,
-      cardNumber: maskCardNumber(card.cardNumber),
-      cvv: '***',
-      pin: undefined,
-    }));
+    const maskedCards = cards.map((card) => {
+      const plainNumber = safeDecrypt(card.cardNumber);
+      return {
+        ...card,
+        cardNumber: maskCardNumber(plainNumber),
+        last4: plainNumber.slice(-4),
+        cvv: '***',
+        pin: undefined,
+      };
+    });
 
     sendPaginated(res, maskedCards, { page, limit, total });
   } catch (error) {
@@ -1039,7 +1103,7 @@ export async function fundCard(
   try {
     if (!req.user) throw new UnauthorizedError('Authentication required');
     const id = req.params.cardId || req.params.id;
-    const { amount, fromWalletId, notes } = req.body;
+    const { amount, fromWalletId, notes, mode } = req.body;
     const numAmount = Number(amount);
     if (!numAmount || isNaN(numAmount) || numAmount <= 0) {
       throw new ValidationError('Amount must be greater than zero');
@@ -1054,7 +1118,7 @@ export async function fundCard(
       query.user = req.user.userId;
     }
 
-    const card = await Cards.findOne(query).populate('wallet');
+    const card: any = await Cards.findOne(query).populate('wallet');
     if (!card) throw new NotFoundError('Card not found');
     if (
       card.status === 'blocked' ||
@@ -1065,30 +1129,222 @@ export async function fundCard(
       throw new ValidationError(`Cannot fund card in ${card.status} status`);
     }
 
-    if (!isAdmin) {
-      const wallet = await Wallets.findById(fromWalletId || card.wallet);
-      if (!wallet) throw new NotFoundError('Source wallet not found');
-      const currency = card.currency || 'USD';
+    const targetWalletId = fromWalletId || card.fundingSource || card.wallet?._id || card.wallet;
+    const wallet: any = targetWalletId
+      ? await Wallets.findOne(
+          isAdmin ? { _id: targetWalletId } : { _id: targetWalletId, user: req.user.userId, status: 'active' }
+        )
+      : await Wallets.findOne({ user: card.user, status: 'active' }).sort({ isPrimary: -1 });
+
+    if (!wallet && !isAdmin) {
+      throw new NotFoundError('Please select an active account to fund or link this card');
+    }
+
+    const currency = (card.currency || (wallet ? getWalletCurrency(wallet) : 'USD')).toUpperCase();
+    const plainLast4 = safeDecrypt(card.cardNumber).slice(-4) || '0000';
+
+    // ── CASE A: CREDIT CARD — PAY OFF CREDIT DEBT FROM SELECTED ACCOUNT ────
+    if (card.cardType === 'credit' && mode === 'repay') {
+      if (!wallet) throw new NotFoundError('Active source account required to repay credit debt');
+      const currentDebt = Number(card.totalDebt || 0);
+      if (currentDebt <= 0) {
+        throw new ValidationError('This credit card has no outstanding debt to repay');
+      }
+      const repayAmount = Math.min(numAmount, currentDebt);
+      const currentBal = getWalletBalance(wallet, currency);
+      if (currentBal < repayAmount) {
+        throw new ValidationError(
+          `Insufficient balance in selected account ($${currentBal.toFixed(2)}) to repay $${repayAmount.toFixed(2)}`
+        );
+      }
+
+      updateWalletBalance(wallet, currency, currentBal - repayAmount);
+      card.fundingSource = wallet._id;
+      card.wallet = wallet._id;
+      await wallet.save();
+
+      await AccountBalances.updateOne(
+        { wallet: wallet._id, currency },
+        { $inc: { availableBalance: -repayAmount, ledgerBalance: -repayAmount } }
+      ).catch(() => {});
+
+      const interestPaid = Math.min(repayAmount, Number(card.accruedInterest || 0));
+      const principalPaid = Math.max(0, Math.round((repayAmount - interestPaid) * 100) / 100);
+
+      card.accruedInterest = Math.max(0, Math.round(((card.accruedInterest || 0) - interestPaid) * 100) / 100);
+      card.creditUsed = Math.max(0, Math.round(((card.creditUsed || 0) - principalPaid) * 100) / 100);
+      card.totalDebt = Math.max(0, Math.round((card.creditUsed + card.accruedInterest) * 100) / 100);
+      card.totalRepaid = Math.round(((card.totalRepaid || 0) + repayAmount) * 100) / 100;
+      card.availableCredit = Math.max(0, Math.round(((card.creditLimit || 10000) - card.creditUsed) * 100) / 100);
+      await card.save();
+
+      await Transactions.create({
+        wallet: wallet._id,
+        referenceNumber: generateReferenceNumber(),
+        type: 'payment',
+        category: 'cards',
+        amount: repayAmount,
+        currency,
+        status: 'completed',
+        description: notes || `Credit Card Debt Repayment (Card •••• ${plainLast4}) — Remaining Debt: $${card.totalDebt.toFixed(2)}`,
+        initiatedBy: req.user.userId,
+        completedAt: new Date(),
+      }).catch(() => {});
+
+      await CardTransactions.create({
+        card: card._id,
+        amount: repayAmount,
+        currency,
+        transactionType: 'refund',
+        merchantName: `Debt Repayment from Account ${wallet.walletNumber}`,
+        merchantCategory: 'repayment',
+        status: 'completed',
+      }).catch(() => {});
+
+      sendSuccess(
+        res,
+        {
+          card,
+          balance: card.balance,
+          totalDebt: card.totalDebt,
+          creditUsed: card.creditUsed,
+          accruedInterest: card.accruedInterest,
+          availableCredit: card.availableCredit,
+        },
+        `Repaid $${repayAmount.toFixed(2)} from account ${wallet.walletNumber}. Remaining debt: $${card.totalDebt.toFixed(2)}`
+      );
+      return;
+    }
+
+    // ── CASE B: CREDIT CARD — FUND ON CREDIT (ADDS PRINCIPAL + INTEREST AS DEBT TO LINKED ACCOUNT) ──
+    if (card.cardType === 'credit' && !isAdmin) {
+      const maxCredit = Number(card.creditLimit || 10000);
+      const usedCredit = Number(card.creditUsed || 0);
+      const availCredit = Math.max(0, Number(card.availableCredit ?? maxCredit - usedCredit));
+
+      if (numAmount > availCredit) {
+        throw new ValidationError(
+          `Requested credit ($${numAmount.toFixed(2)}) exceeds available credit limit ($${availCredit.toFixed(2)})`
+        );
+      }
+
+      const rate = Number(card.interestRate || 5.0);
+      const interestAmount = Math.round(numAmount * (rate / 100) * 100) / 100;
+      const debtAdded = Math.round((numAmount + interestAmount) * 100) / 100;
+
+      if (wallet) {
+        card.fundingSource = wallet._id;
+        card.wallet = wallet._id;
+      }
+
+      card.balance = Math.round(((card.balance || 0) + numAmount) * 100) / 100;
+      card.creditUsed = Math.round((usedCredit + numAmount) * 100) / 100;
+      card.accruedInterest = Math.round(((card.accruedInterest || 0) + interestAmount) * 100) / 100;
+      card.totalDebt = Math.round((card.creditUsed + card.accruedInterest) * 100) / 100;
+      card.availableCredit = Math.max(0, Math.round((maxCredit - card.creditUsed) * 100) / 100);
+      await card.save();
+
+      if (wallet) {
+        await Transactions.create({
+          wallet: wallet._id,
+          referenceNumber: generateReferenceNumber(),
+          type: 'payment',
+          category: 'cards',
+          amount: debtAdded,
+          currency,
+          fee: interestAmount,
+          feeCurrency: currency,
+          status: 'pending',
+          description:
+            notes ||
+            `Credit Card Funded on Credit (•••• ${plainLast4}): $${numAmount.toFixed(2)} + ${rate}% interest ($${interestAmount.toFixed(2)}) = $${debtAdded.toFixed(2)} debt linked to Account ${wallet.walletNumber}`,
+          initiatedBy: req.user.userId,
+        }).catch(() => {});
+      }
+
+      await CardTransactions.create({
+        card: card._id,
+        amount: numAmount,
+        currency,
+        transactionType: 'cash_advance',
+        merchantName: `Funded on Credit (${rate}% Interest: +$${interestAmount.toFixed(2)})`,
+        merchantCategory: 'credit_draw',
+        status: 'completed',
+      }).catch(() => {});
+
+      if (interestAmount > 0) {
+        await CardTransactions.create({
+          card: card._id,
+          amount: interestAmount,
+          currency,
+          transactionType: 'interest',
+          merchantName: `Credit Facility Interest (${rate}%)`,
+          merchantCategory: 'interest',
+          status: 'completed',
+        }).catch(() => {});
+      }
+
+      sendSuccess(
+        res,
+        {
+          card,
+          balance: card.balance,
+          interestRate: rate,
+          interestAdded: interestAmount,
+          totalDebt: card.totalDebt,
+          creditUsed: card.creditUsed,
+          accruedInterest: card.accruedInterest,
+          availableCredit: card.availableCredit,
+        },
+        `Funded $${numAmount.toFixed(2)} on credit (+$${interestAmount.toFixed(2)} interest at ${rate}%). Total debt on linked account: $${card.totalDebt.toFixed(2)}`
+      );
+      return;
+    }
+
+    // ── CASE C: DEBIT / VIRTUAL / PHYSICAL CARD — DEBIT SELECTED ACTIVE ACCOUNT ──
+    if (!isAdmin && wallet) {
       const currentBal = getWalletBalance(wallet, currency);
       if (currentBal < numAmount) {
         throw new ValidationError(
-          `Insufficient wallet balance ($${currentBal}) for funding ($${numAmount})`,
+          `Insufficient balance in selected account ($${currentBal.toFixed(2)}) to fund $${numAmount.toFixed(2)}`
         );
       }
       updateWalletBalance(wallet, currency, currentBal - numAmount);
+      card.fundingSource = wallet._id;
+      card.wallet = wallet._id;
       await wallet.save();
+
+      await AccountBalances.updateOne(
+        { wallet: wallet._id, currency },
+        { $inc: { availableBalance: -numAmount, ledgerBalance: -numAmount } }
+      ).catch(() => {});
+
+      await Transactions.create({
+        wallet: wallet._id,
+        referenceNumber: generateReferenceNumber(),
+        type: 'transfer',
+        category: 'cards',
+        amount: numAmount,
+        currency,
+        status: 'completed',
+        description: notes || `Card Funding from Account ${wallet.walletNumber} to Card •••• ${plainLast4}`,
+        initiatedBy: req.user.userId,
+        completedAt: new Date(),
+      }).catch(() => {});
     }
 
-    card.balance = (card.balance || 0) + numAmount;
+    card.balance = Math.round(((card.balance || 0) + numAmount) * 100) / 100;
     await card.save();
 
     try {
       await CardTransactions.create({
         card: card._id,
         amount: numAmount,
-        currency: card.currency || 'USD',
+        currency,
         transactionType: 'cash_advance',
-        merchantName: isAdmin ? 'Admin Fund Transfer' : 'Wallet Deposit',
+        merchantName: isAdmin
+          ? 'Admin Fund Transfer'
+          : `Funded from Account ${wallet?.walletNumber || ''}`.trim(),
         merchantCategory: 'deposit',
         status: 'completed',
       });
@@ -1099,7 +1355,7 @@ export async function fundCard(
     sendSuccess(
       res,
       { card, balance: card.balance },
-      `Successfully funded card with $${numAmount.toFixed(2)}`,
+      `Successfully funded card with $${numAmount.toFixed(2)} from account ${wallet?.walletNumber || ''}`.trim(),
     );
   } catch (error) {
     next(error);
@@ -1366,6 +1622,79 @@ export async function getAllCardApplications(
 }
 
 // ============================================================================
+// LINK CARD TO ACTIVE ACCOUNT (Fallback Debit if Empty / Credit Debt Account)
+// ============================================================================
+
+export async function linkCardAccount(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    if (!req.user) throw new UnauthorizedError('Authentication required');
+    const id = req.params.cardId || req.params.id;
+    const { walletId, autoDebitWhenEmpty } = req.body;
+
+    if (!walletId) throw new ValidationError('Please select an active account to link');
+
+    const query: any = mongoose.isValidObjectId(id)
+      ? { $or: [{ _id: id }, { cardId: id }], user: req.user.userId }
+      : { cardId: id, user: req.user.userId };
+
+    const card: any = await Cards.findOne(query);
+    if (!card) throw new NotFoundError('Card not found');
+
+    const wallet: any = await Wallets.findOne({
+      _id: walletId,
+      user: req.user.userId,
+      status: 'active',
+    });
+    if (!wallet) throw new NotFoundError('Selected account not found or not active');
+
+    card.wallet = wallet._id;
+    card.fundingSource = wallet._id;
+    if (autoDebitWhenEmpty !== undefined) {
+      card.autoDebitWhenEmpty = Boolean(autoDebitWhenEmpty);
+    }
+
+    card.linkedWallets = Array.isArray(card.linkedWallets) ? card.linkedWallets : [];
+    const exists = card.linkedWallets.some(
+      (lw: any) => String(lw.wallet) === String(wallet._id)
+    );
+    if (!exists) {
+      card.linkedWallets.push({
+        wallet: wallet._id,
+        addedAt: new Date(),
+        addedBy: req.user.userId,
+        isActive: true,
+      });
+    }
+
+    await card.save();
+
+    if (!wallet.linkedCards?.some((cId: any) => String(cId) === String(card._id))) {
+      wallet.linkedCards = [...(wallet.linkedCards || []), card._id];
+      await wallet.save();
+    }
+
+    sendSuccess(
+      res,
+      {
+        card,
+        linkedWallet: {
+          id: wallet._id,
+          walletNumber: wallet.walletNumber,
+          walletType: wallet.walletType,
+        },
+      },
+      `Card linked to account ${wallet.walletNumber} for funding, empty-card auto-debit, and credit repayment`
+    );
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ============================================================================
 // EXPORT
 // ============================================================================
 
@@ -1391,4 +1720,5 @@ export default {
   upgradeCardLimit,
   adminUpdateCardStatus,
   getAllCardApplications,
+  linkCardAccount,
 };
