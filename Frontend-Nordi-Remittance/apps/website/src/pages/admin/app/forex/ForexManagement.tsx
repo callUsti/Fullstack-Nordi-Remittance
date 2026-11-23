@@ -57,7 +57,7 @@ export default function ForexManagement() {
   } = useForexManagement();
 
   return (
-    <PageContainer>
+    <PageContainer className="px-2 sm:px-3 lg:px-4 [&>div]:max-w-full">
       <PageHeader
         title="Foreign Exchange"
         subtitle="Exchange rates, forex transactions, and remittance corridor management"
@@ -113,7 +113,7 @@ export default function ForexManagement() {
       </StatsGrid>
 
       {/* Section Tabs */}
-      <div className="mb-6 flex gap-2 overflow-x-auto pb-1">
+      <div className="mb-6 flex gap-2 overflow-x-auto pb-1 touch-pan-x scrollbar-hide">
         {sectionTabs.map((tab) => (
           <motion.button
             key={tab.id}
@@ -167,7 +167,7 @@ export default function ForexManagement() {
           {/* Rates Table */}
           <DashCard>
             <SectionHeader title="Live Exchange Rates" />
-            <div className="mt-3 overflow-x-auto">
+            <div className="mt-3 overflow-x-auto touch-pan-x scrollbar-hide">
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-gray-100 dark:border-gray-800">
@@ -217,7 +217,7 @@ export default function ForexManagement() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <DashCard>
             <SectionHeader title="Recent Forex Transactions" subtitle="Currency exchange history" />
-            <div className="mt-3 overflow-x-auto">
+            <div className="mt-3 overflow-x-auto touch-pan-x scrollbar-hide">
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-gray-100 dark:border-gray-800">
@@ -282,7 +282,7 @@ export default function ForexManagement() {
             >
               <DashCard hover>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 text-[10px] font-bold text-white">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 text-[10px] font-medium text-white">
                     {rem.fromCurrency}→{rem.toCurrency}
                   </div>
                   <div className="min-w-0 flex-1">
