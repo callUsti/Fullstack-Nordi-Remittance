@@ -88,7 +88,7 @@ export async function getFraudSignalById(
   try {
     if (!req.user) throw new UnauthorizedError("Authentication required");
 
-    const { id } = req.params;
+    const id = req.params.signalId || req.params.id;
 
     const signal = await FraudSignals.findById(id)
       .populate("user", "firstName lastName email phone")
@@ -128,7 +128,7 @@ export async function updateFraudSignal(
   try {
     if (!req.user) throw new UnauthorizedError("Authentication required");
 
-    const { id } = req.params;
+    const id = req.params.signalId || req.params.id;
     const { status, notes, resolution } = req.body;
 
     const signal = await FraudSignals.findById(id);
@@ -290,7 +290,7 @@ export async function getFraudCaseById(
   try {
     if (!req.user) throw new UnauthorizedError("Authentication required");
 
-    const { id } = req.params;
+    const id = req.params.caseId || req.params.id;
 
     const fraudCase = await FraudCases.findById(id)
       .populate("user", "firstName lastName email phone accountStatus")
@@ -319,7 +319,7 @@ export async function updateFraudCase(
   try {
     if (!req.user) throw new UnauthorizedError("Authentication required");
 
-    const { id } = req.params;
+    const id = req.params.caseId || req.params.id;
     const { status, severity, assignedTo, notes, resolution } = req.body;
 
     const fraudCase = await FraudCases.findById(id).session(session);
@@ -414,7 +414,7 @@ export async function addCaseComment(
   try {
     if (!req.user) throw new UnauthorizedError("Authentication required");
 
-    const { id } = req.params;
+    const id = req.params.caseId || req.params.id;
     const { comment } = req.body;
 
     const fraudCase = await FraudCases.findById(id);
@@ -510,7 +510,7 @@ export async function updateVelocityRule(
   try {
     if (!req.user) throw new UnauthorizedError("Authentication required");
 
-    const { id } = req.params;
+    const id = req.params.ruleId || req.params.id;
     const updates = req.body;
 
     const rule = await VelocityRules.findByIdAndUpdate(
@@ -535,7 +535,7 @@ export async function deleteVelocityRule(
   try {
     if (!req.user) throw new UnauthorizedError("Authentication required");
 
-    const { id } = req.params;
+    const id = req.params.ruleId || req.params.id;
 
     const rule = await VelocityRules.findByIdAndDelete(id);
     if (!rule) throw new NotFoundError("Rule not found");
