@@ -25,7 +25,9 @@ const LANGUAGES = [
   { code: 'pt', name: 'Português', flag: '🇵🇹' },
 ];
 
-const CURRENCIES = ['USD', 'EUR', 'GBP', 'NGN', 'GHS', 'KES', 'ZAR'];
+import Currencies from '@nordi/shared/core/data/Currencies';
+
+const CURRENCIES = Currencies.map((c) => c.code);
 const TIMEZONES = ['UTC-5 (EST)', 'UTC+0 (GMT)', 'UTC+1 (WAT)', 'UTC+3 (EAT)', 'UTC+8 (SGT)'];
 
 export default function LanguageRegionScreen() {
