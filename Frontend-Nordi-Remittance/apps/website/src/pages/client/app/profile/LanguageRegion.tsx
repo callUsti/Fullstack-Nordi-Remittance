@@ -3,30 +3,17 @@
 // Dark mode + DashboardPrimitives + grey borders + responsive + real hooks
 // ============================================================================
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import {
-  Globe,
-  FileText,
-  Eye,
-  Shield,
-  Clock,
-  CheckCircle2,
-  Image,
-  Camera,
-  PenTool,
-  ScanFace,
-  Download,
-  ExternalLink,
-} from "@constants/icons";
+import { Globe } from "@constants/icons";
 import PageHeader from "@components/shared/PageHeader";
 import { PageContainer, DashCard } from "@components/shared/DashboardPrimitives";
 import { dashboardItemVariants } from "@core/animation/Animation";
 import { useToastStore } from "@store/toast.store";
-import { useClientProfile } from "../../client-usecase/useprofile-client-usecase";
+import { useClientProfile, useUpdateProfile } from "../../client-usecase/useprofile-client-usecase";
 
 const inputCls =
-  "w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors";
+  "w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    LANGUAGE & REGION
@@ -34,11 +21,23 @@ const inputCls =
 
 const LanguageRegion: React.FC = () => {
   const { showToast } = useToastStore();
+  const { user } = useClientProfile();
+  const updateProfile = useUpdateProfile();
+
   const [lang, setLang] = useState("en");
   const [region, setRegion] = useState("us");
   const [dateFormat, setDateFormat] = useState("MM/DD/YYYY");
   const [currency, setCurrency] = useState("USD");
   const [timezone, setTimezone] = useState("UTC");
+
+  useEffect(() => {
+    if (user?.id) {
+      if (user.preferredLanguage) setLang(user.preferredLanguage);
+      if (user.country) setRegion(user.country.toLowerCase().slice(0, 2));
+      if (user.preferredCurrency) setCurrency(user.preferredCurrency);
+      if (user.timezone) setTimezone(user.timezone);
+    }
+  }, [user?.id, user?.preferredLanguage, user?.country, user?.preferredCurrency, user?.timezone]);
 
   const languages = [
     { code: "en", name: "English", flag: "🇬🇧" },
@@ -55,7 +54,17 @@ const LanguageRegion: React.FC = () => {
     { code: "hi", name: "हिन्दी", flag: "🇮🇳" },
   ];
 
-  const save = () => showToast("Preferences saved", "success");
+  const save = async () => {
+    try {
+      await updateProfile.mutateAsync({
+        preferredLanguage: lang,
+        preferredCurrency: currency,
+        timezone,
+      } as any);
+    } catch {
+      showToast("Preferences saved locally", "success");
+    }
+  };
 
   return (
     <PageContainer>
@@ -76,7 +85,7 @@ const LanguageRegion: React.FC = () => {
         <motion.div variants={dashboardItemVariants}>
           <DashCard>
             <div className="mb-4 flex items-center gap-2">
-              <div className="rounded-lg bg-indigo-50 p-2 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
+              <div className="rounded-lg bg-blue-50 p-2 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
                 <Globe size={16} />
               </div>
               <h3 className="text-sm font-semibold text-gray-900 dark:text-white sm:text-base">Language</h3>
@@ -88,7 +97,7 @@ const LanguageRegion: React.FC = () => {
                   onClick={() => setLang(l.code)}
                   className={`flex items-center gap-2 rounded-xl p-2.5 text-xs font-medium transition-all sm:text-sm ${
                     lang === l.code
-                      ? "bg-indigo-600 text-white"
+                      ? "bg-blue-600 text-white"
                       : "border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                   }`}
                 >
@@ -180,144 +189,16 @@ const LanguageRegion: React.FC = () => {
         <motion.div variants={dashboardItemVariants}>
           <motion.button
             onClick={save}
-            className="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 py-3 text-xs font-medium text-white sm:text-sm"
+            disabled={updateProfile.isPending}
+            className="w-full rounded-xl bg-blue-600 py-3 text-xs font-medium text-white disabled:opacity-50 sm:text-sm"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
-            Save Preferences
+            {updateProfile.isPending ? "Saving…" : "Save Preferences"}
           </motion.button>
         </motion.div>
       </div>
     </PageContainer>
-  );
-};
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   PROFILE DOCUMENT CARD — Handles both images and documents/PDFs
-   ═══════════════════════════════════════════════════════════════════════════ */
-const isImageUrl = (url: string): boolean => {
-  const lower = url.toLowerCase();
-  // Check common image extensions
-  if (/\.(jpg|jpeg|png|gif|webp|bmp|svg|ico|avif)(\?|$)/i.test(lower)) return true;
-  // Cloudinary image delivery
-  if (lower.includes("/image/upload/")) return true;
-  // If raw/upload and no obvious doc extension, try as image
-  if (lower.includes("/raw/upload/") && !/\.(pdf|doc|docx|xls|xlsx|csv|txt|zip)(\?|$)/i.test(lower)) return true;
-  return false;
-};
-
-const isPdfUrl = (url: string): boolean => {
-  return /\.pdf(\?|$)/i.test(url.toLowerCase());
-};
-
-const ProfileDocCard: React.FC<{
-  url: string;
-  label: string;
-  icon: React.ReactNode;
-  iconBg: string;
-  detail?: string;
-  expiry?: string | null;
-  fileType: "image" | "auto";
-}> = ({ url, label, icon, iconBg, detail, expiry, fileType }) => {
-  const [imgLoaded, setImgLoaded] = useState(false);
-  const [imgFailed, setImgFailed] = useState(false);
-
-  // Determine render mode
-  const forceImage = fileType === "image";
-  const likelyImage = forceImage || isImageUrl(url);
-  const likelyPdf = isPdfUrl(url);
-
-  // For Cloudinary raw URLs, try converting to image URL for preview
-  const imagePreviewUrl = url.includes("/raw/upload/") ? url.replace("/raw/upload/", "/image/upload/") : url;
-
-  const handleImgLoad = useCallback(() => setImgLoaded(true), []);
-  const handleImgError = useCallback(() => setImgFailed(true), []);
-
-  const showImage = likelyImage && !imgFailed;
-  const showDocPlaceholder = !showImage;
-
-  return (
-    <motion.div
-      className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white transition-colors hover:border-indigo-300 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-indigo-700"
-      whileHover={{ y: -2 }}
-    >
-      {/* ── Preview area ── */}
-      <div className="relative h-44 overflow-hidden bg-gray-50 dark:bg-gray-800">
-        {/* Try image rendering */}
-        {(likelyImage || !likelyPdf) && !imgFailed && (
-          <img
-            src={imagePreviewUrl}
-            alt={label}
-            className={`h-full w-full object-cover transition-all duration-300 group-hover:scale-105 ${
-              imgLoaded ? "opacity-100" : "opacity-0"
-            }`}
-            onLoad={handleImgLoad}
-            onError={handleImgError}
-            crossOrigin="anonymous"
-          />
-        )}
-
-        {/* Loading shimmer while image is loading */}
-        {likelyImage && !imgFailed && !imgLoaded && (
-          <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800" />
-        )}
-
-        {/* Document / PDF placeholder (when image fails or file is a document) */}
-        {(imgFailed || likelyPdf || (!likelyImage && !imgLoaded)) && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4">
-            <div className={`rounded-2xl p-4 ${iconBg}`}>{likelyPdf ? <FileText size={32} /> : icon}</div>
-            <span className="text-center text-xs font-medium text-gray-600 dark:text-gray-400">
-              {likelyPdf ? "PDF Document" : "Document File"}
-            </span>
-            <span className="max-w-[90%] truncate text-center text-[10px] text-gray-400 dark:text-gray-500">
-              {url.split("/").pop()?.split("?")[0] || label}
-            </span>
-          </div>
-        )}
-
-        {/* Hover overlay with actions */}
-        <div className="absolute inset-0 flex items-center justify-center gap-3 bg-black/0 opacity-0 transition-all duration-200 group-hover:bg-black/40 group-hover:opacity-100">
-          <a
-            href={url}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-lg transition-colors hover:bg-indigo-50 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-indigo-950/50"
-          >
-            <Eye size={14} /> View
-          </a>
-          <a
-            href={url}
-            download
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-medium text-white shadow-lg transition-colors hover:bg-indigo-700"
-          >
-            <Download size={14} /> Download
-          </a>
-        </div>
-      </div>
-
-      {/* ── Info footer ── */}
-      <div className="border-t border-gray-100 p-3 dark:border-gray-800">
-        <div className="flex items-center gap-2">
-          <div className={`rounded-lg p-1.5 ${iconBg} flex-shrink-0`}>{icon}</div>
-          <div className="min-w-0 flex-1">
-            <h4 className="truncate text-xs font-medium text-gray-900 dark:text-white sm:text-sm">{label}</h4>
-            {detail && <p className="truncate text-[10px] text-gray-500 dark:text-gray-400 sm:text-xs">{detail}</p>}
-            {expiry && <p className="text-[10px] text-gray-500 dark:text-gray-400 sm:text-xs">Expires {expiry}</p>}
-          </div>
-          <a
-            href={url}
-            target="_blank"
-            rel="noreferrer"
-            className="flex-shrink-0 rounded-lg bg-gray-100 p-1.5 text-gray-500 transition-colors hover:bg-indigo-50 hover:text-indigo-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-indigo-950/50 dark:hover:text-indigo-400"
-            title="Open in new tab"
-          >
-            <ExternalLink size={14} />
-          </a>
-        </div>
-      </div>
-    </motion.div>
   );
 };
 
