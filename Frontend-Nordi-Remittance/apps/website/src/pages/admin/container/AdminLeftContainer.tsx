@@ -26,7 +26,9 @@ import {
   Activity,
   Shield,
   User,
+  X,
 } from "lucide-react";
+import { sidebarWidths } from "@constants/breakpoints";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -108,6 +110,7 @@ const menu = [
       { title: "Dormant Accounts", route: "/admin/accounts/dormant" },
       { title: "Account Applications", route: "/admin/accounts/applications" },
       { title: "Wallet Operations", route: "/admin/accounts/operations" },
+      { title: "Activity Simulator", route: "/admin/accounts/simulator" },
     ],
   },
   {
@@ -197,24 +200,31 @@ const menu = [
 // ANIMATION VARIANTS
 // ============================================================================
 const sidebarVariants = {
-  expanded: { width: "280px", transition: { duration: 0.3, ease: "easeInOut" } },
+  expanded: { width: `${sidebarWidths.expanded.lg}px`, transition: { duration: 0.3, ease: "easeInOut" } },
   collapsed: { width: "80px", transition: { duration: 0.3, ease: "easeInOut" } },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, x: -10 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.2 } },
 };
 
 const dropdownVariants = {
   hidden: { height: 0, opacity: 0 },
-  visible: { height: "auto", opacity: 1, transition: { duration: 0.3, ease: "easeOut" } },
+  visible: { height: "auto", opacity: 1, transition: { duration: 0.25, ease: "easeOut" } },
 };
+
+const QUICK_ACTIONS = [
+  { icon: <Users size={16} />, label: "Users", route: "/admin/users/all" },
+  { icon: <ShieldAlert size={16} />, label: "Fraud", route: "/admin/fraud" },
+  { icon: <BarChart2 size={16} />, label: "Reports", route: "/admin/reports" },
+  { icon: <Settings size={16} />, label: "Settings", route: "/admin/settings" },
+];
 
 // ============================================================================
 // COMPONENT
 // ============================================================================
-const AdminLeftContainer: React.FC = () => {
+interface AdminLeftContainerProps {
+  mobileOpen?: boolean;
+  onCloseMobile?: () => void;
+}
+
+const AdminLeftContainer: React.FC<AdminLeftContainerProps> = ({ mobileOpen = false, onCloseMobile }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout: clearAuthState, user, userName } = useAuth();
@@ -234,6 +244,7 @@ const AdminLeftContainer: React.FC = () => {
   const roleBadge = user?.role === "admin" ? "System Administrator" : "Admin";
 
   const handleLogout = () => {
+    onCloseMobile?.();
     logoutMutation.mutate(undefined, {
       onSettled: () => {
         clearAuthState();
@@ -248,7 +259,15 @@ const AdminLeftContainer: React.FC = () => {
     if (parent) setOpenDropdowns([parent.route]);
   }, [location.pathname]);
 
-  const toggleSidebar = () => setCollapsed(!collapsed);
+  // Lock body scroll while the mobile drawer is open
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileOpen]);
 
   const handleDropdown = (route: string) => {
     setOpenDropdowns((prev) => (prev.includes(route) ? prev.filter((r) => r !== route) : [...prev, route]));
@@ -257,133 +276,99 @@ const AdminLeftContainer: React.FC = () => {
   const isActive = (route: string) =>
     location.pathname === route || (route !== "/" && location.pathname.startsWith(route));
 
-  const handleNavigation = (route: string) => {
+  const goTo = (route: string) => {
     navigate(route);
     if (collapsed) setCollapsed(false);
+    onCloseMobile?.();
   };
 
-  return (
-    <motion.aside
-      variants={sidebarVariants}
-      initial="expanded"
-      animate={collapsed ? "collapsed" : "expanded"}
-      className="relative flex h-screen flex-col bg-gradient-to-b from-slate-50 to-blue-50 py-6 shadow-lg transition-colors duration-200 dark:from-gray-900 dark:to-gray-900 dark:shadow-gray-950/50"
-    >
-      {/* Toggle button */}
-      <button
-        onClick={toggleSidebar}
-        className="absolute -right-3 top-12 z-10 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 p-1 text-white shadow-lg"
-      >
-        <motion.div animate={{ rotate: collapsed ? 180 : 0 }} transition={{ duration: 0.3 }}>
-          <ChevronDown size={16} />
-        </motion.div>
-      </button>
+  const renderSidebarBody = (isMobileDrawer: boolean) => {
+    const isCollapsed = !isMobileDrawer && collapsed;
 
-      {/* Logo + Admin Profile */}
-      <motion.div
-        className="mb-6 flex items-center px-4 text-xl font-bold"
-        animate={{ justifyContent: collapsed ? "center" : "flex-start" }}
-      >
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-500 text-lg font-bold text-white shadow-md">
-          {initials}
+    return (
+      <div className="flex h-full flex-col bg-blue-50/70 py-5 transition-colors duration-200 dark:bg-gray-900">
+        {/* Header: Admin Info + Mobile Close Button */}
+        <div className={`mb-5 flex items-center px-4 ${isCollapsed ? "justify-center" : "justify-between"}`}>
+          <div className="flex min-w-0 items-center">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 text-lg font-semibold text-white shadow-md">
+              {initials}
+            </div>
+            {!isCollapsed && (
+              <div className="ml-3 min-w-0">
+                <div className="max-w-[165px] truncate text-sm font-medium text-blue-900 dark:text-blue-200">
+                  {displayName}
+                </div>
+                <div className="text-xs font-medium text-blue-500 dark:text-blue-400">{roleBadge}</div>
+              </div>
+            )}
+          </div>
+
+          {isMobileDrawer && onCloseMobile && (
+            <button
+              type="button"
+              aria-label="Close navigation menu"
+              onClick={onCloseMobile}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/80 text-gray-600 shadow-sm dark:bg-gray-800 dark:text-gray-300"
+            >
+              <X size={20} />
+            </button>
+          )}
         </div>
-        {!collapsed && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="ml-3">
-            <div className="max-w-[180px] truncate text-sm font-semibold text-blue-900 dark:text-blue-200">
-              {displayName}
-            </div>
-            <div className="text-xs font-medium text-indigo-500 dark:text-indigo-400">{roleBadge}</div>
-          </motion.div>
-        )}
-      </motion.div>
 
-      {/* Quick Actions */}
-      {!collapsed && (
-        <motion.div className="mb-6 px-4" variants={itemVariants} initial="hidden" animate="visible">
-          <div className="rounded-xl bg-white p-3 shadow-sm dark:bg-gray-800">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-xs font-semibold text-blue-900 dark:text-blue-200">Quick Actions</span>
-              <Activity size={14} className="text-indigo-500 dark:text-indigo-400" />
-            </div>
-            <div className="grid grid-cols-4 gap-2">
-              {[
-                {
-                  icon: <Users size={16} />,
-                  label: "Users",
-                  route: "/admin/users/all",
-                  c: "bg-blue-50 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-gray-600 text-blue-600 dark:text-blue-400",
-                },
-                {
-                  icon: <ShieldAlert size={16} />,
-                  label: "Fraud",
-                  route: "/admin/fraud",
-                  c: "bg-red-50 dark:bg-gray-700 hover:bg-red-100 dark:hover:bg-gray-600 text-red-600 dark:text-red-400",
-                },
-                {
-                  icon: <BarChart2 size={16} />,
-                  label: "Reports",
-                  route: "/admin/reports",
-                  c: "bg-emerald-50 dark:bg-gray-700 hover:bg-emerald-100 dark:hover:bg-gray-600 text-emerald-600 dark:text-emerald-400",
-                },
-                {
-                  icon: <Settings size={16} />,
-                  label: "Settings",
-                  route: "/admin/settings",
-                  c: "bg-amber-50 dark:bg-gray-700 hover:bg-amber-100 dark:hover:bg-gray-600 text-amber-600 dark:text-amber-400",
-                },
-              ].map(({ icon, label, route, c }) => (
-                <motion.div
-                  key={label}
-                  className={`flex cursor-pointer flex-col items-center justify-center rounded-lg p-2 ${c}`}
-                  whileHover={{ y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => navigate(route)}
-                >
-                  <div className="mb-1">{icon}</div>
-                  <span className="text-xs">{label}</span>
-                </motion.div>
-              ))}
+        {/* Quick Actions */}
+        {!isCollapsed && (
+          <div className="mb-5 px-4">
+            <div className="rounded-2xl bg-white p-3 shadow-sm dark:bg-gray-800">
+              <div className="mb-2.5 flex items-center justify-between">
+                <span className="text-xs font-medium text-blue-900 dark:text-blue-200">Quick Actions</span>
+                <Activity size={14} className="text-blue-500 dark:text-blue-400" />
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {QUICK_ACTIONS.map((act) => (
+                  <motion.button
+                    key={act.label}
+                    type="button"
+                    onClick={() => goTo(act.route)}
+                    className="flex min-h-[48px] cursor-pointer flex-col items-center justify-center rounded-xl bg-blue-50 p-2 text-blue-600 transition hover:opacity-90 dark:bg-gray-700 dark:text-blue-300"
+                    whileTap={{ scale: 0.94 }}
+                  >
+                    {act.icon}
+                    <span className="mt-1 text-[11px] font-medium">{act.label}</span>
+                  </motion.button>
+                ))}
+              </div>
             </div>
           </div>
-        </motion.div>
-      )}
+        )}
 
-      {/* Status Indicators */}
-      {!collapsed && (
-        <motion.div
-          className="mb-6 flex flex-col gap-2 px-4"
-          variants={itemVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <motion.div
-            className="flex cursor-pointer items-center justify-between rounded-lg bg-white px-3 py-2 shadow-sm hover:shadow dark:bg-gray-800"
-            whileHover={{ x: 3 }}
-          >
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-green-500" />
-              <span className="text-xs font-medium text-gray-800 dark:text-gray-200">System Online</span>
+        {/* Status Indicators */}
+        {!isCollapsed && (
+          <div className="mb-4 flex flex-col gap-2 px-4">
+            <div className="flex min-h-[42px] w-full items-center justify-between rounded-xl bg-white px-3.5 py-2 shadow-sm dark:bg-gray-800">
+              <div className="flex items-center gap-2.5">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                <span className="text-xs font-medium text-gray-800 dark:text-gray-200">System Online</span>
+              </div>
+              <Shield size={14} className="text-emerald-500" />
             </div>
-            <Shield size={14} className="text-green-500" />
-          </motion.div>
 
-          <motion.div
-            className="flex cursor-pointer items-center justify-between rounded-lg bg-white px-3 py-2 shadow-sm hover:shadow dark:bg-gray-800"
-            whileHover={{ x: 3 }}
-            onClick={() => navigate("/admin/fraud/alerts")}
-          >
-            <div className="flex items-center gap-2">
-              <AlertTriangle size={14} className="text-amber-500 dark:text-amber-400" />
-              <span className="text-xs font-medium text-gray-800 dark:text-gray-200">Security Alerts</span>
-            </div>
-            <Bell size={14} className="text-amber-500 dark:text-amber-400" />
-          </motion.div>
-        </motion.div>
-      )}
+            <motion.button
+              type="button"
+              onClick={() => goTo("/admin/fraud/alerts")}
+              className="flex min-h-[42px] w-full cursor-pointer items-center justify-between rounded-xl bg-white px-3.5 py-2 text-left shadow-sm transition hover:shadow dark:bg-gray-800"
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="flex items-center gap-2.5">
+                <AlertTriangle size={16} className="text-amber-500 dark:text-amber-400" />
+                <span className="text-xs font-medium text-gray-800 dark:text-gray-200">Security Alerts</span>
+              </div>
+              <Bell size={14} className="text-amber-500 dark:text-amber-400" />
+            </motion.button>
+          </div>
+        )}
 
-      {/* Navigation */}
-      <nav className="custom-scrollbar flex-1 overflow-y-auto px-2">
-        <AnimatePresence>
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto px-2.5" style={{ WebkitOverflowScrolling: "touch" }}>
           <ul className="m-0 list-none space-y-1 p-0">
             {menu.map((item) => {
               const active = isActive(item.route);
@@ -391,65 +376,59 @@ const AdminLeftContainer: React.FC = () => {
               const open = openDropdowns.includes(item.route);
 
               return (
-                <motion.li key={item.title} variants={itemVariants} initial="hidden" animate="visible" exit="hidden">
-                  <motion.div
+                <li key={item.title}>
+                  <motion.button
+                    type="button"
+                    title={isCollapsed ? item.title : undefined}
                     onClick={() => {
                       if (item.title === "Logout") {
                         handleLogout();
                         return;
                       }
                       if (hasChildren) {
-                        if (!collapsed) handleDropdown(item.route);
-                        else handleNavigation(item.route);
+                        if (!isCollapsed) handleDropdown(item.route);
+                        else goTo(item.route);
                       } else {
-                        handleNavigation(item.route);
+                        goTo(item.route);
                       }
                     }}
-                    className={`
-                      flex cursor-pointer items-center gap-3 rounded-xl px-4 py-3 transition
-                      ${
-                        item.title === "Logout"
-                          ? "font-medium text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30"
-                          : active
-                            ? "bg-gradient-to-r from-blue-100 to-indigo-100 font-semibold text-blue-800 dark:from-blue-900/40 dark:to-indigo-900/40 dark:text-blue-200"
-                            : "font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-blue-300"
-                      }
-                    `}
-                    whileHover={{ x: collapsed ? 0 : 3 }}
+                    className={`flex min-h-[44px] w-full cursor-pointer items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-sm transition ${
+                      isCollapsed ? "justify-center" : ""
+                    } ${
+                      item.title === "Logout"
+                        ? "font-medium text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30"
+                        : active
+                          ? "bg-blue-100/80 font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-200"
+                          : "font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-blue-300"
+                    }`}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <motion.div
+                    <span
                       className={
                         item.title === "Logout"
                           ? "text-rose-500 dark:text-rose-400"
                           : active
                             ? "text-blue-600 dark:text-blue-400"
-                            : "text-indigo-500 dark:text-indigo-400"
+                            : "text-blue-500 dark:text-blue-400"
                       }
-                      animate={{ scale: active ? 1.1 : 1 }}
                     >
                       {item.icon}
-                    </motion.div>
+                    </span>
 
-                    {!collapsed && <motion.span className="flex-1">{item.title}</motion.span>}
+                    {!isCollapsed && <span className="flex-1 truncate">{item.title}</span>}
 
-                    {hasChildren && !collapsed && (
-                      <motion.div
-                        initial={{ rotate: 0 }}
-                        animate={{ rotate: open ? 180 : 0 }}
-                        transition={{ duration: 0.2 }}
-                      >
+                    {hasChildren && !isCollapsed && (
+                      <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
                         <ChevronDown size={16} className="text-blue-400" />
                       </motion.div>
                     )}
-                  </motion.div>
+                  </motion.button>
 
-                  {/* Dropdown */}
-                  {hasChildren && !collapsed && (
-                    <AnimatePresence>
+                  {hasChildren && !isCollapsed && (
+                    <AnimatePresence initial={false}>
                       {open && (
                         <motion.ul
-                          className="mb-1 mt-1 list-none overflow-hidden pl-8"
+                          className="mb-1 mt-1 list-none overflow-hidden pl-9"
                           variants={dropdownVariants}
                           initial="hidden"
                           animate="visible"
@@ -458,78 +437,111 @@ const AdminLeftContainer: React.FC = () => {
                           {item.children!.map((child) => {
                             const childActive = isActive(child.route);
                             return (
-                              <motion.li key={child.title} variants={itemVariants} className="mb-1">
-                                <motion.div
-                                  onClick={() => navigate(child.route)}
-                                  className={`
-                                    cursor-pointer rounded-lg px-3 py-2 text-sm transition
-                                    ${
-                                      childActive
-                                        ? "bg-blue-100 font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
-                                        : "font-normal text-gray-700 hover:bg-blue-50 hover:text-blue-600 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-blue-300"
-                                    }
-                                  `}
-                                  whileHover={{ x: 3 }}
-                                  whileTap={{ scale: 0.98 }}
+                              <li key={child.title} className="mb-0.5">
+                                <button
+                                  type="button"
+                                  onClick={() => goTo(child.route)}
+                                  className={`flex min-h-[38px] w-full cursor-pointer items-center rounded-lg px-3 py-1.5 text-left text-sm transition ${
+                                    childActive
+                                      ? "bg-blue-100 font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
+                                      : "font-normal text-gray-700 hover:bg-blue-50 hover:text-blue-600 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-blue-300"
+                                  }`}
                                 >
                                   {child.title}
-                                  {childActive && (
-                                    <motion.div
-                                      className="absolute right-0 top-0 h-full w-1 rounded-l bg-blue-600"
-                                      layoutId="activeIndicator"
-                                    />
-                                  )}
-                                </motion.div>
-                              </motion.li>
+                                </button>
+                              </li>
                             );
                           })}
                         </motion.ul>
                       )}
                     </AnimatePresence>
                   )}
-                </motion.li>
+                </li>
               );
             })}
           </ul>
-        </AnimatePresence>
-      </nav>
+        </nav>
 
-      {/* Admin Info */}
-      {!collapsed && (
-        <motion.div
-          className="mt-auto border-t border-blue-100 px-4 pt-4 dark:border-gray-700"
-          variants={itemVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <motion.div
-            className="flex cursor-pointer items-center gap-3 rounded-xl bg-gradient-to-r from-blue-100 to-indigo-100 p-3 dark:from-blue-900/40 dark:to-indigo-900/40"
-            whileHover={{ y: -2, boxShadow: "0 4px 6px rgba(59, 130, 246, 0.1)" }}
-            onClick={() => navigate("/admin/profile")}
-          >
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white">
-              <User size={16} />
-            </div>
-            <div>
-              <div className="text-xs font-medium text-blue-900 dark:text-blue-200">Admin Profile</div>
-              <div className="text-xs text-blue-700 dark:text-blue-400">View & manage</div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-
-      {/* Footer */}
-      <motion.div
-        className="mt-4 px-4 py-3 text-center text-xs"
-        animate={{ justifyContent: collapsed ? "center" : "space-between", opacity: 1 }}
-      >
-        {!collapsed ? (
-          <div className="text-blue-400 dark:text-blue-500">&copy; {new Date().getFullYear()} Nordi Admin</div>
-        ) : (
-          <Lock size={16} className="mx-auto text-blue-400" />
+        {/* Admin Profile Shortcut */}
+        {!isCollapsed && (
+          <div className="mt-3 px-4">
+            <motion.button
+              type="button"
+              onClick={() => goTo("/admin/profile")}
+              className="flex w-full cursor-pointer items-center gap-3 rounded-xl bg-white p-3 text-left shadow-sm dark:bg-gray-800"
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
+                <User size={16} />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-medium text-blue-900 dark:text-blue-200">Admin Profile</div>
+                <div className="text-xs text-blue-700 dark:text-blue-400">View &amp; manage</div>
+              </div>
+            </motion.button>
+          </div>
         )}
-      </motion.div>
-    </motion.aside>
+
+        {/* Footer */}
+        <div className="mt-2 px-4 py-2 text-center text-xs">
+          {!isCollapsed ? (
+            <div className="text-blue-400 dark:text-blue-500">&copy; {new Date().getFullYear()} Nordi Admin</div>
+          ) : (
+            <Lock size={16} className="mx-auto text-blue-400" />
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <>
+      {/* Desktop Docked Sidebar (lg+) */}
+      <motion.aside
+        variants={sidebarVariants}
+        initial="expanded"
+        animate={collapsed ? "collapsed" : "expanded"}
+        className="relative hidden h-[100dvh] shrink-0 shadow-lg dark:shadow-gray-950/50 lg:flex lg:flex-col"
+      >
+        <button
+          type="button"
+          aria-label="Toggle sidebar"
+          onClick={() => setCollapsed(!collapsed)}
+          className="absolute -right-3 top-12 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg"
+        >
+          <motion.div animate={{ rotate: collapsed ? 180 : 0 }} transition={{ duration: 0.25 }}>
+            <ChevronDown size={15} className="rotate-90" />
+          </motion.div>
+        </button>
+        {renderSidebarBody(false)}
+      </motion.aside>
+
+      {/* Mobile & Tablet Slide-Over Drawer (< lg) */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={onCloseMobile}
+              className="fixed inset-0 bg-black/55 backdrop-blur-sm"
+            />
+            <motion.aside
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", stiffness: 360, damping: 34 }}
+              className="fixed inset-y-0 left-0 z-50 h-[100dvh] w-[84vw] max-w-[310px] shadow-2xl"
+              style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+            >
+              {renderSidebarBody(true)}
+            </motion.aside>
+          </div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 
