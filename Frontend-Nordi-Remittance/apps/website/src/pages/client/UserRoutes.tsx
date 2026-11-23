@@ -46,6 +46,7 @@ import LoansOverview from "./app/loans/LoansOverview";
 import ApplyForLoan from "./app/loans/ApplyForLoan";
 import LoanCalculator from "./app/loans/LoanCalculator";
 import CreditScore from "./app/loans/CreditScore";
+import LoanDetail from "./app/loans/LoanDetail";
 
 // Investments
 import Investments from "./app/investments/Investments";
@@ -155,6 +156,7 @@ export default function UserRoutes() {
       <Route path="loans/apply" element={<ApplyForLoan />} />
       <Route path="loans/calculator" element={<LoanCalculator />} />
       <Route path="loans/credit-score" element={<CreditScore />} />
+      <Route path="loans/:loanId" element={<LoanDetail />} />
 
       {/* Investments */}
       <Route path="investments" element={<Investments />} />
