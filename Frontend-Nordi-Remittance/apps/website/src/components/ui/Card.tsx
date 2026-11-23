@@ -236,16 +236,26 @@ export const StatsCard = forwardRef<HTMLDivElement, StatsCardProps>(
             <p className="mt-1 text-xl font-bold tabular-nums text-neutral-900 dark:text-white sm:text-2xl lg:text-3xl">
               {value}
             </p>
-            {change && (
+            {change !== undefined && (
               <div
                 className={cn(
                   "mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
-                  changeColors[change.type],
+                  typeof change === "number"
+                    ? change >= 0
+                      ? changeColors.increase
+                      : changeColors.decrease
+                    : changeColors[change.type] || changeColors.neutral,
                 )}
               >
-                {change.type === "increase" && "↑"}
-                {change.type === "decrease" && "↓"}
-                {Math.abs(change.value)}%
+                {typeof change === "number" ? (
+                  `${change >= 0 ? "+" : ""}${change}%`
+                ) : (
+                  <>
+                    {change.type === "increase" && "↑"}
+                    {change.type === "decrease" && "↓"}
+                    {Math.abs(change.value)}%
+                  </>
+                )}
               </div>
             )}
           </div>
