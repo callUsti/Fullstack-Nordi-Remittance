@@ -17,6 +17,7 @@ const emailGenerator = new EmailContentGenerator();
 import { emitToUser } from '../../services/websocket.service.js';
 import { WS } from '../../core/constants/ws-events.js';
 import { validateUserEligibility } from '../../core/guards/user-eligibility.guard.js';
+import { cacheDelete, CACHE_KEYS } from '../../services/redis.service.js';
 import {
   calculateTransactionTax,
   createTaxRecord,
@@ -50,6 +51,7 @@ export class OpsWalletService {
 
       const {
         userId,
+        walletId,
         amount,
         currency = 'USD',
         description,
@@ -72,7 +74,21 @@ export class OpsWalletService {
       const user = await Users.findById(userId).session(session);
       if (!user) throw new NotFoundError('User not found');
 
-      let wallet = await Wallets.findOne({ user: userId, status: 'active' }).session(session);
+      let wallet = null;
+      if (walletId) {
+        if (mongoose.Types.ObjectId.isValid(walletId)) {
+          wallet = await Wallets.findOne({ _id: walletId, user: userId }).session(session);
+        }
+        if (!wallet) {
+          wallet = await Wallets.findOne({ walletNumber: walletId, user: userId }).session(session);
+        }
+      }
+      if (!wallet) {
+        wallet = await Wallets.findOne({ user: userId, isPrimary: true, status: 'active' }).session(session);
+      }
+      if (!wallet) {
+        wallet = await Wallets.findOne({ user: userId, status: 'active' }).session(session);
+      }
       if (!wallet) {
         wallet = new Wallets({
           user: userId,
@@ -184,6 +200,7 @@ export class OpsWalletService {
       );
 
       await session.commitTransaction();
+      await cacheDelete(`${CACHE_KEYS.USER_WALLETS}${userId}`);
 
       const taxNote =
         taxAmount > 0
@@ -257,6 +274,7 @@ export class OpsWalletService {
 
       const {
         userId,
+        walletId,
         amount,
         currency = 'USD',
         description,
@@ -275,7 +293,21 @@ export class OpsWalletService {
       const user = await Users.findById(userId).session(session);
       if (!user) throw new NotFoundError('User not found');
 
-      const wallet = await Wallets.findOne({ user: userId, status: 'active' }).session(session);
+      let wallet = null;
+      if (walletId) {
+        if (mongoose.Types.ObjectId.isValid(walletId)) {
+          wallet = await Wallets.findOne({ _id: walletId, user: userId }).session(session);
+        }
+        if (!wallet) {
+          wallet = await Wallets.findOne({ walletNumber: walletId, user: userId }).session(session);
+        }
+      }
+      if (!wallet) {
+        wallet = await Wallets.findOne({ user: userId, isPrimary: true, status: 'active' }).session(session);
+      }
+      if (!wallet) {
+        wallet = await Wallets.findOne({ user: userId, status: 'active' }).session(session);
+      }
       if (!wallet) throw new NotFoundError('User wallet not found');
 
       const previousBalance = getWalletBalance(wallet, currency);
@@ -370,6 +402,7 @@ export class OpsWalletService {
       );
 
       await session.commitTransaction();
+      await cacheDelete(`${CACHE_KEYS.USER_WALLETS}${userId}`);
 
       await notifyUser(
         userId,
@@ -432,14 +465,23 @@ export class OpsWalletService {
         throw new ForbiddenError('You do not have permission to perform transfers');
       }
 
-      const { fromUserId, toUserId, amount, currency = 'USD', description, metadata } = data;
+      const {
+        fromUserId,
+        toUserId,
+        fromWalletId,
+        toWalletId,
+        amount,
+        currency = 'USD',
+        description,
+        metadata,
+      } = data;
 
       await Promise.all([
         validateUserEligibility(fromUserId, 'admin transfer (sender)'),
         validateUserEligibility(toUserId, 'admin transfer (recipient)'),
       ]);
 
-      if (fromUserId === toUserId) {
+      if (fromUserId === toUserId && (!fromWalletId || !toWalletId || fromWalletId === toWalletId)) {
         throw new ValidationError('Cannot transfer to the same account');
       }
 
@@ -455,10 +497,33 @@ export class OpsWalletService {
       if (!fromUser) throw new NotFoundError('Sender not found');
       if (!toUser) throw new NotFoundError('Recipient not found');
 
-      const [fromWallet, toWallet] = await Promise.all([
-        Wallets.findOne({ user: fromUserId, status: 'active' }).session(session),
-        Wallets.findOne({ user: toUserId, status: 'active' }).session(session),
-      ]);
+      let fromWallet = null;
+      if (fromWalletId) {
+        if (mongoose.Types.ObjectId.isValid(fromWalletId)) {
+          fromWallet = await Wallets.findOne({ _id: fromWalletId, user: fromUserId }).session(session);
+        }
+        if (!fromWallet) {
+          fromWallet = await Wallets.findOne({ walletNumber: fromWalletId, user: fromUserId }).session(session);
+        }
+      }
+      if (!fromWallet) {
+        fromWallet = await Wallets.findOne({ user: fromUserId, isPrimary: true, status: 'active' }).session(session) ||
+                     await Wallets.findOne({ user: fromUserId, status: 'active' }).session(session);
+      }
+
+      let toWallet = null;
+      if (toWalletId) {
+        if (mongoose.Types.ObjectId.isValid(toWalletId)) {
+          toWallet = await Wallets.findOne({ _id: toWalletId, user: toUserId }).session(session);
+        }
+        if (!toWallet) {
+          toWallet = await Wallets.findOne({ walletNumber: toWalletId, user: toUserId }).session(session);
+        }
+      }
+      if (!toWallet) {
+        toWallet = await Wallets.findOne({ user: toUserId, isPrimary: true, status: 'active' }).session(session) ||
+                   await Wallets.findOne({ user: toUserId, status: 'active' }).session(session);
+      }
 
       if (!fromWallet) throw new NotFoundError('Sender wallet not found');
       if (!toWallet) throw new NotFoundError('Recipient wallet not found');
@@ -555,6 +620,10 @@ export class OpsWalletService {
       );
 
       await session.commitTransaction();
+      await Promise.all([
+        cacheDelete(`${CACHE_KEYS.USER_WALLETS}${fromUserId}`),
+        cacheDelete(`${CACHE_KEYS.USER_WALLETS}${toUserId}`),
+      ]);
 
       await notifyUser(
         fromUserId,
@@ -721,14 +790,59 @@ export class OpsWalletService {
   }
 
   /**
-   * Get pending account applications
+   * Get account applications (all statuses by default, or filtered by status/type)
    */
-  static async getPendingApplications() {
-    // Import here to avoid circular dependencies if any, though it's better to import at the top
+  static async getPendingApplications(filters?: { status?: string; type?: string }) {
     const { AccountApplications } = await import('../accounts/accounts.model.js');
-    return await AccountApplications.find({ status: 'pending' })
+    const query: any = {};
+    if (filters?.status && filters.status !== 'all') {
+      query.status = filters.status;
+    }
+    if (filters?.type && filters.type !== 'all') {
+      query.type = filters.type;
+    }
+
+    const apps = await AccountApplications.find(query)
       .sort({ submittedAt: -1 })
-      .populate('user', 'firstName lastName email');
+      .populate('user', 'firstName lastName email accountNumber mobileNumber country kycStatus status profilePicture')
+      .lean();
+
+    // Attach wallet info for approved applications that don't yet have walletNumber populated
+    const userIds = Array.from(
+      new Set(apps.map((a: any) => String(a.user?._id || a.user || '')).filter(Boolean)),
+    );
+    const wallets = userIds.length > 0
+      ? await Wallets.find({ user: { $in: userIds } }).lean()
+      : [];
+
+    return apps.map((app: any) => {
+      const uid = String(app.user?._id || app.user || '');
+      const matchedWallet = wallets.find(
+        (w: any) =>
+          (w.applicationId && String(w.applicationId) === String(app._id)) ||
+          (app.walletId && String(w._id) === String(app.walletId)) ||
+          (String(w.user) === uid && w.walletType === app.type && w.status !== 'closed'),
+      );
+      const userWallets = wallets
+        .filter((w: any) => String(w.user) === uid)
+        .map((w: any) => ({
+          id: w._id,
+          walletNumber: w.walletNumber,
+          walletType: w.walletType,
+          status: w.status,
+          isPrimary: w.isPrimary,
+          nickname: w.nickname || w.notes,
+          balances: w.balances instanceof Map ? Object.fromEntries(w.balances) : w.balances,
+        }));
+
+      return {
+        ...app,
+        id: app._id,
+        walletId: app.walletId || matchedWallet?._id,
+        walletNumber: app.walletNumber || matchedWallet?.walletNumber,
+        userWallets,
+      };
+    });
   }
 
   /**
@@ -751,31 +865,37 @@ export class OpsWalletService {
       if (application.status !== 'pending')
         throw new ValidationError('Application is already processed');
 
-      application.status = 'approved';
-      application.reviewedAt = new Date();
-      application.reviewedBy = currentUserId;
-      await application.save({ session });
-
       // Create the wallet for the approved application
       const walletType = application.type; // savings, current, fixed_deposit
       const currency = application.currency || 'USD';
 
-      // Guard: check if user already has a wallet of this type
+      // Guard: check if a wallet was already created specifically for this application
       const existingWallet = await Wallets.findOne({
-        user: application.user,
-        walletType: walletType,
+        applicationId: application._id,
         status: { $ne: 'closed' },
       }).session(session);
 
       if (existingWallet) {
-        // Wallet already exists — just mark the application as approved
-        // without creating a duplicate wallet
         application.status = 'approved';
         application.reviewedAt = new Date();
         application.reviewedBy = currentUserId;
+        application.walletId = String(existingWallet._id);
+        application.walletNumber = existingWallet.walletNumber;
         await application.save({ session });
         await session.commitTransaction();
+        await cacheDelete(`${CACHE_KEYS.USER_WALLETS}${application.user}`);
         return { success: true, application, wallet: existingWallet, alreadyExisted: true };
+      }
+
+      const defaultInterestRate =
+        application.interestRate ||
+        (walletType === 'savings' ? 2.75 : walletType === 'fixed_deposit' ? 5.25 : undefined);
+
+      let calculatedMaturityDate = application.maturityDate || undefined;
+      if (!calculatedMaturityDate && walletType === 'fixed_deposit' && application.termMonths) {
+        const d = new Date();
+        d.setMonth(d.getMonth() + Number(application.termMonths));
+        calculatedMaturityDate = d;
       }
 
       const wallet = new Wallets({
@@ -785,9 +905,38 @@ export class OpsWalletService {
         status: 'active',
         walletType: walletType,
         isPrimary: false,
-        notes: `Created from approved application ${applicationId}`,
+        applicationId: String(application._id),
+        nickname: application.nickname || application.businessName || application.goal || undefined,
+        notes: application.nickname || application.businessName || application.goal || `${walletType} account`,
+        initialDeposit: application.initialDeposit || undefined,
+        goal: application.goal || undefined,
+        autoSave: application.autoSave || false,
+        autoSaveAmount: application.autoSaveAmount || undefined,
+        purpose: application.purpose || undefined,
+        businessName: application.businessName || undefined,
+        expectedMonthlyVolume: application.expectedMonthlyVolume || undefined,
+        overdraftRequested: application.overdraftRequested || false,
+        principal: application.principal || undefined,
+        termMonths: application.termMonths || undefined,
+        interestRate: defaultInterestRate,
+        maturityDate: calculatedMaturityDate,
+        autoRenew: application.autoRenew || false,
+        overdraftLimit: application.overdraftRequested ? 5000 : 0,
       });
       await wallet.save({ session });
+
+      application.status = 'approved';
+      application.reviewedAt = new Date();
+      application.reviewedBy = currentUserId;
+      application.walletId = String(wallet._id);
+      application.walletNumber = wallet.walletNumber;
+      if (defaultInterestRate && !application.interestRate) {
+        application.interestRate = defaultInterestRate;
+      }
+      if (calculatedMaturityDate && !application.maturityDate) {
+        application.maturityDate = calculatedMaturityDate;
+      }
+      await application.save({ session });
 
       // Handle initial deposits if applicable
       const initialDeposit = application.initialDeposit || application.principal;
@@ -798,42 +947,43 @@ export class OpsWalletService {
           isPrimary: true,
           status: 'active',
         }).session(session);
-        if (primaryWallet) {
-          const previousBalance = getWalletBalance(primaryWallet, currency);
-          if (previousBalance >= initialDeposit) {
-            updateWalletBalance(primaryWallet, currency, -initialDeposit);
-            await primaryWallet.save({ session });
+        if (primaryWallet && getWalletBalance(primaryWallet, currency) >= initialDeposit) {
+          updateWalletBalance(primaryWallet, currency, -initialDeposit);
+          await primaryWallet.save({ session });
 
-            updateWalletBalance(wallet, currency, initialDeposit);
-            await wallet.save({ session });
+          updateWalletBalance(wallet, currency, initialDeposit);
+          await wallet.save({ session });
 
-            // Log the ledger entries
-            await LedgerEntries.insertMany(
-              [
-                {
-                  wallet: primaryWallet._id,
-                  transaction: application._id, // Using application id as placeholder since no transaction is created here
-                  entryType: 'debit',
-                  amount: initialDeposit,
-                  currency,
-                  balance: getWalletBalance(primaryWallet, currency),
-                  description: `Initial deposit for ${walletType} account transfer`,
-                  accountingDate: new Date(),
-                },
-                {
-                  wallet: wallet._id,
-                  transaction: application._id,
-                  entryType: 'credit',
-                  amount: initialDeposit,
-                  currency,
-                  balance: getWalletBalance(wallet, currency),
-                  description: `Initial deposit from primary account`,
-                  accountingDate: new Date(),
-                },
-              ],
-              { session },
-            );
-          }
+          // Log the ledger entries
+          await LedgerEntries.insertMany(
+            [
+              {
+                wallet: primaryWallet._id,
+                transaction: application._id,
+                entryType: 'debit',
+                amount: initialDeposit,
+                currency,
+                balance: getWalletBalance(primaryWallet, currency),
+                description: `Initial deposit for ${walletType} account transfer`,
+                accountingDate: new Date(),
+              },
+              {
+                wallet: wallet._id,
+                transaction: application._id,
+                entryType: 'credit',
+                amount: initialDeposit,
+                currency,
+                balance: getWalletBalance(wallet, currency),
+                description: `Initial deposit from primary account`,
+                accountingDate: new Date(),
+              },
+            ],
+            { session },
+          );
+        } else {
+          // Credit the new wallet with the requested initial deposit / principal
+          updateWalletBalance(wallet, currency, initialDeposit);
+          await wallet.save({ session });
         }
       }
 
@@ -849,11 +999,12 @@ export class OpsWalletService {
       );
 
       await session.commitTransaction();
+      await cacheDelete(`${CACHE_KEYS.USER_WALLETS}${application.user}`);
 
       await notifyUser(
         String(application.user),
         'Account Approved',
-        `Your ${walletType} account application has been approved.`,
+        `Your ${walletType.replace('_', ' ')} account application has been approved. Account #${wallet.walletNumber}`,
         'account',
       );
 
@@ -890,6 +1041,7 @@ export class OpsWalletService {
     application.reviewedAt = new Date();
     application.reviewedBy = currentUserId;
     await application.save();
+    await cacheDelete(`${CACHE_KEYS.USER_WALLETS}${application.user}`);
 
     await logAdminAction(
       currentUserId,
