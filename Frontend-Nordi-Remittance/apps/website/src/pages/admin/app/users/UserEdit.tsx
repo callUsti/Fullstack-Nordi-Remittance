@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Save } from "lucide-react";
 import { useUserDetail } from "../../admin-usecase/useadmin-users-usercase";
+import { useAdminUserLimits, useAdminUpdateUserLimits } from "@hooks/useTransferLimits";
 import useThemeStore from "@store/theme.store";
 import { Input, Select, Card, CardContent, Button, Modal } from "@components/ui";
 import { Spinner } from "@components/ui";
@@ -12,6 +13,7 @@ const TABS = [
   { key: "personal", label: "Personal Details" },
   { key: "account", label: "Account Details" },
   { key: "financial", label: "Financial Info" },
+  { key: "limits", label: "Transfer Limits" },
   { key: "security", label: "Security Settings" },
 ];
 
@@ -47,6 +49,30 @@ const UserEdit = () => {
   const [formData, setFormData] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("personal");
   const [success, setSuccess] = useState(false);
+
+  const { data: userLimitsData, isLoading: limitsLoading } = useAdminUserLimits(id || "");
+  const updateUserLimits = useAdminUpdateUserLimits(id || "");
+  const [limitForm, setLimitForm] = useState({
+    domPerTx: "",
+    domDaily: "",
+    domMonthly: "",
+    intlPerTx: "",
+    intlDaily: "",
+    intlMonthly: "",
+  });
+
+  useEffect(() => {
+    if (userLimitsData) {
+      setLimitForm({
+        domPerTx: String(userLimitsData.domestic?.perTransaction ?? 25000),
+        domDaily: String(userLimitsData.domestic?.daily ?? 500000),
+        domMonthly: String(userLimitsData.domestic?.monthly ?? 2000000),
+        intlPerTx: String(userLimitsData.international?.perTransaction ?? 5000000),
+        intlDaily: String(userLimitsData.international?.daily ?? 10000000),
+        intlMonthly: String(userLimitsData.international?.monthly ?? 50000000),
+      });
+    }
+  }, [userLimitsData]);
 
   useEffect(() => {
     if (fetchedUser && !formData) {
@@ -105,13 +131,13 @@ const UserEdit = () => {
 
   return (
     <motion.div
-      className="container mx-auto max-w-4xl px-4 py-6"
+      className="w-full min-w-0 max-w-full overflow-x-hidden px-2 py-4 sm:px-4 sm:py-5"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       {/* Header */}
-      <motion.div className="mb-6 flex items-center justify-between" variants={itemVariants}>
+      <motion.div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" variants={itemVariants}>
         <div className="flex items-center">
           <button
             className="mr-4 rounded-full p-2 text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
@@ -131,7 +157,7 @@ const UserEdit = () => {
 
       {/* Tabs */}
       <motion.div
-        className="mb-6 flex overflow-x-auto border-b border-neutral-200 dark:border-neutral-700"
+        className="mb-6 flex overflow-x-auto border-b border-neutral-200 dark:border-neutral-700 touch-pan-x scrollbar-hide"
         variants={itemVariants}
       >
         {TABS.map((tab) => (
@@ -150,7 +176,7 @@ const UserEdit = () => {
         <CardContent>
           {activeTab === "personal" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-              <h3 className="mb-4 text-lg font-bold text-neutral-900 dark:text-white">Personal Information</h3>
+              <h3 className="mb-4 text-lg font-semibold text-neutral-900 dark:text-white">Personal Information</h3>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <Input label="First Name" name="firstName" value={user.firstName || ""} onChange={handleChange} />
                 <Input label="Middle Name" name="middleName" value={user.middleName || ""} onChange={handleChange} />
@@ -195,7 +221,7 @@ const UserEdit = () => {
                   onChange={handleChange}
                 />
               </div>
-              <h3 className="mb-4 mt-8 text-lg font-bold text-neutral-900 dark:text-white">Address Information</h3>
+              <h3 className="mb-4 mt-8 text-lg font-semibold text-neutral-900 dark:text-white">Address Information</h3>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <Input label="Home Address" name="homeAddress" value={user.homeAddress || ""} onChange={handleChange} />
                 <Input label="City" name="city" value={user.city || ""} onChange={handleChange} />
@@ -213,7 +239,7 @@ const UserEdit = () => {
 
           {activeTab === "account" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-              <h3 className="mb-4 text-lg font-bold text-neutral-900 dark:text-white">Account Information</h3>
+              <h3 className="mb-4 text-lg font-semibold text-neutral-900 dark:text-white">Account Information</h3>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <Input label="Account Type" name="accountType" value={user.accountType || ""} onChange={handleChange} />
                 <Input
@@ -244,7 +270,7 @@ const UserEdit = () => {
 
           {activeTab === "financial" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-              <h3 className="mb-4 text-lg font-bold text-neutral-900 dark:text-white">Financial Information</h3>
+              <h3 className="mb-4 text-lg font-semibold text-neutral-900 dark:text-white">Financial Information</h3>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <Input
                   label="Source of Income"
@@ -284,7 +310,7 @@ const UserEdit = () => {
                   onChange={handleChange}
                 />
               </div>
-              <h3 className="mb-4 mt-8 text-lg font-bold text-neutral-900 dark:text-white">Bank Account Information</h3>
+              <h3 className="mb-4 mt-8 text-lg font-semibold text-neutral-900 dark:text-white">Bank Account Information</h3>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <Input label="Bank Name" name="bankName" value={user.bankName || ""} onChange={handleChange} />
                 <Input label="Bank Address" name="bankAddress" value={user.bankAddress || ""} onChange={handleChange} />
@@ -300,9 +326,161 @@ const UserEdit = () => {
             </motion.div>
           )}
 
+          {activeTab === "limits" && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="space-y-6">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">
+                    Transfer Limits (Domestic &amp; International)
+                  </h3>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                    Increase or decrease per-transaction, daily, and monthly limits for this customer.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="primary"
+                  disabled={updateUserLimits.isPending || limitsLoading}
+                  onClick={() => {
+                    updateUserLimits.mutate(
+                      {
+                        domestic: {
+                          perTransaction: Number(limitForm.domPerTx) || 0,
+                          daily: Number(limitForm.domDaily) || 0,
+                          monthly: Number(limitForm.domMonthly) || 0,
+                        },
+                        international: {
+                          perTransaction: Number(limitForm.intlPerTx) || 0,
+                          daily: Number(limitForm.intlDaily) || 0,
+                          monthly: Number(limitForm.intlMonthly) || 0,
+                        },
+                      },
+                      { onSuccess: () => setSuccess(true) },
+                    );
+                  }}
+                >
+                  {updateUserLimits.isPending ? "Saving Limits..." : "Save Transfer Limits"}
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div className="rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
+                  <h4 className="mb-3 text-sm font-semibold text-neutral-900 dark:text-white">
+                    Domestic Transfer Limits ($)
+                  </h4>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <Input
+                      label="Per Transaction"
+                      type="number"
+                      value={limitForm.domPerTx}
+                      onChange={(e) => setLimitForm((p) => ({ ...p, domPerTx: e.target.value }))}
+                    />
+                    <Input
+                      label="Daily Limit"
+                      type="number"
+                      value={limitForm.domDaily}
+                      onChange={(e) => setLimitForm((p) => ({ ...p, domDaily: e.target.value }))}
+                    />
+                    <Input
+                      label="Monthly Limit"
+                      type="number"
+                      value={limitForm.domMonthly}
+                      onChange={(e) => setLimitForm((p) => ({ ...p, domMonthly: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
+                  <h4 className="mb-3 text-sm font-semibold text-neutral-900 dark:text-white">
+                    International Transfer Limits ($)
+                  </h4>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <Input
+                      label="Per Transaction"
+                      type="number"
+                      value={limitForm.intlPerTx}
+                      onChange={(e) => setLimitForm((p) => ({ ...p, intlPerTx: e.target.value }))}
+                    />
+                    <Input
+                      label="Daily Limit"
+                      type="number"
+                      value={limitForm.intlDaily}
+                      onChange={(e) => setLimitForm((p) => ({ ...p, intlDaily: e.target.value }))}
+                    />
+                    <Input
+                      label="Monthly Limit"
+                      type="number"
+                      value={limitForm.intlMonthly}
+                      onChange={(e) => setLimitForm((p) => ({ ...p, intlMonthly: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {(userLimitsData?.limitRequests?.length || 0) > 0 && (
+                <div className="rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
+                  <h4 className="mb-3 text-sm font-semibold text-neutral-900 dark:text-white">
+                    Customer Limit Change Applications
+                  </h4>
+                  <div className="space-y-3">
+                    {userLimitsData!.limitRequests!.map((req) => (
+                      <div
+                        key={req._id}
+                        className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-neutral-200 p-3 text-xs dark:border-neutral-700"
+                      >
+                        <div>
+                          <p className="font-semibold capitalize text-neutral-900 dark:text-white">
+                            {req.scope} — {req.action} request ({req.status})
+                          </p>
+                          <p className="text-neutral-500 dark:text-neutral-400">
+                            Requested: Per-Tx ${req.requestedLimits.perTransaction?.toLocaleString() ?? "—"} · Daily $
+                            {req.requestedLimits.daily?.toLocaleString() ?? "—"} · Monthly $
+                            {req.requestedLimits.monthly?.toLocaleString() ?? "—"}
+                          </p>
+                          {req.reason && <p className="mt-0.5 text-neutral-500">Reason: {req.reason}</p>}
+                        </div>
+                        {req.status === "pending" && (
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              variant="primary"
+                              size="sm"
+                              onClick={() =>
+                                updateUserLimits.mutate({
+                                  [req.scope]: req.requestedLimits,
+                                  limitRequestId: req._id,
+                                  requestStatus: "approved",
+                                })
+                              }
+                            >
+                              Approve &amp; Apply
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                updateUserLimits.mutate({
+                                  limitRequestId: req._id,
+                                  requestStatus: "rejected",
+                                })
+                              }
+                            >
+                              Reject
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          )}
+
           {activeTab === "security" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-              <h3 className="mb-4 text-lg font-bold text-neutral-900 dark:text-white">Security Settings</h3>
+              <h3 className="mb-4 text-lg font-semibold text-neutral-900 dark:text-white">Security Settings</h3>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
@@ -344,7 +522,7 @@ const UserEdit = () => {
       <Modal isOpen={success} onClose={() => setSuccess(false)} size="sm" showCloseButton={false}>
         <div className="p-6 text-center">
           <div className="mb-2 text-4xl text-success-500">✓</div>
-          <div className="mb-2 font-bold text-neutral-900 dark:text-white">User updated successfully!</div>
+          <div className="mb-2 font-medium text-neutral-900 dark:text-white">User updated successfully!</div>
         </div>
       </Modal>
     </motion.div>
