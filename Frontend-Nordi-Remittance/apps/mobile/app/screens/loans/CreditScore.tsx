@@ -7,14 +7,15 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMobileTheme } from '@/core/theme/useMobileTheme';
 import { ScreenHeader } from '@/components/shared/ScreenHeader';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { AdaptiveScreen } from '@/components/layout/AdaptiveScreen';
+import { Icon } from '@/components/ui/Icon';
+import { ICON_SIZES, SPACING, FONT_SIZES, RADIUS } from '@/constants/sizings';
 import { useClientEligibility } from '@nordi/shared/client-usecase';
 
 export default function CreditScoreScreen() {
@@ -33,136 +34,125 @@ export default function CreditScoreScreen() {
   ];
 
   return (
-    <View style={s.container}>
-      <ScreenHeader
-        title="Credit Bureau Score"
-        subtitle="Experian & TransUnion synchronized rating"
-        showBack
-        onBackPress={() => router.back()}
-      />
+    <AdaptiveScreen
+      header={
+        <ScreenHeader
+          title="Credit Bureau Score"
+          subtitle="Experian & TransUnion synchronized rating"
+          showBack
+          onBackPress={() => router.back()}
+        />
+      }
+    >
+      <Card style={s.scoreCard}>
+        <CardContent style={s.scoreContent}>
+          <View style={s.scoreCircle}>
+            <Text style={s.scoreNum}>{score}</Text>
+            <Text style={s.scoreMax}>/ 850</Text>
+          </View>
+          <Text style={s.ratingText}>Excellent Credit</Text>
+          <Text style={s.ratingSub}>Updated automatically on the 1st of every month</Text>
+        </CardContent>
+      </Card>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={s.scrollContent}
-      >
-        <Card style={s.scoreCard}>
-          <CardContent style={s.scoreContent}>
-            <View style={s.scoreCircle}>
-              <Text style={s.scoreNum}>{score}</Text>
-              <Text style={s.scoreMax}>/ 850</Text>
+      <Text style={s.sectionTitle}>Credit Health Drivers</Text>
+
+      {factors.map((item, idx) => (
+        <Card key={idx} style={s.factorCard}>
+          <CardContent style={s.factorContent}>
+            <View style={s.factorIcon}>
+              <Icon name="CheckCircle" size={ICON_SIZES.md} color={theme.colors.success} />
             </View>
-            <Text style={s.ratingText}>Excellent Credit</Text>
-            <Text style={s.ratingSub}>Updated automatically on the 1st of every month</Text>
+            <View style={{ flex: 1, marginLeft: SPACING.md }}>
+              <Text style={s.factorTitle}>{item.title}</Text>
+              <Text style={s.factorSub}>{item.impact}</Text>
+            </View>
+            <Badge variant="success" size="sm">{item.status}</Badge>
           </CardContent>
         </Card>
-
-        <Text style={s.sectionTitle}>Credit Health Drivers</Text>
-
-        {factors.map((item, idx) => (
-          <Card key={idx} style={s.factorCard}>
-            <CardContent style={s.factorContent}>
-              <View style={s.factorIcon}>
-                <Ionicons name="checkmark-circle" size={18} color={theme.colors.success} />
-              </View>
-              <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={s.factorTitle}>{item.title}</Text>
-                <Text style={s.factorSub}>{item.impact}</Text>
-              </View>
-              <Badge variant="success" size="sm">{item.status}</Badge>
-            </CardContent>
-          </Card>
-        ))}
-      </ScrollView>
-    </View>
+      ))}
+    </AdaptiveScreen>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useMobileTheme>) {
   return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-    },
-    scrollContent: {
-      padding: 16,
-      paddingBottom: 40,
-    },
     scoreCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: RADIUS.xl,
       borderWidth: 1,
       borderColor: theme.colors.border,
-      marginBottom: 20,
+      marginBottom: SPACING.xl,
     },
     scoreContent: {
       alignItems: 'center',
-      padding: 24,
+      padding: SPACING['2xl'],
     },
     scoreCircle: {
       width: 100,
       height: 100,
-      borderRadius: 50,
+      borderRadius: RADIUS.full,
       borderWidth: 4,
       borderColor: theme.colors.success,
       backgroundColor: `${theme.colors.success}10`,
       alignItems: 'center',
       justifyContent: 'center',
-      marginBottom: 12,
+      marginBottom: SPACING.md,
     },
     scoreNum: {
-      fontSize: 28,
+      fontSize: FONT_SIZES.display,
       fontWeight: '800',
       color: theme.colors.success,
     },
     scoreMax: {
-      fontSize: 10,
+      fontSize: FONT_SIZES.micro,
       color: theme.colors.textSecondary,
     },
     ratingText: {
-      fontSize: 16,
+      fontSize: FONT_SIZES.title,
       fontWeight: '700',
       color: theme.colors.textPrimary,
-      marginBottom: 2,
+      marginBottom: SPACING.xxs,
     },
     ratingSub: {
-      fontSize: 11,
+      fontSize: FONT_SIZES.caption,
       color: theme.colors.textSecondary,
     },
     sectionTitle: {
-      fontSize: 14,
+      fontSize: FONT_SIZES.subhead,
       fontWeight: '700',
       color: theme.colors.textPrimary,
-      marginBottom: 10,
+      marginBottom: SPACING.sm,
     },
     factorCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 12,
+      borderRadius: RADIUS.lg,
       borderWidth: 1,
       borderColor: theme.colors.border,
-      marginBottom: 10,
+      marginBottom: SPACING.sm,
     },
     factorContent: {
       flexDirection: 'row',
       alignItems: 'center',
-      padding: 14,
+      padding: SPACING.md,
     },
     factorIcon: {
       width: 32,
       height: 32,
-      borderRadius: 8,
+      borderRadius: RADIUS.md,
       backgroundColor: `${theme.colors.success}15`,
       alignItems: 'center',
       justifyContent: 'center',
     },
     factorTitle: {
-      fontSize: 13,
+      fontSize: FONT_SIZES.body,
       fontWeight: '600',
       color: theme.colors.textPrimary,
     },
     factorSub: {
-      fontSize: 11,
+      fontSize: FONT_SIZES.caption,
       color: theme.colors.textSecondary,
-      marginTop: 2,
+      marginTop: SPACING.xxs,
     },
   });
 }
