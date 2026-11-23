@@ -101,12 +101,13 @@ class SessionManager {
     this.lastActivity = Date.now();
 
     // Listen for user activity
-    ACTIVITY_EVENTS.forEach((evt) => {
-      window.addEventListener(evt, this.handleActivity, { passive: true });
-    });
+    // [INACTIVITY AUTO-LOGOUT DISABLED] — Uncomment to re-enable idle timeout monitoring:
+    // ACTIVITY_EVENTS.forEach((evt) => {
+    //   window.addEventListener(evt, this.handleActivity, { passive: true });
+    // });
 
     // Start inactivity timers
-    this.resetTimers();
+    // this.resetTimers();
 
     // Multi-tab sync
     this.initBroadcastChannel();
@@ -115,9 +116,9 @@ class SessionManager {
     window.addEventListener("storage", this.handleStorageEvent);
 
     // Visibility change — when tab becomes visible, check if session expired
-    document.addEventListener("visibilitychange", this.handleVisibilityChange);
+    // document.addEventListener("visibilitychange", this.handleVisibilityChange);
 
-    console.info(`[SessionManager] Started — role: ${role}, timeout: ${INACTIVITY_TIMEOUT_MS / 1000}s`);
+    console.info(`[SessionManager] Started — role: ${role}, inactivity auto-logout: DISABLED`);
   }
 
   /** Stop monitoring. Call on unmount or manual logout. */
@@ -237,15 +238,17 @@ class SessionManager {
     if (this.inactivityTimer) clearTimeout(this.inactivityTimer);
     this.clearCountdown();
 
-    // Set warning timer (fires 60s before logout)
-    this.warningTimer = setTimeout(() => {
-      this.showInactivityWarning();
-    }, INACTIVITY_TIMEOUT_MS - WARNING_BEFORE_MS);
-
-    // Set hard timeout
-    this.inactivityTimer = setTimeout(() => {
-      this.forceLogout("inactivity");
-    }, INACTIVITY_TIMEOUT_MS);
+    // [INACTIVITY AUTO-LOGOUT DISABLED] — Commented out so users stay logged in indefinitely.
+    // Uncomment the timers below to re-enable banking idle timeout:
+    // // Set warning timer (fires 60s before logout)
+    // this.warningTimer = setTimeout(() => {
+    //   this.showInactivityWarning();
+    // }, INACTIVITY_TIMEOUT_MS - WARNING_BEFORE_MS);
+    //
+    // // Set hard timeout
+    // this.inactivityTimer = setTimeout(() => {
+    //   this.forceLogout("inactivity");
+    // }, INACTIVITY_TIMEOUT_MS);
   }
 
   private showInactivityWarning(): void {
@@ -372,16 +375,17 @@ class SessionManager {
   // ── Visibility ─────────────────────────────────────────────────────────
 
   private handleVisibilityChange = (): void => {
-    if (document.visibilityState === "visible" && this.isMonitoring) {
-      // Tab became visible — check if we've been idle too long while hidden
-      const elapsed = Date.now() - this.lastActivity;
-      if (elapsed >= INACTIVITY_TIMEOUT_MS) {
-        this.forceLogout("inactivity");
-      } else if (elapsed >= INACTIVITY_TIMEOUT_MS - WARNING_BEFORE_MS) {
-        // We're in the warning zone
-        this.showInactivityWarning();
-      }
-    }
+    // [INACTIVITY AUTO-LOGOUT DISABLED] — Commented out so returning to an idle tab does not log out.
+    // if (document.visibilityState === "visible" && this.isMonitoring) {
+    //   // Tab became visible — check if we've been idle too long while hidden
+    //   const elapsed = Date.now() - this.lastActivity;
+    //   if (elapsed >= INACTIVITY_TIMEOUT_MS) {
+    //     this.forceLogout("inactivity");
+    //   } else if (elapsed >= INACTIVITY_TIMEOUT_MS - WARNING_BEFORE_MS) {
+    //     // We're in the warning zone
+    //     this.showInactivityWarning();
+    //   }
+    // }
   };
 
   // ── Cleanup ────────────────────────────────────────────────────────────
