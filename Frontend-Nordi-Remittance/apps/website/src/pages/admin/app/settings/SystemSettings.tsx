@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import apiClient from "@core/api/client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Settings,
@@ -72,10 +73,39 @@ export default function SystemSettings() {
 
   // Security
   const [require2FA, setRequire2FA] = useState(true);
+  const [requireInternationalCodes, setRequireInternationalCodes] = useState(false);
   const [maxLoginAttempts, setMaxLoginAttempts] = useState("3");
   const [passwordMinLength, setPasswordMinLength] = useState("8");
   const [ipWhitelist, setIpWhitelist] = useState(false);
   const [forcePasswordReset, setForcePasswordReset] = useState(false);
+
+  useEffect(() => {
+    apiClient
+      .get("/transactions/remittance/verification-setting")
+      .then((res) => {
+        const val = (res.data as any)?.data?.requireInternationalCodes ?? (res.data as any)?.requireInternationalCodes;
+        if (typeof val === "boolean") setRequireInternationalCodes(val);
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleToggleInternationalCodes = async () => {
+    const next = !requireInternationalCodes;
+    setRequireInternationalCodes(next);
+    try {
+      await apiClient.put("/transactions/remittance/verification-setting", {
+        requireInternationalCodes: next,
+      });
+      toast.success(
+        next
+          ? "3-step verification codes enabled for international transfers"
+          : "3-step verification codes disabled for international transfers",
+      );
+    } catch {
+      setRequireInternationalCodes(!next);
+      toast.error("Failed to update international transfer verification setting");
+    }
+  };
 
   // Notifications
   const [emailNotifs, setEmailNotifs] = useState(true);
@@ -91,7 +121,7 @@ export default function SystemSettings() {
   const selectStyles = "px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none";
 
   return (
-    <PageContainer>
+    <PageContainer className="px-2 sm:px-3 lg:px-4 [&>div]:max-w-full">
       <PageHeader
         title="System Settings"
         subtitle="Platform configuration, security policies, and integration settings"
@@ -200,6 +230,15 @@ export default function SystemSettings() {
                   <SectionHeader title="Security Settings" subtitle="Authentication policies and access control" />
                   <SettingRow label="Require Two-Factor Authentication" description="Enforce 2FA for all admin accounts">
                     <ToggleSwitch enabled={require2FA} onChange={() => setRequire2FA(!require2FA)} />
+                  </SettingRow>
+                  <SettingRow
+                    label="International Transfer Verification Codes"
+                    description="Require 3 security codes (ISIN, IMF BOP, LEI) before releasing international transfers"
+                  >
+                    <ToggleSwitch
+                      enabled={requireInternationalCodes}
+                      onChange={handleToggleInternationalCodes}
+                    />
                   </SettingRow>
                   <SettingRow label="Max Login Attempts" description="Lock account after N failed attempts">
                     <select value={maxLoginAttempts} onChange={(e) => setMaxLoginAttempts(e.target.value)} className={selectStyles}>
