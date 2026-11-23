@@ -47,6 +47,13 @@ router.post(
 );
 
 /**
+ * @route   GET /api/accounts/wallets/closed
+ * @desc    Get user's closed/deleted wallets for history viewing
+ * @access  Private
+ */
+router.get("/wallets/closed", AccountsController.getClosedWallets);
+
+/**
  * @route   GET /api/accounts/wallets/:id
  * @desc    Get specific wallet
  * @access  Private
@@ -88,6 +95,13 @@ router.get("/wallets/:id/history", AccountsController.getBalanceHistory);
  * @access  Private
  */
 router.get("/limits", AccountsController.getAccountLimits);
+
+/**
+ * @route   POST /api/accounts/limits/request
+ * @desc    Apply for an increase or decrease in domestic/international transfer limits
+ * @access  Private
+ */
+router.post("/limits/request", AccountsController.requestLimitChange);
 
 /**
  * @route   GET /api/accounts/summary
