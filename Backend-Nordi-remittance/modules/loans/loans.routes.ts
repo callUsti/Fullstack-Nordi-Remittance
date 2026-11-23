@@ -39,26 +39,31 @@ router.use(verifyAccountStatus);
 router.get("/", LoansController.getLoans);
 
 /**
- * @route   GET /api/loans/:loanId
- * @desc    Get specific loan details
- * @access  Private
- */
-router.get("/:loanId", LoansController.getLoanById);
-
-/**
  * @route   GET /api/loans/eligibility/check
  * @desc    Check loan eligibility
  * @access  Private
  */
 router.get(
   "/eligibility/check",
-  requireKycVerified,
   LoansController.checkEligibility,
 );
 
 /**
+ * @route   POST /api/loans/apply/send-otp
+ * @desc    Send 6-digit email OTP to confirm loan application (self or third-party)
+ * @access  Private
+ */
+router.post(
+  "/apply/send-otp",
+  transactionRateLimit,
+  requireKycVerified,
+  auditLogMiddleware,
+  LoansController.sendApplicationOtp,
+);
+
+/**
  * @route   POST /api/loans/apply
- * @desc    Apply for a new loan
+ * @desc    Apply for a new loan (confirmed with OTP)
  * @access  Private
  */
 router.post(
@@ -66,7 +71,6 @@ router.post(
   transactionRateLimit,
   requireKycVerified,
   auditLogMiddleware,
-  // auditLogMiddleware('loan_application'),
   LoansController.applyForLoan,
 );
 
@@ -78,24 +82,11 @@ router.post(
 router.get("/applications", LoansController.getApplications);
 
 /**
- * @route   GET /api/loans/:loanId/schedule
- * @desc    Get loan repayment schedule
+ * @route   GET /api/loans/products
+ * @desc    Get available loan products
  * @access  Private
  */
-router.get("/:loanId/schedule", LoansController.getRepaymentSchedule);
-
-/**
- * @route   POST /api/loans/:loanId/pay
- * @desc    Make a loan payment
- * @access  Private
- */
-router.post(
-  "/:loanId/pay",
-  transactionRateLimit,
-  auditLogMiddleware,
-  // auditLogMiddleware('loan_payment'),
-  LoansController.makePayment,
-);
+router.get("/products", LoansController.getProducts);
 
 // ============================================================================
 // ADMIN ROUTES
@@ -120,7 +111,6 @@ router.get(
 router.post(
   "/admin/applications/:applicationId/review",
   requireAdmin,
-  // auditLogMiddleware('loan_review'),
   auditLogMiddleware,
   LoansController.reviewApplication,
 );
@@ -133,9 +123,58 @@ router.post(
 router.post(
   "/admin/:loanId/disburse",
   requireAdmin,
-  // auditLogMiddleware('loan_disbursement'),
   auditLogMiddleware,
   LoansController.disburseLoan,
+);
+
+/**
+ * @route   PATCH /api/loans/admin/users/:userId/loan-settings
+ * @desc    Admin update user loan limit, default fee %, default count, or suspend loan feature
+ * @access  Admin
+ */
+router.patch(
+  "/admin/users/:userId/loan-settings",
+  requireAdmin,
+  auditLogMiddleware,
+  LoansController.updateUserLoanSettings,
+);
+
+/**
+ * @route   POST /api/loans/admin/:loanId/debit-repayment
+ * @desc    Admin manually debit user account to repay a loan (>= monthly requirement)
+ * @access  Admin
+ */
+router.post(
+  "/admin/:loanId/debit-repayment",
+  requireAdmin,
+  auditLogMiddleware,
+  LoansController.adminDebitLoanRepayment,
+);
+
+/**
+ * @route   GET /api/loans/:loanId
+ * @desc    Get specific loan details
+ * @access  Private
+ */
+router.get("/:loanId", LoansController.getLoanById);
+
+/**
+ * @route   GET /api/loans/:loanId/schedule
+ * @desc    Get loan repayment schedule
+ * @access  Private
+ */
+router.get("/:loanId/schedule", LoansController.getRepaymentSchedule);
+
+/**
+ * @route   POST /api/loans/:loanId/pay
+ * @desc    Make a manual loan payment (never auto-debits)
+ * @access  Private
+ */
+router.post(
+  "/:loanId/pay",
+  transactionRateLimit,
+  auditLogMiddleware,
+  LoansController.makePayment,
 );
 
 export default router;
