@@ -155,7 +155,7 @@ Badge.displayName = "Badge";
 // ========================
 
 const statusConfig: Record<
-  StatusType,
+  StatusBadgeType,
   { variant: BadgeVariant; label: string }
 > = {
   active: { variant: "success", label: "Active" },
@@ -212,7 +212,7 @@ export const NotificationBadge: React.FC<NotificationBadgeProps> = ({
             "absolute -right-1 -top-1",
             "flex items-center justify-center",
             "h-[18px] min-w-[18px] px-1",
-            "text-[10px] font-bold text-white",
+            "text-[10px] font-medium text-white",
             "rounded-full bg-error-500",
             "border-2 border-white",
           )}
