@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Search, Bell, Settings, Sun, Moon, Monitor, LogOut, User, Shield } from "lucide-react";
+import { Search, Bell, Settings, Sun, Moon, Monitor, LogOut, User, Shield, Menu } from "lucide-react";
 import { useAuth } from "@store/auth.store";
 import useThemeStore from "@store/theme.store";
 import { useUnreadNotificationsCount } from "@hooks/api-queries";
 
-const RightContainerNav: React.FC = () => {
+interface RightContainerNavProps {
+  onOpenMobileMenu?: () => void;
+}
+
+const RightContainerNav: React.FC<RightContainerNavProps> = ({ onOpenMobileMenu }) => {
   const navigate = useNavigate();
 
   // ── Auth ──
@@ -64,14 +68,26 @@ const RightContainerNav: React.FC = () => {
 
   return (
     <nav className="w-full border-b border-blue-100 bg-white transition-colors duration-200 dark:border-gray-800 dark:bg-gray-900">
-      <div className="mx-auto max-w-7xl px-4 py-1.5 sm:px-6 lg:px-8">
-        <div className="flex h-14 items-center justify-between">
-          {/* ── Left: Logo + Greeting ── */}
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-tr from-blue-600 via-blue-500 to-cyan-400 text-sm font-bold text-white">
+      <div className="mx-auto max-w-7xl px-3 py-1.5 sm:px-6 lg:px-8">
+        <div className="flex h-14 items-center justify-between gap-2">
+          {/* ── Left: Mobile Menu + Logo + Greeting ── */}
+          <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+            {onOpenMobileMenu && (
+              <button
+                type="button"
+                aria-label="Open navigation menu"
+                onClick={onOpenMobileMenu}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-blue-50/80 text-blue-700 transition hover:bg-blue-100 dark:border-gray-700 dark:bg-gray-800 dark:text-blue-300 lg:hidden"
+              >
+                <Menu size={20} />
+              </button>
+            )}
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-sm font-medium text-white">
               NA
             </div>
-            <span className="hidden text-base font-bold text-blue-700 dark:text-blue-300 md:block">Nordi Admin</span>
+            <span className="truncate text-sm font-medium text-blue-700 dark:text-blue-300 sm:text-base">
+              Nordi Admin
+            </span>
             <div className="ml-2 hidden items-center text-sm lg:flex">
               <span className="mr-1 text-blue-400 dark:text-blue-500">{greeting},</span>
               <span className="max-w-[180px] truncate font-medium text-blue-700 dark:text-blue-300">
@@ -181,7 +197,7 @@ const RightContainerNav: React.FC = () => {
                 className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-2 border-blue-200 bg-gradient-to-tr from-blue-200 via-blue-300 to-cyan-100 dark:border-gray-700 dark:from-blue-700 dark:via-blue-800 dark:to-cyan-900"
                 whileTap={{ scale: 0.95 }}
               >
-                <span className="text-xs font-bold text-blue-700 dark:text-blue-200">{initials}</span>
+                <span className="text-xs font-medium text-blue-700 dark:text-blue-200">{initials}</span>
               </motion.button>
 
               <AnimatePresence>
