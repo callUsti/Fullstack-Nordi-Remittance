@@ -106,7 +106,7 @@ const OverviewUsers: React.FC = () => {
   };
 
   return (
-    <PageContainer className="[&>div]:max-w-full">
+    <PageContainer className="px-2 sm:px-3 lg:px-4 [&>div]:max-w-full">
       {/* Header */}
       <PageHeader
         title="User Management"
@@ -194,7 +194,7 @@ const OverviewUsers: React.FC = () => {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto touch-pan-x scrollbar-hide">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-200 dark:border-gray-800">
@@ -389,7 +389,7 @@ const OverviewUsers: React.FC = () => {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.2 }}
           >
-            <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
+            <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
               {confirmModal.action === "block" && "Block User"}
               {confirmModal.action === "restrict" && "Restrict User"}
               {confirmModal.action === "delete" && "Delete User"}
