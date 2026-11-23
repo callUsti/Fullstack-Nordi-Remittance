@@ -213,13 +213,17 @@ export async function submitVerification(
   try {
     if (!req.user) throw new UnauthorizedError('Authentication required');
 
-    const result = await KycService.submitVerification(req.user.userId, {
-      ip: req.clientIp,
-      userAgent: req.headers['user-agent'] as string,
-      requestId: req.requestId,
-    });
+    const result = await KycService.submitVerification(
+      req.user.userId,
+      {
+        ip: req.clientIp,
+        userAgent: req.headers['user-agent'] as string,
+        requestId: req.requestId,
+      },
+      req.body || {},
+    );
 
-    sendSuccess(res, result, 'Verification submitted');
+    sendSuccess(res, result, 'KYC submitted for Admin review and approval');
   } catch (error) {
     next(error);
   }
