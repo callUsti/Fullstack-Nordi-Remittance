@@ -4,3 +4,4 @@
 // ============================================================================
 
 export * from "@nordi/shared/client-usecase/usedashboard-client-usecase";
+export * from "@nordi/shared/client-usecase/usespending-client-usecase";
