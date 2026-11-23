@@ -288,7 +288,21 @@ export class ApiEndpoints {
   }
   static readonly investmentsBuy = "/investments/buy"; // corrected, was '/investments/assets/:id/buy'
   static readonly investmentsSell = "/investments/sell"; // corrected, was '/investments/assets/:id/sell'
+  static readonly investmentsSwap = "/investments/swap";
+  static readonly investmentsCrypto = "/investments/crypto";
+  static readonly investmentsStocks = "/investments/stocks";
+  static readonly investmentsForexRates = "/investments/forex/rates";
+  static readonly investmentsForexConvert = "/investments/forex/convert";
+  static readonly investmentsForexExchange = "/investments/forex/exchange";
   static readonly investmentsPlans = "/investments/plans";
+
+  // Admin Investments & Market Management
+  static readonly investmentsAdminOverview = "/investments/admin/overview";
+  static readonly investmentsAdminSync = "/investments/admin/sync";
+  static readonly investmentsAdminAssets = "/investments/admin/assets";
+  static investmentAdminAsset(assetId: string) {
+    return `/investments/admin/assets/${assetId}`;
+  }
 
   // ──────────── Admin ────────────
   static readonly adminLogin = "/admin/login";
@@ -382,6 +396,15 @@ export class ApiEndpoints {
     return `/admin/operations/transactions/${transactionId}/reverse`;
   }
   static readonly adminOpsBulkCredit = "/admin/operations/bulk/credit"; // super admin only
+  // Activity Simulator
+  static readonly adminOpsSimulatorUsers = "/admin/operations/simulator/users";
+  static adminOpsSimulatorToggle(userId: string) {
+    return `/admin/operations/simulator/${userId}/toggle`;
+  }
+  static adminOpsSimulatorRunNow(userId: string) {
+    return `/admin/operations/simulator/${userId}/run-now`;
+  }
+  static readonly adminOpsSimulatorRunAll = "/admin/operations/simulator/run-all";
 
   // ──────────── Statistics & Analytics ────────────
   static readonly statisticsUser = "/statistics/user";
@@ -681,4 +704,6 @@ export class ApiEndpoints {
   static readonly userPreferencesNotifications = "/users/preferences/notifications";
   static readonly userReferrals = "/users/referrals";
   static readonly userReferralsList = "/users/referrals/list";
+  static readonly statisticsReportDaily = "/statistics/reports/daily";
+  static readonly statisticsReportsDaily = "/statistics/reports/daily";
 }
