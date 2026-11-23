@@ -62,8 +62,11 @@ const fmtCompact = (n: number) =>
 const pct = (n: number) => `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
 
 const MarketInsights: React.FC = () => {
-  const { products: productsData, isLoading } = useClientInvestmentProducts();
+  const { products: productsData, isLoading: pLoading } = useClientInvestmentProducts();
+  const { portfolio, isLoading: portLoading } = useClientPortfolio();
+  const isLoading = pLoading || portLoading;
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [activeArticle, setActiveArticle] = useState<any | null>(null);
 
   const defaultInsights = [
     {
@@ -116,7 +119,18 @@ const MarketInsights: React.FC = () => {
     },
   ];
 
-  const insights = defaultInsights;
+  const insights = useMemo(() => {
+    const dynamicInsights = productsData.slice(0, 3).map((p: any) => ({
+      title: `${p.name || p.symbol || "Asset"} — ${p.category || p.type || "Market"} Update`,
+      summary:
+        p.description ||
+        `Current valuation at ${fmt(p.price ?? p.nav ?? p.minInvestment ?? 100)} with projected yield of ${p.returns ?? p.yield ?? p.annualReturn ?? 8.5}% p.a.`,
+      category: p.category || "Equities",
+      date: p.updatedAt || new Date().toISOString(),
+      source: "Nordi Live Feed",
+    }));
+    return [...dynamicInsights, ...defaultInsights];
+  }, [productsData]);
 
   const categories = useMemo(() => {
     const cats = [...new Set(insights.map((a) => a.category))];
@@ -130,11 +144,11 @@ const MarketInsights: React.FC = () => {
 
   const categoryColors: Record<string, string> = {
     "Macro Economy": "bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400",
-    Equities: "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-400",
+    Equities: "bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400",
     "Fixed Income": "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400",
     Commodities: "bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400",
     ESG: "bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-400",
-    "Real Estate": "bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-400",
+    "Real Estate": "bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400",
   };
 
   const formatDate = (dateStr: string) => {
@@ -179,7 +193,7 @@ const MarketInsights: React.FC = () => {
                   onClick={() => setSelectedCategory(cat)}
                   className={`rounded-xl px-3 py-1.5 text-[10px] font-medium capitalize transition-colors sm:text-xs ${
                     selectedCategory === cat
-                      ? "bg-indigo-600 text-white dark:bg-indigo-500"
+                      ? "bg-blue-600 text-white dark:bg-blue-500"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
                   }`}
                 >
@@ -231,7 +245,8 @@ const MarketInsights: React.FC = () => {
                     <div className="flex items-center justify-between border-t border-gray-100 pt-3 dark:border-gray-800">
                       <span className="text-[10px] text-gray-400 dark:text-gray-500 sm:text-xs">{article.source}</span>
                       <motion.button
-                        className="flex items-center gap-1 text-[10px] font-medium text-indigo-600 transition-colors hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 sm:text-xs"
+                        onClick={() => setActiveArticle(article)}
+                        className="flex items-center gap-1 text-[10px] font-medium text-blue-600 transition-colors hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 sm:text-xs"
                         whileHover={{ x: 2 }}
                       >
                         Read More <ChevronRight size={12} />
@@ -240,6 +255,39 @@ const MarketInsights: React.FC = () => {
                   </div>
                 </DashCard>
               ))}
+            </div>
+          )}
+
+          {/* Article Reader Modal */}
+          {activeArticle && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+              <DashCard className="w-full max-w-lg">
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
+                    {activeArticle.category}
+                  </span>
+                  <span className="text-xs text-gray-400">{formatDate(activeArticle.date)}</span>
+                </div>
+                <h3 className="mb-2 text-base font-semibold text-gray-900 dark:text-white">{activeArticle.title}</h3>
+                <p className="mb-4 text-xs leading-relaxed text-gray-600 dark:text-gray-300 sm:text-sm">
+                  {activeArticle.summary}
+                </p>
+                {portfolio?.totalValue > 0 && (
+                  <div className="mb-4 rounded-xl bg-gray-50 p-3 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                    <strong>Portfolio Context:</strong> Your current portfolio stands at {fmt(portfolio.totalValue)} (
+                    {pct(portfolio.returnPercentage || 0)} return).
+                  </div>
+                )}
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setActiveArticle(null)}
+                    className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-medium text-white hover:bg-blue-700"
+                  >
+                    Close
+                  </button>
+                </div>
+              </DashCard>
             </div>
           )}
         </motion.div>
