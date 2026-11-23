@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronRight, ChevronLeft, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { formatCurrency } from "@core/algo";
+import { formatCurrency, multiKeySort } from "@core/algo";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -82,6 +82,7 @@ const ClientTransferHistory: React.FC<ClientTransferHistoryProps> = ({
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [sortBy, setSortBy] = useState("Date (Newest first)");
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
@@ -91,12 +92,23 @@ const ClientTransferHistory: React.FC<ClientTransferHistoryProps> = ({
   const statusFilters = ["All", "completed", "pending", "failed"];
 
   // Filter transactions
-  const filtered = transactions.filter((tx) => {
+  const filteredUnsorted = transactions.filter((tx) => {
     const typeMatch = activeFilter === "All" || tx.type === activeFilter;
     const statusMatch =
       statusFilter === "All" || tx.status.toLowerCase() === statusFilter;
     return typeMatch && statusMatch;
   });
+
+  // Sort transactions via @core/algo multiKeySort
+  const filtered = multiKeySort(filteredUnsorted, [
+    sortBy === "Date (Oldest first)"
+      ? { getter: (tx) => new Date(tx.date || 0).getTime(), direction: "asc" }
+      : sortBy === "Amount (High to low)"
+        ? { getter: (tx) => Math.abs(Number(tx.amount || 0)), direction: "desc" }
+        : sortBy === "Amount (Low to high)"
+          ? { getter: (tx) => Math.abs(Number(tx.amount || 0)), direction: "asc" }
+          : { getter: (tx) => new Date(tx.date || 0).getTime(), direction: "desc" },
+  ]);
 
   const PAGE_SIZE = 8;
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -115,7 +127,7 @@ const ClientTransferHistory: React.FC<ClientTransferHistoryProps> = ({
   );
 
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden transition-colors duration-200">
+    <div className="w-full min-w-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden transition-colors duration-200">
       {/* Header / Filters */}
       <div className="p-4 sm:p-5 border-b border-gray-200 dark:border-gray-800">
         <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
@@ -124,7 +136,7 @@ const ClientTransferHistory: React.FC<ClientTransferHistoryProps> = ({
 
         <div className="flex flex-wrap gap-2 items-center">
           {/* Type Filters */}
-          <div className="flex space-x-1.5">
+          <div className="flex max-w-full space-x-1.5 overflow-x-auto scrollbar-hide">
             {typeFilters.map((filter) => (
               <motion.button
                 key={filter}
@@ -147,13 +159,13 @@ const ClientTransferHistory: React.FC<ClientTransferHistoryProps> = ({
           <div className="hidden sm:block w-px h-5 bg-gray-200 dark:bg-gray-700 mx-1" />
 
           {/* Status Filters */}
-          <div className="flex space-x-1.5">
+          <div className="flex max-w-full space-x-1.5 overflow-x-auto scrollbar-hide">
             {statusFilters.map((filter) => (
               <motion.button
                 key={filter}
                 className={`px-3 py-1.5 rounded-lg border text-xs transition-colors ${
                   statusFilter === filter
-                    ? "border-indigo-500 dark:border-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 font-medium"
+                    ? "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 font-medium"
                     : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`}
                 whileTap={{ scale: 0.95 }}
@@ -199,8 +211,16 @@ const ClientTransferHistory: React.FC<ClientTransferHistoryProps> = ({
                     ].map((opt) => (
                       <button
                         key={opt}
-                        className="px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 w-full text-left transition-colors"
-                        onClick={() => setShowFilterDropdown(false)}
+                        className={`px-4 py-2 text-xs w-full text-left transition-colors ${
+                          sortBy === opt
+                            ? "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-medium"
+                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        }`}
+                        onClick={() => {
+                          setSortBy(opt);
+                          setCurrentPage(1);
+                          setShowFilterDropdown(false);
+                        }}
                       >
                         {opt}
                       </button>
@@ -221,7 +241,10 @@ const ClientTransferHistory: React.FC<ClientTransferHistoryProps> = ({
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <div
+          className="w-full overflow-x-auto touch-pan-x scrollbar-hide"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
           <table className="min-w-full table-auto">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
@@ -229,7 +252,13 @@ const ClientTransferHistory: React.FC<ClientTransferHistoryProps> = ({
                   Transaction
                 </th>
                 <th className="px-4 py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                  Sender Bank
+                </th>
+                <th className="px-4 py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">
                   Type
+                </th>
+                <th className="px-4 py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                  Purpose
                 </th>
                 <th className="px-4 py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">
                   Amount
@@ -238,7 +267,7 @@ const ClientTransferHistory: React.FC<ClientTransferHistoryProps> = ({
                   Status
                 </th>
                 <th className="px-4 py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">
-                  Date
+                  Time Sent
                 </th>
                 <th className="px-4 py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">
                   Action
@@ -246,7 +275,7 @@ const ClientTransferHistory: React.FC<ClientTransferHistoryProps> = ({
               </tr>
             </thead>
             <tbody>
-              {paged.map((tx, index) => (
+              {paged.map((tx: any, index) => (
                 <motion.tr
                   key={tx.id || index}
                   className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
@@ -257,12 +286,17 @@ const ClientTransferHistory: React.FC<ClientTransferHistoryProps> = ({
                   <td className="px-4 py-2.5 whitespace-nowrap">
                     <div>
                       <p className="text-xs font-medium text-gray-900 dark:text-white truncate max-w-[160px]">
-                        {tx.title}
+                        {tx.title || tx.recipientName || "Transaction"}
                       </p>
-                      <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate max-w-[160px]">
-                        {tx.description}
+                      <p className="text-[10px] font-mono text-gray-500 dark:text-gray-400 truncate max-w-[160px]">
+                        {tx.referenceNumber || tx.reference || tx.id}
                       </p>
                     </div>
+                  </td>
+                  <td className="px-4 py-2.5 text-xs text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                    <span className="truncate max-w-[140px] block">
+                      {tx.senderBank || tx.meta?.senderBankName || tx.recipientBankName || "Nordi Bank"}
+                    </span>
                   </td>
                   <td className="px-4 py-2.5 text-xs text-gray-700 dark:text-gray-300 whitespace-nowrap">
                     <span
@@ -274,7 +308,12 @@ const ClientTransferHistory: React.FC<ClientTransferHistoryProps> = ({
                             : "bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400"
                       }`}
                     >
-                      {capitalize(tx.type)}
+                      {capitalize(tx.transferType || tx.type)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2.5 text-xs text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                    <span className="truncate max-w-[170px] block">
+                      {tx.purpose || tx.meta?.purpose || tx.description || "Transfer"}
                     </span>
                   </td>
                   <td className="px-4 py-2.5 text-xs font-medium whitespace-nowrap">
@@ -302,11 +341,18 @@ const ClientTransferHistory: React.FC<ClientTransferHistoryProps> = ({
                     </div>
                   </td>
                   <td className="px-4 py-2.5 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                    {formatDate(tx.date)}
+                    {tx.createdAt || tx.date
+                      ? new Date(tx.createdAt || tx.date).toLocaleString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : formatDate(tx.date)}
                   </td>
                   <td className="px-4 py-2.5 text-xs whitespace-nowrap">
                     <motion.button
-                      className="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1 text-xs transition-colors"
+                      className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1 text-xs transition-colors"
                       whileTap={{ scale: 0.95 }}
                       onClick={() => navigate("/customer/transactions")}
                     >
@@ -350,7 +396,7 @@ const ClientTransferHistory: React.FC<ClientTransferHistoryProps> = ({
                 key={page}
                 className={`w-7 h-7 flex text-xs items-center justify-center rounded-lg transition-colors ${
                   currentPage === page
-                    ? "bg-indigo-600 dark:bg-indigo-500 text-white"
+                    ? "bg-blue-600 dark:bg-blue-500 text-white"
                     : "border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                 }`}
                 whileTap={{ scale: 0.9 }}
