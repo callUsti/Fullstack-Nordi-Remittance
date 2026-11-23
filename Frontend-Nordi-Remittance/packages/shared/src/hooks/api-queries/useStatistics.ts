@@ -478,3 +478,36 @@ export const useAvailableExports = () => {
     staleTime: Infinity,
   });
 };
+
+export const usePlatformStatistics = (params?: any) => {
+  return useQuery({
+    queryKey: [...queryKeys.statistics.platform(), params],
+    queryFn: async () => {
+      const response = await StatisticsRepository.getPlatformStats(params);
+      return response.data;
+    },
+  });
+};
+
+export const usePlatformGrowth = (params?: any) => {
+  return useQuery({
+    queryKey: [...queryKeys.statistics.all, "growth", params],
+    queryFn: async () => {
+      const response = await StatisticsRepository.getGrowthStats(params);
+      return response.data;
+    },
+  });
+};
+
+export const useGenerateDailyReport = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data?: any) => {
+      const response = await StatisticsRepository.generateDailyReport(data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.statistics.all });
+    },
+  });
+};
