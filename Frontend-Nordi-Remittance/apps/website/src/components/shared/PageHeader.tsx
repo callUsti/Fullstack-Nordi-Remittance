@@ -43,7 +43,7 @@ const sizeStyles = {
     padding: 'py-3 sm:py-4',
   },
   md: {
-    title: 'text-xl sm:text-2xl font-bold',
+    title: 'text-xl sm:text-2xl font-semibold',
     subtitle: 'text-sm sm:text-base',
     description: 'text-sm',
     padding: 'py-4 sm:py-6',
@@ -125,7 +125,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         </nav>
       )}
 
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         {/* Left side */}
         <div className="flex items-start gap-3 min-w-0">
           {/* Back button */}
@@ -174,7 +174,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 
         {/* Right side - Actions */}
         {actions && (
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex w-full sm:w-auto items-center gap-2 flex-shrink-0">
             {actions}
           </div>
         )}
