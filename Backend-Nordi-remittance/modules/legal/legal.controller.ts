@@ -9,9 +9,17 @@ import {
   PolicyVersions,
   DisputeClaims,
   RegulatoryFilings,
+  Statements,
 } from "./legal-reports.model.js";
 import Users from "../users/users.model.js";
 import Transactions from "../transactions/transactions.model.js";
+import { Wallets, LedgerEntries } from "../accounts/accounts.model.js";
+import {
+  buildStatementPdfBuffer,
+  buildStatementCsv,
+  buildStatementExcelBuffer,
+  type StatementExportPayload,
+} from "../../core/helpers/pdf.helper.js";
 import {
   sendSuccess,
   sendCreated,
@@ -976,6 +984,402 @@ export async function getPolicyVersions(
 }
 
 // ============================================================================
+// ACCOUNT STATEMENTS & REPORTS (PDF / CSV / EXCEL)
+// ============================================================================
+
+async function buildUserStatementPayload(
+  userId: string,
+  opts: { accountId?: string; startDate?: string; endDate?: string; title?: string; type?: string },
+): Promise<{ payload: StatementExportPayload; wallet: any; txIds: any[]; start: Date; end: Date }> {
+  const user: any = await Users.findById(userId).select("firstName lastName email").lean();
+  const accountHolder = user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.email : "Account Holder";
+
+  const wallet: any = opts.accountId && mongoose.Types.ObjectId.isValid(opts.accountId)
+    ? await Wallets.findOne({ _id: opts.accountId, user: userId }).lean()
+    : await Wallets.findOne({ user: userId }).sort({ isPrimary: -1 }).lean();
+
+  const start = opts.startDate ? new Date(opts.startDate) : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+  const end = opts.endDate ? new Date(opts.endDate) : new Date();
+  if (opts.endDate && opts.endDate.length <= 10) {
+    end.setHours(23, 59, 59, 999);
+  }
+
+  const txFilter: Record<string, any> = {
+    initiatedBy: userId,
+    createdAt: { $gte: start, $lte: end },
+  };
+  if (opts.accountId && wallet) txFilter.wallet = wallet._id;
+  if (opts.type && opts.type !== "all") txFilter.type = opts.type;
+
+  const txDocs: any[] = await Transactions.find(txFilter).sort({ createdAt: -1 }).limit(500).lean();
+
+  let totalCredits = 0;
+  let totalDebits = 0;
+  const rows = txDocs.map((tx) => {
+    const meta = tx.meta && typeof tx.meta === "object" ? tx.meta : {};
+    const rawType = String(tx.type || "transfer").toLowerCase();
+    const isCredit = rawType === "credit" || rawType === "deposit" || rawType === "refund";
+    const amt = Math.abs(Number(tx.amount) || 0);
+    if (isCredit) totalCredits += amt;
+    else totalDebits += amt;
+
+    return {
+      date: tx.createdAt ? new Date(tx.createdAt).toISOString().slice(0, 16).replace("T", " ") : "",
+      reference: tx.referenceNumber || String(tx._id),
+      senderBank: meta.senderBankName || meta.senderBank || tx.recipientBankName || meta.bankName || "Nordi Bank",
+      type: tx.transferType ? `${tx.type} (${tx.transferType})` : String(tx.type || "transfer"),
+      purpose: meta.purpose || tx.description || tx.category || "Transfer",
+      amount: isCredit ? amt : -amt,
+      currency: tx.currency || "USD",
+      status: tx.status || "completed",
+    };
+  });
+
+  // Fallback to ledger entries if wallet has ledger entries and no Transactions matched
+  if (rows.length === 0 && wallet) {
+    const ledgerDocs: any[] = await LedgerEntries.find({
+      wallet: wallet._id,
+      createdAt: { $gte: start, $lte: end },
+    })
+      .sort({ createdAt: -1 })
+      .limit(500)
+      .lean();
+    for (const entry of ledgerDocs) {
+      const isCredit = entry.entryType === "credit";
+      const amt = Math.abs(Number(entry.amount) || 0);
+      if (isCredit) totalCredits += amt;
+      else totalDebits += amt;
+      rows.push({
+        date: entry.createdAt ? new Date(entry.createdAt).toISOString().slice(0, 16).replace("T", " ") : "",
+        reference: String(entry.transaction || entry._id).slice(-10),
+        senderBank: "Nordi Bank",
+        type: entry.entryType || "entry",
+        purpose: entry.description || "Account Entry",
+        amount: isCredit ? amt : -amt,
+        currency: entry.currency || "USD",
+        status: "completed",
+      });
+    }
+  }
+
+  const walletBalances = wallet?.balances instanceof Map
+    ? Object.fromEntries(wallet.balances)
+    : (wallet?.balances || {});
+  const primaryCurrency = Object.keys(walletBalances)[0] || "USD";
+  const closingBalance = Number(walletBalances[primaryCurrency] || 0);
+  const openingBalance = closingBalance - totalCredits + totalDebits;
+
+  return {
+    wallet,
+    txIds: txDocs.map((t) => t._id),
+    start,
+    end,
+    payload: {
+      title: opts.title || "Official Account Statement",
+      accountHolder,
+      accountLabel: wallet?.walletType ? `${String(wallet.walletType).replace("_", " ").toUpperCase()} Account` : "Primary Account",
+      accountNumber: wallet?.walletNumber || "All Accounts",
+      currency: primaryCurrency,
+      periodLabel: `${start.toISOString().slice(0, 10)} to ${end.toISOString().slice(0, 10)}`,
+      openingBalance,
+      closingBalance,
+      totalCredits,
+      totalDebits,
+      rows,
+    },
+  };
+}
+
+async function sendExportResponse(
+  res: Response,
+  format: string,
+  filenameBase: string,
+  payload: StatementExportPayload,
+): Promise<void> {
+  const fmt = (format || "pdf").toLowerCase();
+  if (fmt === "csv") {
+    const csv = buildStatementCsv(payload);
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${filenameBase}.csv"`);
+    res.send(csv);
+    return;
+  }
+  if (fmt === "excel" || fmt === "xlsx") {
+    const xlsxBuf = await buildStatementExcelBuffer(payload);
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader("Content-Disposition", `attachment; filename="${filenameBase}.xlsx"`);
+    res.send(xlsxBuf);
+    return;
+  }
+  const pdfBuf = buildStatementPdfBuffer(payload);
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="${filenameBase}.pdf"`);
+  res.send(pdfBuf);
+}
+
+export async function getReports(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    if (!req.user) throw new UnauthorizedError("Authentication required");
+    const docs = await Statements.find({ user: req.user.userId, isArchived: false })
+      .sort({ createdAt: -1 })
+      .limit(25)
+      .lean();
+
+    const reports = docs.map((d: any) => ({
+      id: d.statementId || String(d._id),
+      _id: d._id,
+      type: d.statementType || "custom",
+      format: d.fileFormat || "pdf",
+      startDate: d.startDate,
+      endDate: d.endDate,
+      currency: d.currency,
+      downloadCount: d.downloadCount || 0,
+      createdAt: d.createdAt,
+      downloadUrl: `/legal/reports/${d.statementId || d._id}/file`,
+    }));
+
+    sendPaginated(res, reports, { page: 1, limit: 25, total: reports.length });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getReportById(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    if (!req.user) throw new UnauthorizedError("Authentication required");
+    const { reportId } = req.params;
+    const doc: any = await Statements.findOne({
+      user: req.user.userId,
+      $or: [
+        { statementId: reportId },
+        ...(mongoose.Types.ObjectId.isValid(String(reportId)) ? [{ _id: reportId }] : []),
+      ],
+    }).lean();
+    if (!doc) throw new NotFoundError("Report not found");
+    sendSuccess(res, { ...doc, id: doc.statementId || String(doc._id) });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function requestAccountStatement(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    if (!req.user) throw new UnauthorizedError("Authentication required");
+    const { accountId, startDate, endDate, format = "pdf" } = req.body;
+    const normalizedFormat = format === "xlsx" ? "excel" : ["pdf", "csv", "excel"].includes(format) ? format : "pdf";
+
+    const built = await buildUserStatementPayload(req.user.userId, {
+      accountId,
+      startDate,
+      endDate,
+      title: "Account Statement",
+    });
+
+    const walletId = built.wallet?._id || new mongoose.Types.ObjectId();
+    const statement = await Statements.create({
+      user: req.user.userId,
+      wallet: walletId,
+      statementType: "custom",
+      startDate: built.start,
+      endDate: built.end,
+      currency: built.payload.currency,
+      openingBalance: built.payload.openingBalance,
+      closingBalance: built.payload.closingBalance,
+      totalCredits: built.payload.totalCredits,
+      totalDebits: built.payload.totalDebits,
+      transactions: built.txIds,
+      fileFormat: normalizedFormat,
+    });
+
+    sendCreated(res, {
+      id: statement.statementId,
+      statementId: statement.statementId,
+      format: normalizedFormat,
+      startDate: built.start,
+      endDate: built.end,
+      downloadUrl: `/legal/reports/${statement.statementId}/file`,
+    }, "Statement generated successfully");
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function requestTransactionHistory(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    if (!req.user) throw new UnauthorizedError("Authentication required");
+    const { accountId, startDate, endDate, format = "pdf" } = req.body;
+    const normalizedFormat = format === "xlsx" ? "excel" : ["pdf", "csv", "excel"].includes(format) ? format : "pdf";
+
+    const built = await buildUserStatementPayload(req.user.userId, {
+      accountId,
+      startDate,
+      endDate,
+      title: "Transaction History Statement",
+    });
+
+    const walletId = built.wallet?._id || new mongoose.Types.ObjectId();
+    const statement = await Statements.create({
+      user: req.user.userId,
+      wallet: walletId,
+      statementType: "custom",
+      startDate: built.start,
+      endDate: built.end,
+      currency: built.payload.currency,
+      openingBalance: built.payload.openingBalance,
+      closingBalance: built.payload.closingBalance,
+      totalCredits: built.payload.totalCredits,
+      totalDebits: built.payload.totalDebits,
+      transactions: built.txIds,
+      fileFormat: normalizedFormat,
+    });
+
+    sendCreated(res, {
+      id: statement.statementId,
+      statementId: statement.statementId,
+      format: normalizedFormat,
+      startDate: built.start,
+      endDate: built.end,
+      downloadUrl: `/legal/reports/${statement.statementId}/file`,
+    }, "Transaction history report generated successfully");
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function downloadReport(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    if (!req.user) throw new UnauthorizedError("Authentication required");
+    const { reportId } = req.params;
+    const doc: any = await Statements.findOne({
+      user: req.user.userId,
+      $or: [
+        { statementId: reportId },
+        ...(mongoose.Types.ObjectId.isValid(String(reportId)) ? [{ _id: reportId }] : []),
+      ],
+    }).lean();
+    if (!doc) throw new NotFoundError("Report not found");
+
+    sendSuccess(res, {
+      downloadUrl: `/legal/reports/${doc.statementId || doc._id}/file`,
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function downloadStatementFile(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    if (!req.user) throw new UnauthorizedError("Authentication required");
+    const { reportId } = req.params;
+    const doc: any = await Statements.findOne({
+      user: req.user.userId,
+      $or: [
+        { statementId: reportId },
+        ...(mongoose.Types.ObjectId.isValid(String(reportId)) ? [{ _id: reportId }] : []),
+      ],
+    });
+    if (!doc) throw new NotFoundError("Statement not found");
+
+    doc.downloadCount = (doc.downloadCount || 0) + 1;
+    doc.lastDownloadedAt = new Date();
+    await doc.save();
+
+    const built = await buildUserStatementPayload(req.user.userId, {
+      accountId: doc.wallet ? String(doc.wallet) : undefined,
+      startDate: doc.startDate?.toISOString(),
+      endDate: doc.endDate?.toISOString(),
+      title: "Official Account Statement",
+    });
+
+    await sendExportResponse(
+      res,
+      doc.fileFormat || "pdf",
+      `Nordi-Statement-${new Date().toISOString().slice(0, 10)}`,
+      built.payload,
+    );
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function exportStatementDirect(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    if (!req.user) throw new UnauthorizedError("Authentication required");
+    const { accountId, startDate, endDate, format = "pdf", type } = req.query as Record<string, string>;
+
+    const built = await buildUserStatementPayload(req.user.userId, {
+      accountId,
+      startDate,
+      endDate,
+      type,
+      title: accountId ? "Official Account Statement" : "Transaction Statement",
+    });
+
+    // Save statement history record cleanly in background (when a wallet exists)
+    if (built.wallet?._id) {
+      const normalizedFormat = format === "xlsx" ? "excel" : ["pdf", "csv", "excel"].includes(format) ? format : "pdf";
+      Statements.create({
+        user: req.user.userId,
+        wallet: built.wallet._id,
+        statementType: "custom",
+        startDate: built.start,
+        endDate: built.end,
+        currency: built.payload.currency,
+        openingBalance: built.payload.openingBalance,
+        closingBalance: built.payload.closingBalance,
+        totalCredits: built.payload.totalCredits,
+        totalDebits: built.payload.totalDebits,
+        transactions: built.txIds,
+        fileFormat: normalizedFormat,
+        downloadCount: 1,
+        lastDownloadedAt: new Date(),
+      }).catch(() => {});
+    }
+
+    await sendExportResponse(
+      res,
+      format,
+      `Nordi-Statement-${new Date().toISOString().slice(0, 10)}`,
+      built.payload,
+    );
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ============================================================================
 // EXPORT
 // ============================================================================
 
@@ -1002,4 +1406,11 @@ export default {
   createRegulatoryFiling,
   submitRegulatoryFiling,
   getPolicyVersions,
+  getReports,
+  getReportById,
+  requestAccountStatement,
+  requestTransactionHistory,
+  downloadReport,
+  downloadStatementFile,
+  exportStatementDirect,
 };
