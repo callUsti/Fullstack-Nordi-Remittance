@@ -1,6 +1,6 @@
 // @ts-nocheck
 import mongoose from "mongoose";
-import { Wallets, LedgerEntries, AccountLimits, AccountStatusHistories } from "./accounts.model.js";
+import { Wallets, LedgerEntries, AccountLimits, AccountStatusHistories, AccountApplications } from "./accounts.model.js";
 import { Cards } from "../cards/cards.model.js";
 import Transactions from "../transactions/transactions.model.js";
 import { generateWalletNumber } from "../../core/helpers/generator.js";
@@ -31,18 +31,17 @@ const WS_EVENTS = {
 export class WalletService {
   /**
    * Get user's wallets
+   * Get user's wallets enriched with AccountApplication metadata
    */
   static async getWallets(userId: string) {
-    const cacheKey = `${CACHE_KEYS.USER_WALLETS}${userId}`;
-    const cachedWallets = await cacheGet(cacheKey);
+    const [wallets, applications] = await Promise.all([
+      Wallets.find({ user: userId, isDeleted: { $ne: true } })
+        .select("-__v")
+        .sort({ isPrimary: -1, walletType: 1, createdAt: 1 }),
+      AccountApplications.find({ user: userId }).sort({ submittedAt: -1 }).lean(),
+    ]);
 
-    if (cachedWallets) {
-      return { wallets: cachedWallets, cached: true };
-    }
-
-    const wallets = await Wallets.find({ user: userId, isDeleted: { $ne: true } })
-      .select("-__v")
-      .sort({ walletType: 1, createdAt: 1 });
+    const usedAppIds = new Set<string>();
 
     const walletsWithStats = await Promise.all(
       wallets.map(async (wallet) => {
@@ -51,15 +50,74 @@ export class WalletService {
           createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
         });
 
+        const obj = wallet.toObject();
+        const rawNotes = String(obj.notes || "");
+        const appIdMatch = rawNotes.match(/application\s+([a-f0-9]{24})/i);
+        const linkedApp =
+          (obj.applicationId && applications.find((a: any) => String(a._id) === String(obj.applicationId))) ||
+          (appIdMatch && applications.find((a: any) => String(a._id) === appIdMatch[1])) ||
+          applications.find(
+            (a: any) =>
+              a.type === obj.walletType &&
+              !usedAppIds.has(String(a._id)) &&
+              (a.status === "approved" || a.status === "pending"),
+          );
+
+        if (linkedApp) {
+          usedAppIds.add(String(linkedApp._id));
+        }
+
+        const cleanNotes =
+          rawNotes && !rawNotes.startsWith("Created from approved application") ? rawNotes : undefined;
+        const nickname = obj.nickname || (linkedApp as any)?.nickname || cleanNotes || undefined;
+
+        const balancesObj: Record<string, number> =
+          obj.balances instanceof Map
+            ? Object.fromEntries(obj.balances)
+            : typeof obj.balances === "object" && obj.balances !== null
+              ? { ...(obj.balances as any) }
+              : {};
+
+        const totalBal = Object.values(balancesObj).reduce((s, v) => s + (Number(v) || 0), 0);
+        const appAmount = Number(
+          obj.initialDeposit ||
+            obj.principal ||
+            (linkedApp as any)?.initialDeposit ||
+            (linkedApp as any)?.principal ||
+            0,
+        );
+        if (totalBal === 0 && appAmount > 0 && recentTransactions === 0) {
+          const curr = (linkedApp as any)?.currency || Object.keys(balancesObj)[0] || "USD";
+          balancesObj[curr] = appAmount;
+        }
+
         return {
-          ...wallet.toObject(),
+          ...obj,
+          balances: balancesObj,
+          nickname,
+          notes: nickname || obj.notes,
+          goal: obj.goal ?? (linkedApp as any)?.goal,
+          autoSave: obj.autoSave ?? (linkedApp as any)?.autoSave,
+          autoSaveAmount: obj.autoSaveAmount ?? (linkedApp as any)?.autoSaveAmount,
+          initialDeposit: obj.initialDeposit ?? (linkedApp as any)?.initialDeposit,
+          purpose: obj.purpose ?? (linkedApp as any)?.purpose,
+          businessName: obj.businessName ?? (linkedApp as any)?.businessName,
+          expectedMonthlyVolume: obj.expectedMonthlyVolume ?? (linkedApp as any)?.expectedMonthlyVolume,
+          overdraftRequested: obj.overdraftRequested ?? (linkedApp as any)?.overdraftRequested,
+          principal: obj.principal ?? (linkedApp as any)?.principal,
+          termMonths: obj.termMonths ?? (linkedApp as any)?.termMonths,
+          interestRate: obj.interestRate ?? (linkedApp as any)?.interestRate,
+          maturityDate: obj.maturityDate ?? (linkedApp as any)?.maturityDate,
+          autoRenew: obj.autoRenew ?? (linkedApp as any)?.autoRenew,
+          applicationId: obj.applicationId ?? (linkedApp as any)?._id,
+          applicationStatus: (linkedApp as any)?.status || "approved",
           recentTransactionsCount: recentTransactions,
         };
       }),
     );
 
-    await cacheSet(cacheKey, walletsWithStats, CACHE_TTL.ACCOUNT);
-    return { wallets: walletsWithStats };
+    await cacheSet(`${CACHE_KEYS.USER_WALLETS}${userId}`, walletsWithStats, CACHE_TTL.ACCOUNT);
+    return { wallets: walletsWithStats, applications };
   }
 
   /**
@@ -99,8 +157,12 @@ export class WalletService {
   /**
    * Create new wallet
    */
-  static async createWallet(userId: string, data: { currency?: string; type?: string; name?: string }) {
-    const { currency, type } = data;
+  static async createWallet(
+    userId: string,
+    data: { currency?: string; type?: string; walletType?: string; name?: string; nickname?: string },
+  ) {
+    const { currency, name, nickname } = data;
+    const type = data.walletType || data.type;
     const supportedCurrencies = ["USD", "EUR", "GBP", "NGN", "KES", "GHS", "ZAR", "CAD", "AUD"];
 
     if (currency && !supportedCurrencies.includes(currency.toUpperCase())) {
@@ -129,6 +191,7 @@ export class WalletService {
       balances: new Map([[walletCurrency, 0]]),
       status: "active",
       walletType,
+      notes: nickname || name || undefined,
       isPrimary: existingWallets === 0,
       isDeleted: false,
       accountPolicies: { ...policies },
@@ -164,23 +227,26 @@ export class WalletService {
   /**
    * Update wallet settings
    */
-  static async updateWallet(userId: string, walletId: string, data: { name?: string; isDefault?: boolean; }) {
-    const { name, isDefault } = data;
+  static async updateWallet(
+    userId: string,
+    walletId: string,
+    data: { name?: string; nickname?: string; notes?: string; isDefault?: boolean; isPrimary?: boolean },
+  ) {
+    const newName = data.nickname ?? data.name ?? data.notes;
+    const isPrimary = data.isPrimary ?? data.isDefault;
 
     const wallet = await Wallets.findOne({ _id: walletId, user: userId });
     if (!wallet) {
       throw new NotFoundError("Wallet not found");
     }
 
-    if (name) {
-      wallet.notes = name;
+    if (newName !== undefined) {
+      wallet.notes = newName;
+      wallet.nickname = newName;
     }
 
-    if (isDefault === true) {
-      await Wallets.updateMany(
-        { user: userId, _id: { $ne: wallet._id } },
-        { isPrimary: false },
-      );
+    if (isPrimary === true) {
+      await Wallets.updateMany({ user: userId, _id: { $ne: wallet._id } }, { isPrimary: false });
       wallet.isPrimary = true;
     }
 
@@ -194,7 +260,7 @@ export class WalletService {
 
     emitToUser(userId, WS_EVENTS.WALLET_UPDATED, {
       walletId: wallet._id,
-      updates: { name, isDefault },
+      updates: { name: newName, isPrimary },
       message: "Wallet updated successfully",
       timestamp: new Date().toISOString(),
     });
@@ -338,41 +404,102 @@ export class WalletService {
   /**
    * Get all wallets (admin)
    */
-  static async getAllWallets(filters: { status?: string; userId?: string; query?: string }, pagination: { page: number; limit: number }) {
+  static async getAllWallets(
+    filters: { status?: string; userId?: string; query?: string; walletType?: string; type?: string },
+    pagination: { page: number; limit: number },
+  ) {
     const { limit, skip, page } = buildPagination(pagination.page, pagination.limit);
 
-    const query: Record<string, any> = {};
+    const query: Record<string, any> = { isDeleted: { $ne: true } };
     if (filters.status) query.status = filters.status;
     if (filters.userId) query.user = filters.userId;
-    
+    if (filters.walletType || filters.type) query.walletType = filters.walletType || filters.type;
+
     if (filters.query) {
       const q = filters.query.trim();
-      const Users = (await import('./accounts.model.js')).Users || mongoose.model('Users');
-      
+      const Users = (await import("./accounts.model.js")).Users || mongoose.model("Users");
+
       const userSearchQuery = buildTextSearchQuery(q, ["firstName", "lastName", "email", "accountNumber"]);
-      const matchingUsers = await Users.find(userSearchQuery).select('_id').lean();
-      
+      const matchingUsers = await Users.find(userSearchQuery).select("_id").lean();
+
       const userIds = matchingUsers.map((u: any) => u._id);
-      
-      // We combine the walletNumber search with the user search
-      const walletSearchQuery = buildTextSearchQuery(q, ["walletNumber"], "contains");
-      query.$or = [
-        ...walletSearchQuery.$or || [],
-        { user: { $in: userIds } }
-      ];
+
+      const walletSearchQuery = buildTextSearchQuery(q, ["walletNumber", "notes", "nickname"], "contains");
+      query.$or = [...(walletSearchQuery.$or || []), { user: { $in: userIds } }];
     }
 
-    const [wallets, total] = await Promise.all([
+    const [wallets, total, applications] = await Promise.all([
       Wallets.find(query)
-        .populate("user", "firstName lastName email accountNumber")
+        .populate("user", "firstName lastName email accountNumber mobileNumber country kycStatus status profilePicture")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
       Wallets.countDocuments(query),
+      AccountApplications.find({}).sort({ submittedAt: -1 }).lean(),
     ]);
 
-    return { wallets, total, page, limit };
+    const enrichedWallets = wallets.map((w: any) => {
+      const userId = typeof w.user === "string" ? w.user : w.user?._id;
+      const rawNotes = String(w.notes || "");
+      const appIdMatch = rawNotes.match(/application\s+([a-f0-9]{24})/i);
+      const linkedApp =
+        (w.applicationId && applications.find((a: any) => String(a._id) === String(w.applicationId))) ||
+        (appIdMatch && applications.find((a: any) => String(a._id) === appIdMatch[1])) ||
+        applications.find(
+          (a: any) =>
+            String(a.user) === String(userId) &&
+            a.type === w.walletType &&
+            (a.status === "approved" || a.status === "pending"),
+        );
+
+      const cleanNotes =
+        rawNotes && !rawNotes.startsWith("Created from approved application") ? rawNotes : undefined;
+      const nickname = w.nickname || (linkedApp as any)?.nickname || cleanNotes || undefined;
+
+      const balancesObj: Record<string, number> =
+        w.balances instanceof Map
+          ? Object.fromEntries(w.balances)
+          : typeof w.balances === "object" && w.balances !== null
+            ? { ...(w.balances as any) }
+            : {};
+
+      const totalBal = Object.values(balancesObj).reduce((s, v) => s + (Number(v) || 0), 0);
+      const appAmount = Number(
+        w.initialDeposit ||
+          w.principal ||
+          (linkedApp as any)?.initialDeposit ||
+          (linkedApp as any)?.principal ||
+          0,
+      );
+      if (totalBal === 0 && appAmount > 0) {
+        const curr = (linkedApp as any)?.currency || Object.keys(balancesObj)[0] || "USD";
+        balancesObj[curr] = appAmount;
+      }
+
+      return {
+        ...w,
+        balances: balancesObj,
+        nickname,
+        notes: nickname || w.notes,
+        goal: w.goal ?? (linkedApp as any)?.goal,
+        autoSave: w.autoSave ?? (linkedApp as any)?.autoSave,
+        autoSaveAmount: w.autoSaveAmount ?? (linkedApp as any)?.autoSaveAmount,
+        initialDeposit: w.initialDeposit ?? (linkedApp as any)?.initialDeposit,
+        purpose: w.purpose ?? (linkedApp as any)?.purpose,
+        businessName: w.businessName ?? (linkedApp as any)?.businessName,
+        expectedMonthlyVolume: w.expectedMonthlyVolume ?? (linkedApp as any)?.expectedMonthlyVolume,
+        overdraftRequested: w.overdraftRequested ?? (linkedApp as any)?.overdraftRequested,
+        principal: w.principal ?? (linkedApp as any)?.principal,
+        termMonths: w.termMonths ?? (linkedApp as any)?.termMonths,
+        interestRate: w.interestRate ?? (linkedApp as any)?.interestRate,
+        maturityDate: w.maturityDate ?? (linkedApp as any)?.maturityDate,
+        autoRenew: w.autoRenew ?? (linkedApp as any)?.autoRenew,
+        applicationId: w.applicationId ?? (linkedApp as any)?._id,
+      };
+    });
+
+    return { wallets: enrichedWallets, total, page, limit };
   }
 
   /**
@@ -389,7 +516,7 @@ export class WalletService {
       {
         status,
         updatedAt: new Date(),
-        ...(status === "suspended" && { freezeReason: reason }),
+        ...((status === "suspended" || status === "frozen") && { freezeReason: reason }),
         ...(status === "closed" && { closedAt: new Date() }),
       },
       { new: true },
@@ -398,6 +525,8 @@ export class WalletService {
     if (!wallet) {
       throw new NotFoundError("Wallet not found");
     }
+
+    await cacheDelete(`${CACHE_KEYS.USER_WALLETS}${wallet.user}`);
 
     emitToUser(String(wallet.user), WS_EVENTS.WALLET_STATUS_CHANGED, {
       walletId: wallet._id,
