@@ -53,7 +53,7 @@ const MobileApp: React.FC = () => {
               Mobile Banking
             </span>
 
-            <h1 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter mb-6 leading-[1.1]">
+            <h1 className="text-4xl md:text-6xl font-bold text-white uppercase tracking-tighter mb-6 leading-[1.1]">
               Banking at Your Fingertips
             </h1>
 
@@ -74,7 +74,7 @@ const MobileApp: React.FC = () => {
                       ? React.cloneElement(feature.icon as React.ReactElement, { className: "w-5 h-5" })
                       : feature.icon}
                   </div>
-                  <span className="text-[11px] sm:text-sm text-neutral-900 dark:text-white font-black uppercase tracking-tight">{feature.text}</span>
+                  <span className="text-[11px] sm:text-sm text-neutral-900 dark:text-white font-medium uppercase tracking-tight">{feature.text}</span>
                 </div>
               ))}
             </div>
@@ -178,7 +178,7 @@ const MobileApp: React.FC = () => {
                   <div className="p-5 space-y-4">
                     <div className="text-center">
                       <div className="text-xs text-neutral-500 dark:text-neutral-400">Total Balance</div>
-                      <div className="text-2xl font-bold text-neutral-900 dark:text-white">$24,580.50</div>
+                      <div className="text-2xl font-semibold text-neutral-900 dark:text-white">$24,580.50</div>
                     </div>
                     
                     <div className="flex justify-between">
