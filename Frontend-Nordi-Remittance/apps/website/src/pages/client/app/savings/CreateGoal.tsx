@@ -34,6 +34,7 @@ import {
   useCreateSavingsGoal,
   useClientSavingsGoalProgress,
 } from "../../client-usecase/usesavinga-client-usecase";
+import { useClientWallets } from "../../client-usecase/useaccounts-client-usecase";
 import { useUIStore } from "@store/ui.store";
 import { useToastStore } from "@store/toast.store";
 
@@ -46,7 +47,7 @@ const fmt = (n: number) =>
 const pct = (saved: number, target: number) => (target > 0 ? Math.min(Math.round((saved / target) * 100), 100) : 0);
 
 const inputCls =
-  "w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 transition-colors";
+  "w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors";
 
 const labelCls = "block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5";
 
@@ -58,6 +59,7 @@ const GOAL_EMOJIS = ["🎯", "🏠", "✈️", "🚗", "💍", "🎓", "💰", "
 
 const CreateGoal: React.FC = () => {
   const createMutation = useCreateSavingsGoal();
+  const { wallets } = useClientWallets();
   const { showToast } = useToastStore();
 
   const [form, setForm] = useState({
@@ -67,10 +69,14 @@ const CreateGoal: React.FC = () => {
     emoji: "🎯",
     monthlyContribution: "",
     category: "",
+    walletId: "",
   });
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm((p) => ({ ...p, [key]: e.target.value }));
+
+  const defaultWalletId = wallets[0]?._id || wallets[0]?.id || "";
+  const activeWalletId = form.walletId || defaultWalletId;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,17 +89,24 @@ const CreateGoal: React.FC = () => {
         name: form.name,
         targetAmount: Number(form.targetAmount),
         targetDate: form.targetDate || new Date(Date.now() + 365 * 86400000).toISOString(),
-        accountId: "" as any,
+        accountId: activeWalletId as any,
         category: form.category || undefined,
         imageUrl: form.emoji,
         autoSave: form.monthlyContribution
           ? { enabled: true, amount: Number(form.monthlyContribution), frequency: "monthly" }
           : undefined,
       });
-      showToast("Savings goal created!", "success");
-      setForm({ name: "", targetAmount: "", targetDate: "", emoji: "🎯", monthlyContribution: "", category: "" });
+      setForm({
+        name: "",
+        targetAmount: "",
+        targetDate: "",
+        emoji: "🎯",
+        monthlyContribution: "",
+        category: "",
+        walletId: "",
+      });
     } catch {
-      showToast("Failed to create savings goal", "error");
+      // handled by mutation onError
     }
   };
 
@@ -125,7 +138,7 @@ const CreateGoal: React.FC = () => {
                     onClick={() => setForm((p) => ({ ...p, emoji: em }))}
                     className={`flex h-10 w-10 items-center justify-center rounded-xl text-lg transition-all ${
                       form.emoji === em
-                        ? "bg-indigo-50 ring-2 ring-indigo-500 dark:bg-indigo-950/50"
+                        ? "bg-blue-50 ring-2 ring-blue-500 dark:bg-blue-950/50"
                         : "border border-gray-200 bg-gray-100 hover:bg-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
                     }`}
                   >
@@ -185,6 +198,24 @@ const CreateGoal: React.FC = () => {
               </div>
             </div>
 
+            {/* Source Wallet */}
+            {wallets.length > 0 && (
+              <div>
+                <label className={labelCls}>Funding Wallet</label>
+                <select value={activeWalletId} onChange={set("walletId")} className={inputCls}>
+                  {wallets.map((w: any) => {
+                    const wid = w._id || w.id;
+                    const bal = w.balance ?? w.availableBalance ?? 0;
+                    return (
+                      <option key={wid} value={wid}>
+                        {w.name || `${w.currency || "USD"} Wallet`} ({fmt(bal)})
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+            )}
+
             {/* Monthly contribution */}
             <div>
               <label className={labelCls}>Monthly Contribution (optional)</label>
@@ -208,7 +239,7 @@ const CreateGoal: React.FC = () => {
             <motion.button
               type="submit"
               disabled={createMutation.isPending}
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 py-3 text-xs font-medium text-white disabled:opacity-50 sm:text-sm"
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-xs font-medium text-white disabled:opacity-50 sm:text-sm"
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
@@ -226,65 +257,5 @@ const CreateGoal: React.FC = () => {
     </PageContainer>
   );
 };
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   3. AUTO-SAVE RULES
-   ═══════════════════════════════════════════════════════════════════════════ */
-interface AutoRule {
-  id: string;
-  name: string;
-  description: string;
-  type: "round-up" | "scheduled" | "percentage";
-  enabled: boolean;
-  amount?: number;
-  percentage?: number;
-  frequency?: string;
-  icon: React.ReactNode;
-  color: string;
-}
-
-const defaultRules: AutoRule[] = [
-  {
-    id: "round-up",
-    name: "Round-Up Savings",
-    description: "Round up every purchase to the nearest dollar and save the difference.",
-    type: "round-up",
-    enabled: false,
-    icon: <ArrowUpRight size={18} />,
-    color: "from-emerald-500 to-teal-500",
-  },
-  {
-    id: "weekly-save",
-    name: "Weekly Auto-Save",
-    description: "Automatically transfer a fixed amount every week.",
-    type: "scheduled",
-    enabled: true,
-    amount: 50,
-    frequency: "Weekly",
-    icon: <Calendar size={18} />,
-    color: "from-indigo-500 to-purple-500",
-  },
-  {
-    id: "monthly-save",
-    name: "Monthly Auto-Save",
-    description: "Automatically transfer a fixed amount on the 1st of each month.",
-    type: "scheduled",
-    enabled: true,
-    amount: 300,
-    frequency: "Monthly",
-    icon: <Clock size={18} />,
-    color: "from-blue-500 to-cyan-500",
-  },
-  {
-    id: "income-pct",
-    name: "Income Percentage",
-    description: "Save a percentage of every incoming deposit automatically.",
-    type: "percentage",
-    enabled: false,
-    percentage: 10,
-    icon: <Percent size={18} />,
-    color: "from-amber-500 to-orange-500",
-  },
-];
 
 export default CreateGoal;
