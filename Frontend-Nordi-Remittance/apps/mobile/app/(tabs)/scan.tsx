@@ -1,220 +1,367 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+// ============================================================================
+// SCAN & PAY SCREEN — Nordi Remittance Mobile
+// Ultra-clean, modern QR payment scanner & merchant reader
+// ============================================================================
+
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
+import { AdaptiveScreen } from '@/components/layout/AdaptiveScreen';
 import { useMobileTheme } from '@/core/theme/useMobileTheme';
+import { Icon } from '@/components/ui/Icon';
+import { Card, CardContent } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { SPACING, FONT_SIZES, ICON_SIZES, RADIUS } from '@/constants/sizings';
 
 export default function ScanScreen() {
+  const router = useRouter();
   const theme = useMobileTheme();
   const styles = createStyles(theme);
 
+  const [flashlight, setFlashlight] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    setRefreshing(false);
+  };
+
+  const recentScans = [
+    { id: '1', name: 'Blue Bottle Cafe', amount: 6.25, time: '20m ago', category: 'Dining', currency: 'USD' },
+    { id: '2', name: 'Whole Foods Market', amount: 54.80, time: 'Yesterday', category: 'Groceries', currency: 'USD' },
+    { id: '3', name: 'Nordi ATM London', amount: 120.00, time: 'Oct 18', category: 'Cash Out', currency: 'GBP' },
+  ];
+
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Scan to Pay</Text>
-        <TouchableOpacity style={styles.historyButton}>
-          <Ionicons name="time" size={24} color={theme.primary} />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.scanArea}>
-        <View style={styles.scanFrame}>
-          <View style={styles.scanCorner} />
-          <View style={[styles.scanCorner, styles.topRight]} />
-          <View style={[styles.scanCorner, styles.bottomLeft]} />
-          <View style={[styles.scanCorner, styles.bottomRight]} />
+    <AdaptiveScreen withTabBar={true} onRefresh={onRefresh} refreshing={refreshing}>
+      {/* Top Header */}
+      <View style={styles.topHeader}>
+        <View>
+          <Text style={styles.headerSubtitle}>CONTACTLESS PAY</Text>
+          <Text style={styles.headerTitle}>Scan to Pay</Text>
         </View>
-        <Text style={styles.scanText}>Align QR code within frame</Text>
-      </View>
-
-      <View style={styles.actions}>
-        <TouchableOpacity style={styles.actionButton}>
-          <View style={[styles.actionIcon, { backgroundColor: theme.primarySoft }]}>
-            <Ionicons name="qr-code" size={24} color={theme.primary} />
-          </View>
-          <Text style={styles.actionText}>My QR Code</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
-          <View style={[styles.actionIcon, { backgroundColor: theme.surfaceAlt }]}>
-            <Ionicons name="images" size={24} color="#16a34a" />
-          </View>
-          <Text style={styles.actionText}>Upload QR</Text>
+        <TouchableOpacity
+          style={styles.headerBtn}
+          onPress={() => router.push('/screens/Transactions' as any)}
+          activeOpacity={0.7}
+        >
+          <Icon name="Clock" size={ICON_SIZES.sm} color={theme.primary} />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.recentScans}>
-        <Text style={styles.recentTitle}>Recent Sc ans</Text>
-        {[
-          { name: 'Coffee Shop', amount: 8.5, time: '2 hours ago' },
-          { name: 'Grocery Store', amount: 45.99, time: 'Yesterday' },
-          { name: 'Restaurant', amount: 32.4, time: '2 days ago' }
-        ].map((scan, index) => (
-          <TouchableOpacity key={index} style={styles.scanItem}>
-            <View style={styles.scanIcon}>
-              <Ionicons name="qr-code" size={24} color={theme.iconMuted} />
+      {/* Modern Viewfinder Box */}
+      <Card style={styles.viewfinderCard}>
+        <CardContent style={styles.viewfinderContent}>
+          <View style={styles.frameWrapper}>
+            {/* Corner brackets */}
+            <View style={[styles.corner, styles.cornerTL, { borderColor: theme.primary }]} />
+            <View style={[styles.corner, styles.cornerTR, { borderColor: theme.primary }]} />
+            <View style={[styles.corner, styles.cornerBL, { borderColor: theme.primary }]} />
+            <View style={[styles.corner, styles.cornerBR, { borderColor: theme.primary }]} />
+
+            {/* Center target indicator */}
+            <View style={styles.laserLineWrap}>
+              <View style={[styles.laserLine, { backgroundColor: theme.primary }]} />
             </View>
-            <View style={styles.scanInfo}>
-              <Text style={styles.scanName}>{scan.name}</Text>
-              <Text style={styles.scanTime}>{scan.time}</Text>
+
+            <View style={styles.centerAim}>
+              <Icon name="QrCode" size={32} color={`${theme.primary}40`} />
             </View>
-            <Text style={styles.scanAmount}>${scan.amount.toFixed(2)}</Text>
+          </View>
+
+          <Text style={styles.instructionsText}>
+            Align payment QR code or invoice barcode inside the square
+          </Text>
+
+          {/* Quick controls row inside card */}
+          <View style={styles.controlsRow}>
+            <TouchableOpacity
+              style={[
+                styles.controlBtn,
+                flashlight && { backgroundColor: theme.primarySoft, borderColor: theme.primary },
+              ]}
+              onPress={() => setFlashlight(!flashlight)}
+              activeOpacity={0.7}
+            >
+              <Icon
+                name={flashlight ? 'Zap' : 'ZapOff'}
+                size={ICON_SIZES.sm}
+                color={flashlight ? theme.primary : theme.textMuted}
+              />
+              <Text style={[styles.controlText, flashlight && { color: theme.primary }]}>
+                {flashlight ? 'Torch On' : 'Torch Off'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.controlBtn}
+              onPress={() => Alert.alert('My QR', 'Your Nordi Pay ID: @nordi.member')}
+              activeOpacity={0.7}
+            >
+              <Icon name="Share2" size={ICON_SIZES.sm} color={theme.textMuted} />
+              <Text style={styles.controlText}>My Code</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.controlBtn}
+              onPress={() => Alert.alert('Upload', 'Select QR screenshot from camera roll.')}
+              activeOpacity={0.7}
+            >
+              <Icon name="Image" size={ICON_SIZES.sm} color={theme.textMuted} />
+              <Text style={styles.controlText}>Upload</Text>
+            </TouchableOpacity>
+          </View>
+        </CardContent>
+      </Card>
+
+      {/* Recent QR Transactions */}
+      <View style={styles.sectionWrap}>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionHeading}>RECENT MERCHANT PAYMENTS</Text>
+          <TouchableOpacity
+            onPress={() => router.push('/screens/banking/transactions')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.seeAllText}>View All</Text>
           </TouchableOpacity>
-        ))}
-      </View>
+        </View>
 
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.flashButton}>
-          <Ionicons name="flash" size={24} color={theme.iconMuted} />
-        </TouchableOpacity>
+        <Card style={styles.recentCard}>
+          <CardContent style={{ paddingVertical: SPACING.xs, paddingHorizontal: SPACING.md }}>
+            {recentScans.map((scan, idx) => {
+              const isLast = idx === recentScans.length - 1;
+              return (
+                <View key={scan.id} style={[styles.scanRow, !isLast && styles.scanBorder]}>
+                  <View style={styles.scanLeft}>
+                    <View style={[styles.scanIconWrap, { backgroundColor: theme.primarySoft }]}>
+                      <Icon name="Store" size={ICON_SIZES.sm} color={theme.primary} />
+                    </View>
+                    <View style={styles.scanTextCol}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Text style={styles.scanName}>{scan.name}</Text>
+                        <Badge variant="outline" size="sm" style={{ marginLeft: 6 }}>
+                          {scan.category}
+                        </Badge>
+                      </View>
+                      <Text style={styles.scanTime}>{scan.time} • Instant settlement</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.scanAmount}>
+                    -${scan.amount.toFixed(2)}
+                  </Text>
+                </View>
+              );
+            })}
+          </CardContent>
+        </Card>
       </View>
-    </View>
+    </AdaptiveScreen>
   );
 }
 
-const createStyles = (theme: ReturnType<typeof useMobileTheme>) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.background
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    paddingTop: 60
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: theme.text
-  },
-  historyButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: theme.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  scanArea: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    maxHeight: 400
-  },
-  scanFrame: {
-    width: 280,
-    height: 280,
-    position: 'relative'
-  },
-  scanCorner: {
-    position: 'absolute',
-    width: 40,
-    height: 40,
-    borderColor: theme.primary,
-    borderWidth: 4
-  },
-  topRight: {
-    top: 0,
-    right: 0,
-    borderLeftWidth: 0,
-    borderBottomWidth: 0
-  },
-  bottomLeft: {
-    bottom: 0,
-    left: 0,
-    borderRightWidth: 0,
-    borderTopWidth: 0
-  },
-  bottomRight: {
-    bottom: 0,
-    right: 0,
-    borderLeftWidth: 0,
-    borderTopWidth: 0
-  },
-  scanText: {
-    fontSize: 16,
-    color: theme.textMuted,
-    marginTop: 24
-  },
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    padding: 20
-  },
-  actionButton: {
-    alignItems: 'center',
-    marginHorizontal: 20
-  },
-  actionIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8
-  },
-  actionText: {
-    fontSize: 14,
-    color: theme.textMuted
-  },
-  recentScans: {
-    padding: 20
-  },
-  recentTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: theme.text,
-    marginBottom: 16
-  },
-  scanItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.surface,
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12
-  },
-  scanIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: theme.surfaceAlt,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16
-  },
-  scanInfo: {
-    flex: 1
-  },
-  scanName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.text
-  },
-  scanTime: {
-    fontSize: 14,
-    color: theme.textMuted,
-    marginTop: 4
-  },
-  scanAmount: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.text
-  },
-  footer: {
-    padding: 20,
-    alignItems: 'center'
-  },
-  flashButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: theme.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3
-  }
-});
+const createStyles = (theme: ReturnType<typeof useMobileTheme>) =>
+  StyleSheet.create({
+    topHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: SPACING.lg,
+      marginTop: SPACING.xs,
+    },
+    headerSubtitle: {
+      fontSize: FONT_SIZES.nano,
+      letterSpacing: 1.2,
+      fontWeight: '700',
+      color: theme.primary,
+      marginBottom: 2,
+    },
+    headerTitle: {
+      fontSize: FONT_SIZES.hero,
+      fontWeight: '800',
+      color: theme.text,
+      letterSpacing: -0.5,
+    },
+    headerBtn: {
+      width: 34,
+      height: 34,
+      borderRadius: RADIUS.lg,
+      backgroundColor: theme.surfaceAlt,
+      borderWidth: 1,
+      borderColor: theme.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    viewfinderCard: {
+      backgroundColor: theme.surface,
+      borderRadius: RADIUS.xl,
+      borderWidth: 1,
+      borderColor: theme.border,
+      marginBottom: SPACING.lg,
+    },
+    viewfinderContent: {
+      alignItems: 'center',
+      paddingVertical: SPACING.xl,
+      paddingHorizontal: SPACING.md,
+    },
+    frameWrapper: {
+      width: 200,
+      height: 200,
+      borderRadius: RADIUS.lg,
+      backgroundColor: theme.surfaceAlt,
+      borderWidth: 1,
+      borderColor: theme.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'relative',
+      overflow: 'hidden',
+    },
+    corner: {
+      position: 'absolute',
+      width: 24,
+      height: 24,
+      borderWidth: 3,
+    },
+    cornerTL: {
+      top: 0,
+      left: 0,
+      borderRightWidth: 0,
+      borderBottomWidth: 0,
+      borderTopLeftRadius: RADIUS.md,
+    },
+    cornerTR: {
+      top: 0,
+      right: 0,
+      borderLeftWidth: 0,
+      borderBottomWidth: 0,
+      borderTopRightRadius: RADIUS.md,
+    },
+    cornerBL: {
+      bottom: 0,
+      left: 0,
+      borderRightWidth: 0,
+      borderTopWidth: 0,
+      borderBottomLeftRadius: RADIUS.md,
+    },
+    cornerBR: {
+      bottom: 0,
+      right: 0,
+      borderLeftWidth: 0,
+      borderTopWidth: 0,
+      borderBottomRightRadius: RADIUS.md,
+    },
+    centerAim: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    laserLineWrap: {
+      position: 'absolute',
+      top: '48%',
+      width: '100%',
+      paddingHorizontal: 8,
+    },
+    laserLine: {
+      height: 2,
+      borderRadius: 1,
+    },
+    instructionsText: {
+      fontSize: FONT_SIZES.caption,
+      color: theme.textMuted,
+      marginTop: SPACING.md,
+      textAlign: 'center',
+      paddingHorizontal: SPACING.md,
+    },
+    controlsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: SPACING.lg,
+      gap: SPACING.sm,
+    },
+    controlBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: SPACING.xs + 2,
+      paddingHorizontal: SPACING.md,
+      borderRadius: RADIUS.full,
+      backgroundColor: theme.surfaceAlt,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    controlText: {
+      fontSize: FONT_SIZES.caption,
+      fontWeight: '600',
+      color: theme.textMuted,
+      marginLeft: 6,
+    },
+    sectionWrap: {
+      marginBottom: SPACING.lg,
+    },
+    sectionHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: SPACING.xs,
+      paddingHorizontal: SPACING.xxs,
+    },
+    sectionHeading: {
+      fontSize: FONT_SIZES.micro,
+      fontWeight: '700',
+      letterSpacing: 1,
+      color: theme.textMuted,
+    },
+    seeAllText: {
+      fontSize: FONT_SIZES.caption,
+      fontWeight: '600',
+      color: theme.primary,
+    },
+    recentCard: {
+      backgroundColor: theme.surface,
+      borderRadius: RADIUS.lg,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    scanRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: SPACING.sm,
+    },
+    scanBorder: {
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.border,
+    },
+    scanLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+      marginRight: SPACING.sm,
+    },
+    scanIconWrap: {
+      width: 32,
+      height: 32,
+      borderRadius: RADIUS.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: SPACING.sm,
+    },
+    scanTextCol: {
+      flex: 1,
+    },
+    scanName: {
+      fontSize: FONT_SIZES.body,
+      fontWeight: '600',
+      color: theme.text,
+    },
+    scanTime: {
+      fontSize: FONT_SIZES.nano,
+      color: theme.textMuted,
+      marginTop: 2,
+    },
+    scanAmount: {
+      fontSize: FONT_SIZES.body,
+      fontWeight: '700',
+      color: theme.text,
+    },
+  });
