@@ -40,8 +40,11 @@ import {
   useClientInvestmentProducts,
   useClientPortfolio,
   useClientInvestmentPerformance,
+  useCreateInvestment,
 } from "../../client-usecase/useinvestments-client-usecase";
+import { useClientWallets } from "../../client-usecase/useaccounts-client-usecase";
 import { useUIStore } from "@store/ui.store";
+import { useToastStore } from "@store/toast.store";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -63,10 +66,50 @@ const pct = (n: number) => `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
 
 const MutualFunds: React.FC = () => {
   const { products: allProducts, isLoading } = useClientInvestmentProducts({ type: "mutual_fund" as any });
-  const products = allProducts.filter((p: any) => p.type === "mutual_fund" || p.category === "mutual_funds" || true);
+  const { wallets } = useClientWallets();
+  const createInvestment = useCreateInvestment();
+  const { showToast } = useToastStore();
+
+  const matchedProducts = allProducts.filter(
+    (p: any) => p.type === "mutual_fund" || p.category === "mutual_funds" || p.assetType === "mutual_fund",
+  );
+  const products = matchedProducts.length > 0 ? matchedProducts : allProducts;
 
   const [search, setSearch] = useState("");
   const [riskFilter, setRiskFilter] = useState("all");
+  const [selectedFund, setSelectedFund] = useState<any | null>(null);
+  const [investAmount, setInvestAmount] = useState("");
+  const [selectedWalletId, setSelectedWalletId] = useState("");
+
+  const defaultWalletId = wallets[0]?._id || wallets[0]?.id || "";
+  const walletIdToUse = selectedWalletId || defaultWalletId;
+
+  const handleInvestSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedFund || !investAmount || Number(investAmount) <= 0) {
+      showToast("Please enter a valid investment amount", "error");
+      return;
+    }
+    const minInv = Number(selectedFund.minInvestment ?? selectedFund.minimumInvestment ?? 0);
+    if (Number(investAmount) < minInv) {
+      showToast(`Minimum investment is ${fmt(minInv)}`, "error");
+      return;
+    }
+    const nav = Number(selectedFund.nav ?? selectedFund.netAssetValue ?? selectedFund.price ?? 1);
+    const quantity = Math.max(1, Number((Number(investAmount) / (nav > 0 ? nav : 1)).toFixed(4)));
+    try {
+      await createInvestment.mutateAsync({
+        productId: selectedFund._id || selectedFund.id || selectedFund.assetId || selectedFund.name,
+        amount: Number(investAmount),
+        sourceAccountId: walletIdToUse,
+        quantity,
+      } as any);
+      setSelectedFund(null);
+      setInvestAmount("");
+    } catch {
+      // handled by mutation onError
+    }
+  };
 
   const defaultFunds = [
     {
@@ -174,7 +217,7 @@ const MutualFunds: React.FC = () => {
                   placeholder="Search funds..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 bg-white py-2 pl-9 pr-4 text-xs text-gray-900 transition-colors placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/40 sm:text-sm"
+                  className="w-full rounded-xl border border-gray-200 bg-white py-2 pl-9 pr-4 text-xs text-gray-900 transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/40 sm:text-sm"
                 />
               </div>
               <div className="flex shrink-0 gap-2">
@@ -184,7 +227,7 @@ const MutualFunds: React.FC = () => {
                     onClick={() => setRiskFilter(r)}
                     className={`rounded-xl px-3 py-2 text-[10px] font-medium capitalize transition-colors sm:text-xs ${
                       riskFilter === r
-                        ? "bg-indigo-600 text-white dark:bg-indigo-500"
+                        ? "bg-blue-600 text-white dark:bg-blue-500"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
                     }`}
                   >
@@ -243,19 +286,19 @@ const MutualFunds: React.FC = () => {
                       <div className="mb-4 grid grid-cols-3 gap-2">
                         <div className="rounded-lg bg-gray-50 p-2 text-center dark:bg-gray-800">
                           <p className="text-[10px] text-gray-500 dark:text-gray-400">Returns</p>
-                          <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 sm:text-sm">
+                          <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 sm:text-sm">
                             +{fund.returns ?? fund.annualReturn ?? 0}%
                           </p>
                         </div>
                         <div className="rounded-lg bg-gray-50 p-2 text-center dark:bg-gray-800">
                           <p className="text-[10px] text-gray-500 dark:text-gray-400">NAV</p>
-                          <p className="text-xs font-bold text-gray-900 dark:text-white sm:text-sm">
+                          <p className="text-xs font-medium text-gray-900 dark:text-white sm:text-sm">
                             ${fund.nav ?? fund.netAssetValue ?? 0}
                           </p>
                         </div>
                         <div className="rounded-lg bg-gray-50 p-2 text-center dark:bg-gray-800">
                           <p className="text-[10px] text-gray-500 dark:text-gray-400">Min</p>
-                          <p className="text-xs font-bold text-gray-900 dark:text-white sm:text-sm">
+                          <p className="text-xs font-medium text-gray-900 dark:text-white sm:text-sm">
                             ${fund.minInvestment ?? fund.minimumInvestment ?? 0}
                           </p>
                         </div>
@@ -263,7 +306,11 @@ const MutualFunds: React.FC = () => {
 
                       {/* Invest Button */}
                       <motion.button
-                        className="mt-auto w-full rounded-xl bg-indigo-600 py-2.5 text-xs font-medium text-white transition-colors hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400 sm:text-sm"
+                        onClick={() => {
+                          setSelectedFund(fund);
+                          setInvestAmount(String(fund.minInvestment ?? fund.minimumInvestment ?? 500));
+                        }}
+                        className="mt-auto w-full rounded-xl bg-blue-600 py-2.5 text-xs font-medium text-white transition-colors hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400 sm:text-sm"
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.98 }}
                       >
@@ -273,6 +320,74 @@ const MutualFunds: React.FC = () => {
                   </DashCard>
                 );
               })}
+            </div>
+          )}
+
+          {/* Invest Modal */}
+          {selectedFund && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+              <DashCard className="w-full max-w-md">
+                <h3 className="mb-1 text-base font-semibold text-gray-900 dark:text-white">
+                  Invest in {selectedFund.name}
+                </h3>
+                <p className="mb-4 text-xs text-gray-500 dark:text-gray-400">
+                  NAV: ${selectedFund.nav ?? selectedFund.netAssetValue ?? 10} • Min:{" "}
+                  {fmt(selectedFund.minInvestment ?? selectedFund.minimumInvestment ?? 100)}
+                </p>
+                <form onSubmit={handleInvestSubmit} className="space-y-4">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                      Amount (USD)
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      step="any"
+                      value={investAmount}
+                      onChange={(e) => setInvestAmount(e.target.value)}
+                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                      required
+                    />
+                  </div>
+                  {wallets.length > 0 && (
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                        Source Wallet
+                      </label>
+                      <select
+                        value={walletIdToUse}
+                        onChange={(e) => setSelectedWalletId(e.target.value)}
+                        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                      >
+                        {wallets.map((w: any) => {
+                          const wid = w._id || w.id;
+                          return (
+                            <option key={wid} value={wid}>
+                              {w.name || `${w.currency || "USD"} Wallet`} ({fmt(w.balance ?? w.availableBalance ?? 0)})
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
+                  )}
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedFund(null)}
+                      className="rounded-xl border border-gray-200 px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={createInvestment.isPending}
+                      className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {createInvestment.isPending ? "Processing…" : "Confirm Investment"}
+                    </button>
+                  </div>
+                </form>
+              </DashCard>
             </div>
           )}
         </motion.div>
