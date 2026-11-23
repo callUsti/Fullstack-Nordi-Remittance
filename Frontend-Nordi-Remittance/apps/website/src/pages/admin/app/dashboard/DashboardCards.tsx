@@ -32,7 +32,7 @@ const DashboardCards: React.FC<DashboardCardsProps> = ({ cardsData, isLoading })
     return (
       <DashCard>
         <SkeletonBlock className="h-5 w-36 mb-4" />
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="space-y-2">
               <SkeletonBlock className="h-8 w-full" />
@@ -81,14 +81,14 @@ const DashboardCards: React.FC<DashboardCardsProps> = ({ cardsData, isLoading })
         <div className="flex-1 flex items-center gap-2 p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/50">
           <FiCreditCard size={14} className="text-indigo-500" />
           <div>
-            <p className="text-sm font-bold text-gray-900 dark:text-white">{cardsData.virtualCards}</p>
+            <p className="text-sm font-medium text-gray-900 dark:text-white">{cardsData.virtualCards}</p>
             <p className="text-[10px] text-gray-500 dark:text-gray-400">Virtual</p>
           </div>
         </div>
         <div className="flex-1 flex items-center gap-2 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/50">
           <FiPlus size={14} className="text-amber-500" />
           <div>
-            <p className="text-sm font-bold text-gray-900 dark:text-white">{cardsData.physicalCards}</p>
+            <p className="text-sm font-medium text-gray-900 dark:text-white">{cardsData.physicalCards}</p>
             <p className="text-[10px] text-gray-500 dark:text-gray-400">Physical</p>
           </div>
         </div>
@@ -99,7 +99,7 @@ const DashboardCards: React.FC<DashboardCardsProps> = ({ cardsData, isLoading })
         {cardStats.map(({ icon, label, value, color, bg }) => (
           <div key={label} className={`flex flex-col items-center p-2.5 rounded-xl ${bg}`}>
             <span className={`mb-1 ${color}`}>{icon}</span>
-            <p className="text-sm font-bold text-gray-900 dark:text-white">{value}</p>
+            <p className="text-sm font-medium text-gray-900 dark:text-white">{value}</p>
             <p className="text-[10px] text-gray-500 dark:text-gray-400">{label}</p>
           </div>
         ))}
