@@ -116,6 +116,32 @@ router.get("/", TransactionController.getTransactions);
  */
 router.get("/stats", TransactionController.getTransactionStats);
 
+// ============================================================================
+// INTERNATIONAL REMITTANCE & RECIPIENT ROUTES
+// ============================================================================
+
+router.get("/remittance/countries", TransactionController.getRemittanceCountries);
+router.post("/remittance/quote", TransactionController.getRemittanceQuote);
+router.get("/remittance/verification-setting", TransactionController.getTransferVerificationSetting);
+router.put(
+  "/remittance/verification-setting",
+  requireAdmin,
+  auditLogMiddleware,
+  TransactionController.setTransferVerificationSetting,
+);
+router.post(
+  "/remittance",
+  transactionRateLimit,
+  idempotencyMiddleware,
+  requireKycVerified,
+  enforceKycLimits,
+  checkSufficientBalance,
+  auditLogMiddleware,
+  TransactionController.sendRemittance,
+);
+router.get("/recipients", TransactionController.getRecipients);
+router.post("/recipients", TransactionController.createRecipient);
+
 /**
  * @route   GET /api/transactions/reference/:reference
  * @desc    Get transaction by reference number
