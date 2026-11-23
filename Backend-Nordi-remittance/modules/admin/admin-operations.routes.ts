@@ -272,4 +272,32 @@ router.post(
   AdminOperationsController.adminFundCardFromWallet,
 );
 
+// ============================================================================
+// ACTIVITY SIMULATOR (CRON + ADMIN PER-USER TOGGLE)
+// ============================================================================
+
+router.get(
+  "/simulator/users",
+  requirePermission("canViewTransactions"),
+  AdminOperationsController.getSimulatorUsers,
+);
+
+router.post(
+  "/simulator/:userId/toggle",
+  requirePermission("canAdjustBalances"),
+  AdminOperationsController.toggleUserSimulator,
+);
+
+router.post(
+  "/simulator/:userId/run-now",
+  requirePermission("canAdjustBalances"),
+  AdminOperationsController.runUserSimulatorNow,
+);
+
+router.post(
+  "/simulator/run-all",
+  requirePermission("canAdjustBalances"),
+  AdminOperationsController.runAllEnabledSimulators,
+);
+
 export default router;
