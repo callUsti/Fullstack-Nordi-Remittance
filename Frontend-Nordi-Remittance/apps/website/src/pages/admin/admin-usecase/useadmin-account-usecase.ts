@@ -17,14 +17,103 @@ import { useToast } from "@store/toast.store";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+export type AccountStatusFilter = "All" | "Active" | "Dormant" | "Frozen" | "Closed";
+export type AccountTypeFilter =
+  | "all"
+  | "savings"
+  | "current"
+  | "fixed-deposit"
+  | "fixed_deposit"
+  | "personal"
+  | "business"
+  | "wallet";
+
+const PAGE_SIZE = 20;
+
+const TYPE_LABELS: Record<string, string> = {
+  personal: "Personal Wallet",
+  business: "Business Wallet",
+  savings: "Savings Account",
+  current: "Current Account",
+  fixed_deposit: "Fixed Deposit",
+  "fixed-deposit": "Fixed Deposit",
+  wallet: "Personal Wallet",
+};
+
+export function formatCurrencyAmount(amount: number, currency: string = "USD"): string {
+  const safeCurrency = (currency || "USD").toUpperCase();
+  const num = Number(amount) || 0;
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: safeCurrency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(num);
+  } catch {
+    return `${safeCurrency} ${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+}
+
+function normalizeWalletItem(w: any) {
+  const balancesMap: Record<string, number> =
+    w.balances instanceof Map ? Object.fromEntries(w.balances) : w.balances || {};
+  const entries = Object.entries(balancesMap);
+  const totalBalance = entries.reduce((sum: number, [, v]: [string, any]) => sum + (Number(v) || 0), 0);
+  const nonZeroEntry = entries.find(([, v]) => Number(v) > 0);
+  const detectedCurrency = w.currency || nonZeroEntry?.[0] || entries[0]?.[0] || "USD";
+  const rawType = w.walletType || w.accountType || "personal";
+  const nickname = w.nickname || w.businessName || w.goal || w.notes || "";
+
+  return {
+    id: String(w._id || w.walletNumber || w.id || ""),
+    userId: String(typeof w.user === "string" ? w.user : w.user?._id || w.userId || ""),
+    owner:
+      w.user?.firstName && w.user?.lastName
+        ? `${w.user.firstName} ${w.user.lastName}`
+        : w.userName || "Unknown",
+    email: w.user?.email || w.email || "",
+    mobileNumber: w.user?.mobileNumber || "",
+    country: w.user?.country || "",
+    kycStatus: w.user?.kycStatus || "pending",
+    userStatus: w.user?.status || "active",
+    userAvatar: w.user?.profilePicture || w.user?.avatar || "",
+    type: rawType,
+    typeLabel: TYPE_LABELS[rawType] || rawType.replace("_", " "),
+    nickname,
+    displayName: nickname || TYPE_LABELS[rawType] || rawType,
+    accountNumber: w.walletNumber || w.accountNumber || "",
+    userAccountNumber: w.user?.accountNumber || "",
+    balance: totalBalance,
+    balancesByCurrency: balancesMap,
+    currency: detectedCurrency,
+    status: w.status || "active",
+    isPrimary: Boolean(w.isPrimary),
+    interestRate:
+      w.interestRate ??
+      (rawType === "savings" ? 2.75 : rawType === "fixed_deposit" ? 5.25 : 0),
+    termMonths: w.termMonths ?? null,
+    maturityDate: w.maturityDate || "",
+    autoRenew: Boolean(w.autoRenew),
+    goal: w.goal || "",
+    autoSave: Boolean(w.autoSave),
+    autoSaveAmount: Number(w.autoSaveAmount) || 0,
+    purpose: w.purpose || "",
+    businessName: w.businessName || "",
+    expectedMonthlyVolume: Number(w.expectedMonthlyVolume) || 0,
+    overdraftRequested: Boolean(w.overdraftRequested),
+    overdraftLimit: Number(w.overdraftLimit) || 0,
+    principal: Number(w.principal ?? w.initialDeposit) || 0,
+    initialDeposit: Number(w.initialDeposit) || 0,
+    applicationId: w.applicationId || "",
+    opened: w.createdAt || "",
+    lastActivity: w.updatedAt || w.lastTransactionAt || "",
+  };
+}
+
 // ============================================================================
 // useAccountsManagement — Aggregates admin wallet listing, filters & actions
 // ============================================================================
-
-export type AccountStatusFilter = "All" | "Active" | "Dormant" | "Frozen" | "Closed";
-export type AccountTypeFilter = "all" | "savings" | "current" | "fixed-deposit" | "wallet";
-
-const PAGE_SIZE = 20;
 
 export function useAccountsManagement() {
   const { accountsState, setModuleState, expandedId, setExpandedId } = useAdminStore();
@@ -44,44 +133,57 @@ export function useAccountsManagement() {
         : Array.isArray(outer?.data)
           ? outer.data
           : outer?.wallets || [];
-    return raw.map((w: any) => {
-      const balancesMap: Record<string, number> =
-        w.balances instanceof Map ? Object.fromEntries(w.balances) : w.balances || {};
-      const totalBalance = Object.values(balancesMap).reduce((sum: number, v: any) => sum + (Number(v) || 0), 0);
-      return {
-        id: w._id || w.walletNumber || w.id || "",
-        userId: typeof w.user === "string" ? w.user : w.user?._id || w.userId || "",
-        owner:
-          w.user?.firstName && w.user?.lastName ? `${w.user.firstName} ${w.user.lastName}` : w.userName || "Unknown",
-        email: w.user?.email || w.email || "",
-        type: w.walletType || w.accountType || "wallet",
-        accountNumber: w.walletNumber || w.accountNumber || "",
-        balance: totalBalance,
-        currency: w.currency || "EUR",
-        status: w.status || "active",
-        interestRate: w.interestRate ?? 0,
-        opened: w.createdAt || "",
-        lastActivity: w.updatedAt || w.lastTransactionAt || "",
-      };
-    });
+    return raw.map(normalizeWalletItem);
   }, [walletsRaw]);
+
+  // --- Map every userId to all of their associated wallets/accounts ---
+  const userAccountsMap = useMemo(() => {
+    const map: Record<string, any[]> = {};
+    for (const acc of rawAccounts) {
+      const key = acc.userId || acc.email;
+      if (!key) continue;
+      if (!map[key]) map[key] = [];
+      map[key].push(acc);
+    }
+    return map;
+  }, [rawAccounts]);
 
   // --- Filter Pipeline ---
   const filtered = useMemo(() => {
     const predicates: ((item: any) => boolean)[] = [];
     if (search) {
       predicates.push(
-        textSearchFilter(search, [(a) => a.owner ?? "", (a) => a.accountNumber ?? "", (a) => a.email ?? ""]),
+        textSearchFilter(search, [
+          (a) => a.owner ?? "",
+          (a) => a.accountNumber ?? "",
+          (a) => a.email ?? "",
+          (a) => a.nickname ?? "",
+          (a) => a.businessName ?? "",
+          (a) => a.goal ?? "",
+          (a) => a.typeLabel ?? "",
+        ]),
       );
     }
     if (statusFilter !== "All") {
-      predicates.push(enumFilter((a) => a.status ?? "", [statusFilter.toLowerCase()]));
+      if (statusFilter === "Frozen") {
+        predicates.push(enumFilter((a) => (a.status ?? "").toLowerCase(), ["suspended", "frozen"]));
+      } else {
+        predicates.push(enumFilter((a) => (a.status ?? "").toLowerCase(), [statusFilter.toLowerCase()]));
+      }
     }
     if (typeFilter !== "all") {
-      predicates.push(enumFilter((a) => a.type ?? "", [typeFilter]));
+      if (typeFilter === "fixed-deposit" || typeFilter === "fixed_deposit") {
+        predicates.push(enumFilter((a) => a.type ?? "", ["fixed_deposit", "fixed-deposit"]));
+      } else if (typeFilter === "wallet") {
+        predicates.push(enumFilter((a) => a.type ?? "", ["personal", "business", "wallet"]));
+      } else {
+        predicates.push(enumFilter((a) => a.type ?? "", [typeFilter]));
+      }
     }
     const result = applyFilterPipeline(rawAccounts, predicates);
-    return multiKeySort(result, [{ getter: (a: any) => new Date(a.lastActivity || a.opened || 0), direction: "desc" }]);
+    return multiKeySort(result, [
+      { getter: (a: any) => new Date(a.lastActivity || a.opened || 0), direction: "desc" },
+    ]);
   }, [rawAccounts, search, statusFilter, typeFilter]);
 
   // --- Pagination ---
@@ -95,15 +197,19 @@ export function useAccountsManagement() {
   const stats = useMemo(() => {
     const totalBalance = rawAccounts.reduce((sum: number, a: any) => sum + a.balance, 0);
     const activeCount = rawAccounts.filter((a: any) => a.status === "active").length;
-    const dormantCount = rawAccounts.filter((a: any) => a.status === "dormant" || a.status === "suspended").length;
+    const dormantCount = rawAccounts.filter(
+      (a: any) => a.status === "dormant" || a.status === "suspended",
+    ).length;
+    const uniqueUsersCount = Object.keys(userAccountsMap).length;
     const s: any = statsRaw || {};
     return {
       totalBalance,
       activeAccounts: activeCount || s.activeAccounts || 0,
       dormantAccounts: dormantCount,
       totalAccounts: rawAccounts.length || s.totalAccounts || 0,
+      uniqueUsersCount,
     };
-  }, [rawAccounts, statsRaw]);
+  }, [rawAccounts, statsRaw, userAccountsMap]);
 
   // --- Actions ---
   const updateStatus = useCallback(
@@ -156,6 +262,7 @@ export function useAccountsManagement() {
     accounts: paginatedResult.items,
     allAccounts: filtered,
     rawAccounts,
+    userAccountsMap,
     stats,
     search,
     statusFilter,
@@ -185,8 +292,14 @@ export function useAccountsManagement() {
 export type ApplicationStatusFilter = "all" | "pending" | "approved" | "rejected";
 
 export function useApplicationsManagement() {
-  const { applicationsState, setModuleState, rejectDialogId, setRejectDialogId, rejectReason, setRejectReason } =
-    useAdminStore();
+  const {
+    applicationsState,
+    setModuleState,
+    rejectDialogId,
+    setRejectDialogId,
+    rejectReason,
+    setRejectReason,
+  } = useAdminStore();
   const { search, statusFilter, typeFilter, page } = applicationsState;
 
   const { data: raw, isLoading, refetch } = useAdminPendingApplications();
@@ -195,10 +308,26 @@ export function useApplicationsManagement() {
 
   const rawApplications = useMemo<any[]>(() => {
     if (!raw) return [];
-    if (Array.isArray(raw)) return raw;
-    if (Array.isArray((raw as any).applications)) return (raw as any).applications;
-    if (Array.isArray((raw as any).data)) return (raw as any).data;
-    return [];
+    const list = Array.isArray(raw)
+      ? raw
+      : Array.isArray((raw as any).applications)
+        ? (raw as any).applications
+        : Array.isArray((raw as any).data)
+          ? (raw as any).data
+          : [];
+    return list.map((a: any) => ({
+      ...a,
+      id: String(a._id || a.id || ""),
+      typeLabel: TYPE_LABELS[a.type] || (a.type || "").replace("_", " "),
+      displayTitle:
+        a.nickname ||
+        a.businessName ||
+        a.goal ||
+        TYPE_LABELS[a.type] ||
+        (a.type || "Account").replace("_", " "),
+      currency: a.currency || "USD",
+      amountRequested: Number(a.initialDeposit ?? a.principal ?? 0),
+    }));
   }, [raw]);
 
   const filtered = useMemo(() => {
@@ -210,16 +339,24 @@ export function useApplicationsManagement() {
           a.user?.firstName?.toLowerCase().includes(q) ||
           a.user?.lastName?.toLowerCase().includes(q) ||
           a.user?.email?.toLowerCase().includes(q) ||
-          a.type?.toLowerCase().includes(q),
+          a.type?.toLowerCase().includes(q) ||
+          a.nickname?.toLowerCase().includes(q) ||
+          a.businessName?.toLowerCase().includes(q) ||
+          a.goal?.toLowerCase().includes(q) ||
+          a.purpose?.toLowerCase().includes(q) ||
+          a.walletNumber?.toLowerCase().includes(q),
       );
     }
     if (statusFilter !== "all") {
       items = items.filter((a) => a.status === statusFilter);
     }
     if (typeFilter !== "all") {
-      items = items.filter((a) => a.type === typeFilter);
+      const normalizedType = typeFilter === "fixed-deposit" ? "fixed_deposit" : typeFilter;
+      items = items.filter((a) => a.type === normalizedType || a.type === typeFilter);
     }
-    return [...items].sort((a, b) => new Date(b.submittedAt || 0).getTime() - new Date(a.submittedAt || 0).getTime());
+    return [...items].sort(
+      (a, b) => new Date(b.submittedAt || 0).getTime() - new Date(a.submittedAt || 0).getTime(),
+    );
   }, [rawApplications, search, statusFilter, typeFilter]);
 
   const paginatedResult = useMemo(() => paginate(filtered, page, PAGE_SIZE), [filtered, page]);
@@ -258,7 +395,7 @@ export function useApplicationsManagement() {
         },
       );
     },
-    [rejectMutation, refetch],
+    [rejectMutation, refetch, setRejectDialogId, setRejectReason],
   );
 
   return {
@@ -278,7 +415,8 @@ export function useApplicationsManagement() {
     pagination: paginatedResult,
     pageNumbers,
     setSearch: (v: string) => setModuleState("applicationsState", { search: v, page: 1 }),
-    setStatusFilter: (v: ApplicationStatusFilter) => setModuleState("applicationsState", { statusFilter: v, page: 1 }),
+    setStatusFilter: (v: ApplicationStatusFilter) =>
+      setModuleState("applicationsState", { statusFilter: v, page: 1 }),
     setTypeFilter: (v: string) => setModuleState("applicationsState", { typeFilter: v, page: 1 }),
     setPage: (p: number) => setModuleState("applicationsState", { page: p }),
     setRejectDialogId,
@@ -305,7 +443,7 @@ export function useWalletCombobox(value: string, accounts: any[], users: any[]) 
 
   // Dynamically fetch wallets if user types 3+ characters
   const { data: searchData, isLoading } = useAdminWallets(
-    debouncedSearch.length >= 3 ? { query: debouncedSearch, limit: 20 } : { limit: 1 }
+    debouncedSearch.length >= 3 ? { query: debouncedSearch, limit: 20 } : { limit: 1 },
   );
 
   const dynamicAccounts = useMemo(() => {
@@ -318,24 +456,7 @@ export function useWalletCombobox(value: string, accounts: any[], users: any[]) 
         : Array.isArray(outer?.data)
           ? outer.data
           : outer?.wallets || [];
-    return raw.map((w: any) => {
-      const balancesMap: Record<string, number> =
-        w.balances instanceof Map ? Object.fromEntries(w.balances) : w.balances || {};
-      const totalBalance = Object.values(balancesMap).reduce((sum: number, v: any) => sum + (Number(v) || 0), 0);
-      return {
-        id: w._id || w.walletNumber || w.id || "",
-        userId: typeof w.user === "string" ? w.user : w.user?._id || w.userId || "",
-        owner:
-          w.user?.firstName && w.user?.lastName ? `${w.user.firstName} ${w.user.lastName}` : w.userName || "Unknown",
-        email: w.user?.email || w.email || "",
-        type: w.walletType || w.accountType || "wallet",
-        accountNumber: w.walletNumber || w.accountNumber || "",
-        balance: totalBalance,
-        currency: w.currency || "EUR",
-        status: w.status || "active",
-        userAvatar: w.user?.avatar,
-      };
-    });
+    return raw.map(normalizeWalletItem);
   }, [searchData, debouncedSearch]);
 
   useEffect(() => {
@@ -344,21 +465,38 @@ export function useWalletCombobox(value: string, accounts: any[], users: any[]) 
     }
   }, [dynamicAccounts, cacheAccounts]);
 
-  const selectedAcc = accounts.find((a) => a.id === value) || cachedAccounts[value] || dynamicAccounts.find((a) => a.id === value);
-  const selectedUser = selectedAcc ? users.find((u) => u.email === selectedAcc.email) || { avatar: selectedAcc.userAvatar } : null;
+  const selectedAcc =
+    accounts.find((a) => a.id === value) ||
+    cachedAccounts[value] ||
+    dynamicAccounts.find((a) => a.id === value);
+  const selectedUser = selectedAcc
+    ? users.find((u) => u.email === selectedAcc.email) || { avatar: selectedAcc.userAvatar }
+    : null;
 
   const filtered = (debouncedSearch.length >= 3 ? dynamicAccounts : accounts)
     .filter((a) => {
       const q = search.toLowerCase();
       return (
         a.owner.toLowerCase().includes(q) ||
-        a.accountNumber.includes(q) ||
-        (a.email && a.email.toLowerCase().includes(q))
+        a.accountNumber.toLowerCase().includes(q) ||
+        (a.email && a.email.toLowerCase().includes(q)) ||
+        (a.nickname && a.nickname.toLowerCase().includes(q)) ||
+        (a.typeLabel && a.typeLabel.toLowerCase().includes(q))
       );
     })
     .slice(0, 50);
 
-  return { open, setOpen, search, setSearch, debouncedSearch, isLoading, filtered, selectedAcc, selectedUser };
+  return {
+    open,
+    setOpen,
+    search,
+    setSearch,
+    debouncedSearch,
+    isLoading,
+    filtered,
+    selectedAcc,
+    selectedUser,
+  };
 }
 
 // ============================================================================
@@ -369,16 +507,16 @@ export function useWalletOperationForm(
   endpoint: string,
   label: string,
   onSuccess: () => void,
-  accounts: any[]
+  accounts: any[],
 ) {
   const toast = useToast();
-  
+
   const [form, setForm] = useState({
     walletId: "",
     fromWalletId: "",
     toWalletId: "",
     amount: "",
-    currency: "EUR",
+    currency: "USD",
     description: "",
     reason: "",
   });
@@ -387,7 +525,8 @@ export function useWalletOperationForm(
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const set =
-    (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
+    (key: keyof typeof form) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
       setForm((f) => ({ ...f, [key]: e.target.value }));
 
   const buildPayload = () => {
@@ -398,6 +537,8 @@ export function useWalletOperationForm(
       return {
         fromUserId: fromAcc?.userId || form.fromWalletId.trim(),
         toUserId: toAcc?.userId || form.toWalletId.trim(),
+        fromWalletId: fromAcc?.id || form.fromWalletId.trim(),
+        toWalletId: toAcc?.id || form.toWalletId.trim(),
         amount,
         currency: form.currency,
         description: form.description.trim() || `Admin transfer of ${amount} ${form.currency}`,
@@ -407,6 +548,7 @@ export function useWalletOperationForm(
     const targetAcc = accounts.find((a) => a.id === form.walletId);
     return {
       userId: targetAcc?.userId || form.walletId.trim(),
+      walletId: targetAcc?.id || form.walletId.trim(),
       amount,
       currency: form.currency,
       description: form.description.trim() || `Admin ${type} of ${amount} ${form.currency}`,
@@ -417,8 +559,8 @@ export function useWalletOperationForm(
   const isValid = () => {
     const amount = parseFloat(form.amount);
     if (!amount || amount <= 0) return false;
-    if (type === "transfer") return form.fromWalletId.trim() && form.toWalletId.trim();
-    return !!form.walletId.trim();
+    if (type === "transfer") return Boolean(form.fromWalletId.trim() && form.toWalletId.trim());
+    return Boolean(form.walletId.trim());
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -439,7 +581,7 @@ export function useWalletOperationForm(
         fromWalletId: "",
         toWalletId: "",
         amount: "",
-        currency: "EUR",
+        currency: "USD",
         description: "",
         reason: "",
       });
@@ -451,5 +593,16 @@ export function useWalletOperationForm(
     }
   };
 
-  return { form, setForm, set, loading, lastResult, isValid, handleSubmit, isConfirmOpen, setIsConfirmOpen, handleConfirm };
+  return {
+    form,
+    setForm,
+    set,
+    loading,
+    lastResult,
+    isValid,
+    handleSubmit,
+    isConfirmOpen,
+    setIsConfirmOpen,
+    handleConfirm,
+  };
 }
