@@ -6,14 +6,15 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMobileTheme } from '@/core/theme/useMobileTheme';
 import { ScreenHeader } from '@/components/shared/ScreenHeader';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { AdaptiveScreen } from '@/components/layout/AdaptiveScreen';
+import { Icon } from '@/components/ui/Icon';
+import { ICON_SIZES, SPACING, FONT_SIZES, RADIUS } from '@/constants/sizings';
 
 const RATES = [
   { pair: 'EUR / USD', rate: '1.0824', change: '+0.18%', isPositive: true },
@@ -31,77 +32,66 @@ export default function LiveRatesScreen() {
   const s = createStyles(theme);
 
   return (
-    <View style={s.container}>
-      <ScreenHeader
-        title="Live FX Market Rates"
-        subtitle="Real-time institutional liquidity feeds"
-        showBack
-        onBackPress={() => router.back()}
-      />
-
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={s.scrollContent}
-      >
-        {RATES.map((item, idx) => (
-          <Card key={idx} style={s.rateCard}>
-            <CardContent style={s.rateContent}>
-              <View style={s.iconWrap}>
-                <Ionicons name="trending-up" size={18} color={theme.colors.primary} />
-              </View>
-              <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={s.pairText}>{item.pair}</Text>
-                <Text style={s.rateVal}>{item.rate}</Text>
-              </View>
-              <Badge variant={item.isPositive ? 'success' : 'neutral'} size="sm">
-                {item.change}
-              </Badge>
-            </CardContent>
-          </Card>
-        ))}
-      </ScrollView>
-    </View>
+    <AdaptiveScreen
+      header={
+        <ScreenHeader
+          title="Live FX Market Rates"
+          subtitle="Real-time institutional liquidity feeds"
+          showBack
+          onBackPress={() => router.back()}
+        />
+      }
+    >
+      {RATES.map((item, idx) => (
+        <Card key={idx} style={s.rateCard}>
+          <CardContent style={s.rateContent}>
+            <View style={s.iconWrap}>
+              <Icon name="TrendingUp" size={ICON_SIZES.md} color={theme.colors.primary} />
+            </View>
+            <View style={{ flex: 1, marginLeft: SPACING.md }}>
+              <Text style={s.pairText}>{item.pair}</Text>
+              <Text style={s.rateVal}>{item.rate}</Text>
+            </View>
+            <Badge variant={item.isPositive ? 'success' : 'neutral'} size="sm">
+              {item.change}
+            </Badge>
+          </CardContent>
+        </Card>
+      ))}
+    </AdaptiveScreen>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useMobileTheme>) {
   return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-    },
-    scrollContent: {
-      padding: 16,
-      paddingBottom: 40,
-    },
     rateCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 12,
+      borderRadius: RADIUS.lg,
       borderWidth: 1,
       borderColor: theme.colors.border,
-      marginBottom: 10,
+      marginBottom: SPACING.sm,
     },
     rateContent: {
       flexDirection: 'row',
       alignItems: 'center',
-      padding: 14,
+      padding: SPACING.md,
     },
     iconWrap: {
       width: 36,
       height: 36,
-      borderRadius: 10,
+      borderRadius: RADIUS.sm,
       backgroundColor: `${theme.colors.primary}12`,
       alignItems: 'center',
       justifyContent: 'center',
     },
     pairText: {
-      fontSize: 14,
+      fontSize: FONT_SIZES.subhead,
       fontWeight: '700',
       color: theme.colors.textPrimary,
-      marginBottom: 2,
+      marginBottom: SPACING.xxs,
     },
     rateVal: {
-      fontSize: 13,
+      fontSize: FONT_SIZES.body,
       fontWeight: '600',
       color: theme.colors.textSecondary,
     },
