@@ -3,10 +3,8 @@
 // ============================================================================
 import React, { useState } from 'react';
 import {
-  View,
   Text,
   StyleSheet,
-  ScrollView,
   TextInput,
   Alert,
 } from 'react-native';
@@ -15,6 +13,8 @@ import { useMobileTheme } from '@/core/theme/useMobileTheme';
 import { ScreenHeader } from '@/components/shared/ScreenHeader';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { AdaptiveScreen } from '@/components/layout/AdaptiveScreen';
+import { SPACING, FONT_SIZES, RADIUS } from '@/constants/sizings';
 import { useApplyForLoan } from '@nordi/shared/client-usecase';
 
 export default function ApplyForLoanScreen() {
@@ -53,89 +53,79 @@ export default function ApplyForLoanScreen() {
   };
 
   return (
-    <View style={s.container}>
-      <ScreenHeader
-        title="Credit Line Application"
-        subtitle="Zero collateral requirements • Instant credit scoring"
-        showBack
-        onBackPress={() => router.back()}
-      />
+    <AdaptiveScreen
+      keyboardAvoiding
+      header={
+        <ScreenHeader
+          title="Credit Line Application"
+          subtitle="Zero collateral requirements • Instant credit scoring"
+          showBack
+          onBackPress={() => router.back()}
+        />
+      }
+    >
+      <Card style={s.card}>
+        <CardContent style={s.content}>
+          <Text style={s.label}>Requested Amount ($ USD)</Text>
+          <TextInput
+            value={amount}
+            onChangeText={setAmount}
+            style={[s.input, { fontSize: 20, fontWeight: '700' }]}
+            keyboardType="numeric"
+          />
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={s.scrollContent}
-      >
-        <Card style={s.card}>
-          <CardContent style={s.content}>
-            <Text style={s.label}>Requested Amount ($ USD)</Text>
-            <TextInput
-              value={amount}
-              onChangeText={setAmount}
-              style={[s.input, { fontSize: 20, fontWeight: '700' }]}
-              keyboardType="numeric"
-            />
+          <Text style={[s.label, { marginTop: SPACING.md }]}>Duration (Months)</Text>
+          <TextInput
+            value={termMonths}
+            onChangeText={setTermMonths}
+            style={s.input}
+            keyboardType="numeric"
+          />
 
-            <Text style={[s.label, { marginTop: 14 }]}>Duration (Months)</Text>
-            <TextInput
-              value={termMonths}
-              onChangeText={setTermMonths}
-              style={s.input}
-              keyboardType="numeric"
-            />
+          <Text style={[s.label, { marginTop: SPACING.md }]}>Loan Purpose</Text>
+          <TextInput
+            value={purpose}
+            onChangeText={setPurpose}
+            style={s.input}
+          />
 
-            <Text style={[s.label, { marginTop: 14 }]}>Loan Purpose</Text>
-            <TextInput
-              value={purpose}
-              onChangeText={setPurpose}
-              style={s.input}
-            />
-
-            <Button
-              title={applyMutation.isPending ? 'Submitting Application...' : 'Submit Application'}
-              variant="primary"
-              size="lg"
-              onPress={handleApply}
-              disabled={applyMutation.isPending}
-              style={{ marginTop: 22 }}
-            />
-          </CardContent>
-        </Card>
-      </ScrollView>
-    </View>
+          <Button
+            title={applyMutation.isPending ? 'Submitting Application...' : 'Submit Application'}
+            variant="primary"
+            size="lg"
+            onPress={handleApply}
+            disabled={applyMutation.isPending}
+            style={{ marginTop: SPACING.xl }}
+          />
+        </CardContent>
+      </Card>
+    </AdaptiveScreen>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useMobileTheme>) {
   return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-    },
-    scrollContent: {
-      padding: 16,
-      paddingBottom: 40,
-    },
     card: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 14,
+      borderRadius: RADIUS.xl,
       borderWidth: 1,
       borderColor: theme.colors.border,
     },
     content: {
-      padding: 16,
+      padding: SPACING.lg,
     },
     label: {
-      fontSize: 12,
+      fontSize: FONT_SIZES.bodySm,
       fontWeight: '600',
       color: theme.colors.textSecondary,
-      marginBottom: 6,
+      marginBottom: SPACING.xs,
     },
     input: {
       height: 46,
-      borderRadius: 10,
+      borderRadius: RADIUS.sm,
       backgroundColor: `${theme.colors.textSecondary}10`,
-      paddingHorizontal: 12,
-      fontSize: 14,
+      paddingHorizontal: SPACING.md,
+      fontSize: FONT_SIZES.subhead,
       color: theme.colors.textPrimary,
       fontWeight: '500',
     },
