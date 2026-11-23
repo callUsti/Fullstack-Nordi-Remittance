@@ -425,6 +425,35 @@ export const LegalRepository = {
     const response = await apiClient.patch<ApiResponse<{ message: string }>>(ApiEndpoints.legalConsent, data);
     return response.data;
   },
+
+  // ==========================================================================
+  // ADMIN DISPUTES & REGULATORY FILINGS (/legal/admin/*)
+  // ==========================================================================
+
+  getAdminDisputes: async (params?: any): Promise<ApiResponse<any>> => {
+    const response = await apiClient.get<ApiResponse<any>>(ApiEndpoints.legalAdminDisputes, { params });
+    return response.data;
+  },
+
+  updateAdminDispute: async (claimId: string, data: any): Promise<ApiResponse<any>> => {
+    const response = await apiClient.put<ApiResponse<any>>(ApiEndpoints.legalAdminDispute(claimId), data);
+    return response.data;
+  },
+
+  getAdminRegulatoryFilings: async (params?: any): Promise<ApiResponse<any>> => {
+    const response = await apiClient.get<ApiResponse<any>>(ApiEndpoints.legalAdminRegulatory, { params });
+    return response.data;
+  },
+
+  createAdminRegulatoryFiling: async (data: any): Promise<ApiResponse<any>> => {
+    const response = await apiClient.post<ApiResponse<any>>(ApiEndpoints.legalAdminRegulatory, data);
+    return response.data;
+  },
+
+  submitAdminRegulatoryFiling: async (filingId: string, data?: any): Promise<ApiResponse<any>> => {
+    const response = await apiClient.post<ApiResponse<any>>(ApiEndpoints.legalAdminRegulatorySubmit(filingId), data);
+    return response.data;
+  },
 };
 
 export default LegalRepository;
