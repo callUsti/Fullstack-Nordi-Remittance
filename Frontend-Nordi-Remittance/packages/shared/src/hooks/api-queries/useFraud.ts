@@ -1,9 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { FraudRepository } from '../../domain/repository/fraud.repository';
-// Assuming global toast store or hook
-// import { useToastStore } from '../../store/ui/toast-store';
-declare const useToastStore: any; // Fallback if auto-imported
-declare const queryKeys: any; // Fallback if auto-imported
+import { useToastStore } from '../../store/toast.store';
+import { queryKeys } from '../../core/lib/queryClient';
 
 export const useBehaviorProfile = () => {
   return useQuery({
@@ -167,6 +165,71 @@ export const useFraudAnalytics = () => {
     queryFn: async () => {
       const response = await FraudRepository.getAnalytics();
       return response.data;
+    },
+  });
+};
+
+export const useAddFraudCaseComment = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
+
+  return useMutation({
+    mutationFn: async ({ caseId, comment, author = "Admin" }: { caseId: UUID; comment: string; author?: string }) => {
+      const response = await FraudRepository.addCaseComment(caseId, { author, content: comment });
+      return response.data;
+    },
+    onSuccess: (_, { caseId }) => {
+      queryClient.invalidateQueries({ queryKey: ["fraud", "cases"] });
+      queryClient.invalidateQueries({ queryKey: ["fraud", "cases", caseId] });
+      showToast("Investigation comment added", "success");
+    },
+  });
+};
+
+export const useCreateVelocityRule = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
+
+  return useMutation({
+    mutationFn: async (data: Partial<VelocityRule>) => {
+      const response = await FraudRepository.createVelocityRule(data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["fraud", "velocityRules"] });
+      showToast("Velocity rule created", "success");
+    },
+  });
+};
+
+export const useUpdateVelocityRule = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
+
+  return useMutation({
+    mutationFn: async ({ ruleId, data }: { ruleId: UUID; data: Partial<VelocityRule> }) => {
+      const response = await FraudRepository.updateVelocityRule(ruleId, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["fraud", "velocityRules"] });
+      showToast("Velocity rule updated", "success");
+    },
+  });
+};
+
+export const useDeleteVelocityRule = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
+
+  return useMutation({
+    mutationFn: async (ruleId: UUID) => {
+      const response = await FraudRepository.deleteVelocityRule(ruleId);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["fraud", "velocityRules"] });
+      showToast("Velocity rule deleted", "success");
     },
   });
 };
