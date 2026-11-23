@@ -538,10 +538,11 @@ export const useDeleteSavingsGoal = () => {
       transferAccountId,
     }: {
       goalId: UUID;
-      transferAccountId: UUID;
+      transferAccountId?: UUID;
     }) => {
       const response = await InvestmentsRepository.deleteSavingsGoal(
-        goalId
+        goalId,
+        transferAccountId,
       );
       return response.data;
     },
@@ -592,6 +593,159 @@ export const useUpdateAutoSave = () => {
     },
     onError: (error: Error) => {
       showToast(error.message || "Failed to update auto-save", "error");
+    },
+  });
+};
+
+// ============================================================================
+// LIVE MARKET (COINMARKETCAP CRYPTO, EQUITIES & FOREX) + SWAP & ADMIN HOOKS
+// ============================================================================
+
+export const useCryptoMarket = (refresh = false) => {
+  return useQuery({
+    queryKey: [...queryKeys.investments.all, "crypto-market", refresh],
+    queryFn: async () => {
+      const response = await InvestmentsRepository.getCryptoMarket(refresh);
+      return response.data;
+    },
+  });
+};
+
+export const useStockMarket = (refresh = false) => {
+  return useQuery({
+    queryKey: [...queryKeys.investments.all, "stock-market", refresh],
+    queryFn: async () => {
+      const response = await InvestmentsRepository.getStockMarket(refresh);
+      return response.data;
+    },
+  });
+};
+
+export const useForexRates = (refresh = false) => {
+  return useQuery({
+    queryKey: [...queryKeys.investments.all, "forex-rates", refresh],
+    queryFn: async () => {
+      const response = await InvestmentsRepository.getForexRates(refresh);
+      return response.data;
+    },
+  });
+};
+
+export const useSwapAsset = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
+
+  return useMutation({
+    mutationFn: async (data: {
+      fromAssetId: string;
+      toAssetId: string;
+      fromQuantity?: number;
+      usdAmount?: number;
+      amount?: number;
+    }) => {
+      const response = await InvestmentsRepository.swap(data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.investments.all });
+      showToast("Asset swap completed successfully", "success");
+    },
+    onError: (error: Error) => {
+      showToast(error.message || "Failed to swap assets", "error");
+    },
+  });
+};
+
+export const useExchangeForex = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
+
+  return useMutation({
+    mutationFn: async (data: {
+      fromCurrency: string;
+      toCurrency: string;
+      amount: number;
+      walletId: string;
+      targetWalletId?: string;
+    }) => {
+      const response = await InvestmentsRepository.exchangeForex(data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.transactions.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.investments.all });
+      showToast("Currency exchange completed successfully", "success");
+    },
+    onError: (error: Error) => {
+      showToast(error.message || "Failed to exchange currency", "error");
+    },
+  });
+};
+
+export const useAdminInvestmentsOverview = () => {
+  return useQuery({
+    queryKey: [...queryKeys.investments.all, "admin-overview"],
+    queryFn: async () => {
+      const response = await InvestmentsRepository.getAdminOverview();
+      return response.data;
+    },
+  });
+};
+
+export const useSyncAdminMarkets = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
+
+  return useMutation({
+    mutationFn: async () => {
+      const response = await InvestmentsRepository.syncAdminMarkets();
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.investments.all });
+      showToast("Live market feeds synced successfully", "success");
+    },
+    onError: (error: Error) => {
+      showToast(error.message || "Failed to sync market feeds", "error");
+    },
+  });
+};
+
+export const useUpsertAdminAsset = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
+
+  return useMutation({
+    mutationFn: async (data: Record<string, any>) => {
+      const response = await InvestmentsRepository.upsertAdminAsset(data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.investments.all });
+      showToast("Market asset updated successfully", "success");
+    },
+    onError: (error: Error) => {
+      showToast(error.message || "Failed to save market asset", "error");
+    },
+  });
+};
+
+export const useDeleteAdminAsset = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
+
+  return useMutation({
+    mutationFn: async (assetId: string) => {
+      const response = await InvestmentsRepository.deleteAdminAsset(assetId);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.investments.all });
+      showToast("Market asset deactivated", "success");
+    },
+    onError: (error: Error) => {
+      showToast(error.message || "Failed to deactivate market asset", "error");
     },
   });
 };
