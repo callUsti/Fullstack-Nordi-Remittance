@@ -1,0 +1,16 @@
+{
+  "watch": ["."],
+  "ext": "ts",
+  "ignore": [
+    "node_modules/**",
+    "dist/**",
+    "logs/**",
+    "*.test.ts",
+    "coverage/**"
+  ],
+  "exec": "tsx index.ts",
+  "env": {
+    "NODE_OPTIONS": "--disable-warning=DEP0205"
+  }
+}
+
