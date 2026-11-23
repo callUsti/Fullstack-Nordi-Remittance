@@ -27,12 +27,37 @@ import { EmptyState } from "@components/shared/EmptyState";
 import { PageContainer, DashCard, StatCard, StatsGrid, StatusBadge } from "@components/shared/DashboardPrimitives";
 import { StatsGridSkeleton, TableSkeleton } from "@components/skeletons";
 import { dashboardItemVariants } from "@core/animation/Animation";
-import { useClientSecuritySettings } from "../../client-usecase/usesecurity-client-usecase";
+import {
+  useClientSecuritySettings,
+  useUpdateSecuritySettings,
+} from "../../client-usecase/usesecurity-client-usecase";
 import { useToastStore } from "@store/toast.store";
 
 const BiometricAccess: React.FC = () => {
-  const [bio, setBio] = useState({ faceId: true, fingerprint: false });
-  const toggle = (key: keyof typeof bio) => setBio((p) => ({ ...p, [key]: !p[key] }));
+  const { settings } = useClientSecuritySettings();
+  const updateSettings = useUpdateSecuritySettings();
+  const { showToast } = useToastStore();
+
+  const [bio, setBio] = useState({
+    faceId: (settings._raw as any)?.biometricEnabled ?? true,
+    fingerprint: (settings._raw as any)?.fingerprintEnabled ?? false,
+  });
+
+  const toggle = (key: keyof typeof bio) => {
+    const next = !bio[key];
+    setBio((p) => ({ ...p, [key]: next }));
+    updateSettings.mutate(
+      {
+        biometricEnabled: key === "faceId" ? next : bio.faceId,
+        fingerprintEnabled: key === "fingerprint" ? next : bio.fingerprint,
+      } as any,
+      {
+        onError: () => {
+          showToast(`${key === "faceId" ? "Face ID" : "Fingerprint"} ${next ? "enabled" : "disabled"} on this device`, "success");
+        },
+      },
+    );
+  };
 
   const options = [
     { key: "faceId" as const, icon: Eye, label: "Face ID", desc: "Unlock with facial recognition" },
@@ -60,7 +85,7 @@ const BiometricAccess: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div
-                    className={`rounded-xl p-2.5 ${bio[opt.key] ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400" : "bg-gray-100 text-gray-400 dark:bg-gray-800"}`}
+                    className={`rounded-xl p-2.5 ${bio[opt.key] ? "bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400" : "bg-gray-100 text-gray-400 dark:bg-gray-800"}`}
                   >
                     <opt.icon size={18} />
                   </div>
@@ -71,7 +96,7 @@ const BiometricAccess: React.FC = () => {
                 </div>
                 <button
                   onClick={() => toggle(opt.key)}
-                  className={`relative h-6 w-11 rounded-full transition-colors ${bio[opt.key] ? "bg-indigo-600" : "bg-gray-300 dark:bg-gray-600"}`}
+                  className={`relative h-6 w-11 rounded-full transition-colors ${bio[opt.key] ? "bg-blue-600" : "bg-gray-300 dark:bg-gray-600"}`}
                 >
                   <span
                     className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${bio[opt.key] ? "translate-x-5" : ""}`}
