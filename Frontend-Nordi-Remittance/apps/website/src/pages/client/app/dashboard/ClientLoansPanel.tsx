@@ -34,8 +34,8 @@ const ClientLoansPanel: React.FC<ClientLoansPanelProps> = ({ loansData, isLoadin
       icon: <FiDollarSign size={14} />,
       label: "Total Borrowed",
       value: formatCurrency(loansData.totalDisbursed),
-      color: "text-indigo-500",
-      bg: "bg-indigo-50 dark:bg-indigo-950/50",
+      color: "text-blue-500",
+      bg: "bg-blue-50 dark:bg-blue-950/50",
     },
     {
       icon: <FiCheckCircle size={14} />,
@@ -74,7 +74,7 @@ const ClientLoansPanel: React.FC<ClientLoansPanelProps> = ({ loansData, isLoadin
           <div key={label} className={`flex items-center gap-2 p-2.5 rounded-xl ${bg}`}>
             <span className={color}>{icon}</span>
             <div>
-              <p className="text-sm font-bold text-gray-900 dark:text-white">{value}</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">{value}</p>
               <p className="text-[10px] text-gray-500 dark:text-gray-400">{label}</p>
             </div>
           </div>
@@ -91,8 +91,8 @@ const ClientLoansPanel: React.FC<ClientLoansPanelProps> = ({ loansData, isLoadin
           value={loansData.repaymentRate}
           color={
             loansData.repaymentRate >= 80
-              ? "bg-gradient-to-r from-emerald-500 to-teal-500"
-              : "bg-gradient-to-r from-amber-500 to-orange-500"
+              ? "bg-emerald-600"
+              : "bg-amber-600"
           }
           height="sm"
         />
