@@ -114,12 +114,15 @@ export class OpsCardService {
       );
 
         try {
-          const emailContent = emailGenerator.adminCardApprovedEmail({
-            firstName: user.firstName,
+          const emailContent = emailGenerator.cardIssuedEmail({
+            cardholderName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Customer',
             cardType: card.cardType,
             cardBrand: card.cardBrand || 'Visa',
             lastFour: cardNumber.slice(-4),
-            expiry: `${String(expiryMonth).padStart(2, '0')}/${expiryYear}`
+            expiryMonth: String(expiryMonth).padStart(2, '0'),
+            expiryYear: String(expiryYear),
+            status: card.status,
+            cardId: String(card.cardId || card._id),
           });
           await queueTemplatedMail(String(user.email), emailContent);
         } catch (emailError) {
