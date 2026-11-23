@@ -18,6 +18,7 @@ import { UnauthorizedError } from "../../core/errors/AppError.js";
 import { WalletService } from "./wallet.service.js";
 import { AccountAnalyticsService } from "./account-analytics.service.js";
 import { BeneficiaryService } from "./beneficiary.service.js";
+import { LimitsService } from "./limits.service.js";
 import { WalletLifecycleService } from "./wallet-lifecycle.service.js";
 import { WalletProductLinkService } from "./wallet-product-link.service.js";
 import { buildPagination } from "../../core/algo/query-builder.js";
@@ -109,8 +110,27 @@ export async function getBalanceHistory(req: AuthenticatedRequest, res: Response
 export async function getAccountLimits(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     if (!req.user) throw new UnauthorizedError("Authentication required");
-    const result = await AccountAnalyticsService.getAccountLimits(req.user.userId);
-    sendSuccess(res, result);
+    const [result, scopeLimits] = await Promise.all([
+      AccountAnalyticsService.getAccountLimits(req.user.userId),
+      LimitsService.getEffectiveLimits(req.user.userId),
+    ]);
+    sendSuccess(res, {
+      ...result,
+      domestic: scopeLimits.domestic,
+      international: scopeLimits.international,
+      customLimits: scopeLimits.customLimits,
+      limitRequests: scopeLimits.limitRequests,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function requestLimitChange(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    if (!req.user) throw new UnauthorizedError("Authentication required");
+    const created = await LimitsService.createLimitRequest(req.user.userId, req.body);
+    sendCreated(res, created, "Limit change request submitted for review");
   } catch (error) {
     next(error);
   }
@@ -291,6 +311,7 @@ export default {
   closeWallet,
   getBalanceHistory,
   getAccountLimits,
+  requestLimitChange,
   getAccountSummary,
   getBeneficiaries,
   addBeneficiary,
