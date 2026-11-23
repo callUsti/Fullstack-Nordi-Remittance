@@ -3,7 +3,6 @@
 // ============================================================================
 
 import * as Sentry from "@sentry/node";
-import { nodeProfilingIntegration } from "@sentry/profiling-node";
 import { env, isProduction } from "../config/env.config.js";
 import Logger from "./logger.js";
 
@@ -11,10 +10,29 @@ import Logger from "./logger.js";
 // INITIALIZATION
 // ============================================================================
 
-export function initializeSentry(): void {
+export async function initializeSentry(): Promise<void> {
   if (!env.SENTRY_DSN) {
     Logger.warn("[Sentry] SENTRY_DSN not set — Sentry disabled");
     return;
+  }
+
+  const integrations: any[] = [
+    // HTTP tracing
+    Sentry.httpIntegration(),
+    // Express middleware tracing
+    Sentry.expressIntegration(),
+    // MongoDB query tracing via mongodbIntegration
+    Sentry.mongoIntegration(),
+  ];
+
+  // Optional CPU profiling — requires a native C++ addon that may not be available on all Node ABI versions
+  try {
+    const profiling = await import("@sentry/profiling-node");
+    if (typeof profiling.nodeProfilingIntegration === "function") {
+      integrations.push(profiling.nodeProfilingIntegration());
+    }
+  } catch {
+    Logger.warn("[Sentry] Node CPU profiler native addon not available on current Node runtime — continuing with standard tracing");
   }
 
   Sentry.init({
@@ -23,16 +41,7 @@ export function initializeSentry(): void {
     release: process.env.npm_package_version || "0.0.0",
     serverName: env.KAFKA_CLIENT_ID || "nordi-remittance-api",
 
-    integrations: [
-      // HTTP tracing
-      Sentry.httpIntegration(),
-      // Express middleware tracing
-      Sentry.expressIntegration(),
-      // Profiling
-      nodeProfilingIntegration(),
-      // MongoDB query tracing via mongodbIntegration
-      Sentry.mongoIntegration(),
-    ],
+    integrations,
 
     // Performance sampling
     tracesSampleRate: isProduction() ? 0.2 : 1.0,
