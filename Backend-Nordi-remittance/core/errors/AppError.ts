@@ -191,8 +191,12 @@ export class LoanNotFoundError extends AppError {
 
 export class InsufficientBalanceError extends AppError {
   constructor(required?: number, available?: number) {
+    const message =
+      required !== undefined && available !== undefined
+        ? `Insufficient balance: need ${required.toFixed(2)}, available ${available.toFixed(2)}`
+        : 'Insufficient balance for this transaction';
     super(
-      'Insufficient balance for this transaction',
+      message,
       HttpStatus.BAD_REQUEST,
       constants.ERROR_CODES.INSUFFICIENT_BALANCE,
       true,
