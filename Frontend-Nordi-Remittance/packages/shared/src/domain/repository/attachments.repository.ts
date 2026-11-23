@@ -184,6 +184,28 @@ export const AttachmentsRepository = {
     >(`${ApiEndpoints.attachments}/storage`);
     return response.data;
   },
+
+  // ==========================================================================
+  // ADMIN ATTACHMENTS & KYC DOCUMENTS (/attachments/admin/*)
+  // ==========================================================================
+
+  getAdminAllAttachments: async (params?: any): Promise<ApiResponse<any>> => {
+    const response = await apiClient.get<ApiResponse<any>>(ApiEndpoints.attachmentsAdminAll, { params });
+    return response.data;
+  },
+
+  getAdminUserKycDocuments: async (userId: string): Promise<ApiResponse<any>> => {
+    const response = await apiClient.get<ApiResponse<any>>(ApiEndpoints.attachmentAdminUserKyc(userId));
+    return response.data;
+  },
+
+  reviewAdminKycDocument: async (
+    documentId: string,
+    data: { status: "approved" | "rejected"; rejectionReason?: string; notes?: string },
+  ): Promise<ApiResponse<any>> => {
+    const response = await apiClient.put<ApiResponse<any>>(ApiEndpoints.attachmentAdminKycReview(documentId), data);
+    return response.data;
+  },
 };
 
 export default AttachmentsRepository;
