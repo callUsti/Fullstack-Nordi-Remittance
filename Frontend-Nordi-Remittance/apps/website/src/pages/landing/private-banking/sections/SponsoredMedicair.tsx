@@ -127,8 +127,8 @@ const SponsoredMedicair: React.FC = () => {
                   ? React.cloneElement(feature.icon as React.ReactElement, { className: "w-5 h-5 sm:w-7 sm:h-7" })
                   : feature.icon}
               </div>
-              <h3 className="font-black text-[13px] sm:text-lg text-neutral-900 dark:text-white mb-2 uppercase tracking-tight leading-tight">{feature.title}</h3>
-              <p className="text-[10px] sm:text-[13px] text-neutral-500 dark:text-neutral-400 font-bold leading-relaxed">{feature.description}</p>
+              <h3 className="font-semibold text-[13px] sm:text-lg text-neutral-900 dark:text-white mb-2 uppercase tracking-tight leading-tight">{feature.title}</h3>
+              <p className="text-[10px] sm:text-[13px] text-neutral-500 dark:text-neutral-400 font-semibold leading-relaxed">{feature.description}</p>
             </motion.div>
           ))}
         </div>
@@ -146,16 +146,16 @@ const SponsoredMedicair: React.FC = () => {
               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-rose-500/10 text-rose-600 flex items-center justify-center shadow-lg">
                 <Shield className="w-6 h-6 sm:w-7 sm:h-7" />
               </div>
-              <h4 className="text-lg sm:text-xl font-black text-neutral-900 dark:text-white uppercase tracking-tight">Global Coverage</h4>
+              <h4 className="text-lg sm:text-xl font-semibold text-neutral-900 dark:text-white uppercase tracking-tight">Global Coverage</h4>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-12">
               {coverageBenefits.map((benefit) => (
                 <div key={benefit} className="flex items-center gap-3 group">
                   <div className="w-5 h-5 rounded-full bg-rose-500/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                    <Check className="w-3 h-3 text-rose-600 font-bold" />
+                    <Check className="w-3 h-3 text-rose-600 font-medium" />
                   </div>
-                  <span className="text-[13px] sm:text-sm text-neutral-600 dark:text-neutral-300 font-bold group-hover:text-neutral-900 dark:group-hover:text-white transition-colors">{benefit}</span>
+                  <span className="text-[13px] sm:text-sm text-neutral-600 dark:text-neutral-300 font-medium group-hover:text-neutral-900 dark:group-hover:text-white transition-colors">{benefit}</span>
                 </div>
               ))}
             </div>
@@ -163,11 +163,11 @@ const SponsoredMedicair: React.FC = () => {
             {/* Coverage Limit */}
             <div className="p-6 sm:p-8 rounded-[2rem] bg-rose-500/5 border-2 border-rose-500/10 shadow-inner group hover:bg-rose-500/10 transition-colors">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-[10px] sm:text-xs text-neutral-500 dark:text-neutral-400 font-black uppercase tracking-widest">Annual Integrity Limit</span>
+                <span className="text-[10px] sm:text-xs text-neutral-500 dark:text-neutral-400 font-medium uppercase tracking-widest">Annual Integrity Limit</span>
                 <Award className="w-6 h-6 sm:w-8 sm:h-8 text-rose-600 animate-pulse" />
               </div>
-              <p className="text-3xl sm:text-5xl font-black text-rose-600 dark:text-rose-400 tabular-nums tracking-tighter">$5,000,000</p>
-              <p className="text-[10px] sm:text-xs text-neutral-400 font-black uppercase tracking-widest mt-2">Per member, per annum • Global Access</p>
+              <p className="text-3xl sm:text-5xl font-bold text-rose-600 dark:text-rose-400 tabular-nums tracking-tighter">$5,000,000</p>
+              <p className="text-[10px] sm:text-xs text-neutral-400 font-medium uppercase tracking-widest mt-2">Per member, per annum • Global Access</p>
             </div>
           </motion.div>
 
@@ -185,19 +185,19 @@ const SponsoredMedicair: React.FC = () => {
                 <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center shrink-0">
                   <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-rose-400" />
                 </div>
-                <h4 className="text-lg sm:text-xl font-black uppercase tracking-tight">Elite Network</h4>
+                <h4 className="text-lg sm:text-xl font-semibold uppercase tracking-tight">Elite Network</h4>
               </div>
               <div className="grid grid-cols-2 gap-3 mb-6 relative z-10">
                 {partnerHospitals.map((hospital) => (
                   <div
                     key={hospital}
-                    className="px-4 py-2.5 rounded-xl bg-white/5 text-[11px] sm:text-[13px] font-bold border border-white/5 hover:bg-white/10 hover:border-rose-500/30 transition-all cursor-default"
+                    className="px-4 py-2.5 rounded-xl bg-white/5 text-[11px] sm:text-[13px] font-medium border border-white/5 hover:bg-white/10 hover:border-rose-500/30 transition-all cursor-default"
                   >
                     {hospital}
                   </div>
                 ))}
               </div>
-              <p className="text-[10px] sm:text-xs text-neutral-500 font-black uppercase tracking-widest relative z-10">+ 500 Legacy partner facilities worldwide</p>
+              <p className="text-[10px] sm:text-xs text-neutral-500 font-medium uppercase tracking-widest relative z-10">+ 500 Legacy partner facilities worldwide</p>
             </div>
 
             {/* Emergency Contact */}
@@ -208,14 +208,14 @@ const SponsoredMedicair: React.FC = () => {
                   <Phone className="w-7 h-7 sm:w-8 sm:h-8" />
                 </div>
                 <div>
-                  <p className="text-[10px] sm:text-xs text-rose-100 font-black uppercase tracking-[0.2em] mb-1">Emergency Lifeline</p>
-                  <p className="text-xl sm:text-2xl font-black tabular-nums tracking-tight group-hover:tracking-widest transition-all uppercase">+1 800-MED-CARE</p>
+                  <p className="text-[10px] sm:text-xs text-rose-100 font-medium uppercase tracking-[0.2em] mb-1">Emergency Lifeline</p>
+                  <p className="text-xl sm:text-2xl font-semibold tabular-nums tracking-tight group-hover:tracking-widest transition-all uppercase">+1 800-MED-CARE</p>
                 </div>
               </div>
-              <p className="text-[13px] sm:text-base text-rose-50 font-bold mb-8 sm:mb-10 leading-relaxed">
+              <p className="text-[13px] sm:text-base text-rose-50 font-medium mb-8 sm:mb-10 leading-relaxed">
                 Our global medical concierge is standing by <span className="underline decoration-2 underline-offset-4">24/7/365</span> for immediate deployment of emergency wealth-care.
               </p>
-              <Button variant="primary" size="lg" className="w-full bg-white text-rose-600 font-black py-4 px-10 shadow-xl hover:bg-rose-50 transform hover:-translate-y-1 transition-all uppercase tracking-widest text-xs sm:text-sm">
+              <Button variant="primary" size="lg" className="w-full bg-white text-rose-600 font-medium py-4 px-10 shadow-xl hover:bg-rose-50 transform hover:-translate-y-1 transition-all uppercase tracking-widest text-xs sm:text-sm">
                 In-Case-of-Emergency Card
                 <ArrowRight className="w-5 h-5 ml-3" />
               </Button>
@@ -223,8 +223,8 @@ const SponsoredMedicair: React.FC = () => {
 
             {/* Eligibility Note */}
             <div className="p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 shadow-inner">
-              <p className="text-[11px] sm:text-sm text-neutral-600 dark:text-neutral-400 font-bold leading-relaxed">
-                <span className="font-black text-rose-600 uppercase tracking-tighter mr-2">Note:</span> 
+              <p className="text-[11px] sm:text-sm text-neutral-600 dark:text-neutral-400 font-medium leading-relaxed">
+                <span className="font-medium text-rose-600 uppercase tracking-tighter mr-2">Note:</span> 
                 Complimentary for Private Banking members with AUM exceeding $1M. Additional family legacy members added at custom rates.
               </p>
             </div>
