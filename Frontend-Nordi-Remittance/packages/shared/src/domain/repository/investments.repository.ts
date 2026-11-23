@@ -27,10 +27,10 @@ export const InvestmentsRepository = {
   // ==========================================================================
 
   /**
-   * Get all user investments
+   * Get all user investments (maps to /investments/portfolio)
    */
   getAll: async (params?: InvestmentFilters): Promise<PaginatedResponse<Investment>> => {
-    const response = await apiClient.get<PaginatedResponse<Investment>>("/investments", { params });
+    const response = await apiClient.get<PaginatedResponse<Investment>>(ApiEndpoints.investmentsPortfolio, { params });
     return response.data;
   },
 
@@ -38,7 +38,7 @@ export const InvestmentsRepository = {
    * Get investment by ID
    */
   getById: async (investmentId: UUID): Promise<ApiResponse<Investment>> => {
-    const response = await apiClient.get<ApiResponse<Investment>>(`/investments/${investmentId}`);
+    const response = await apiClient.get<ApiResponse<Investment>>(ApiEndpoints.investmentAsset(investmentId));
     return response.data;
   },
 
@@ -46,7 +46,7 @@ export const InvestmentsRepository = {
    * Get active investments
    */
   getActive: async (): Promise<ApiResponse<Investment[]>> => {
-    const response = await apiClient.get<ApiResponse<Investment[]>>(`/investments/active`);
+    const response = await apiClient.get<ApiResponse<Investment[]>>(ApiEndpoints.investmentsPortfolio);
     return response.data;
   },
 
@@ -97,13 +97,38 @@ export const InvestmentsRepository = {
   // ==========================================================================
 
   /**
-   * Get available investment products
+   * Get available investment products (fetches assets + plans from backend)
    */
   getProducts: async (type?: InvestmentType): Promise<ApiResponse<InvestmentProduct[]>> => {
-    const response = await apiClient.get<ApiResponse<InvestmentProduct[]>>(`/investments/products`, {
-      params: type ? { type } : undefined,
-    });
-    return response.data;
+    const [assetsRes, plansRes] = await Promise.allSettled([
+      apiClient.get<ApiResponse<any>>(ApiEndpoints.investmentsAssets, {
+        params: type ? { type } : undefined,
+      }),
+      apiClient.get<ApiResponse<any>>(ApiEndpoints.investmentsPlans),
+    ]);
+
+    const assetsData =
+      assetsRes.status === "fulfilled" ? (assetsRes.value.data?.data ?? assetsRes.value.data) : {};
+    const plansData =
+      plansRes.status === "fulfilled" ? (plansRes.value.data?.data ?? plansRes.value.data) : {};
+
+    const assets = Array.isArray(assetsData)
+      ? assetsData
+      : Array.isArray(assetsData?.assets)
+        ? assetsData.assets
+        : [];
+    const plans = Array.isArray(plansData)
+      ? plansData
+      : Array.isArray(plansData?.plans)
+        ? plansData.plans
+        : [];
+
+    const combined = [...assets, ...plans];
+    return {
+      success: true,
+      data: combined as InvestmentProduct[],
+      message: "Investment products retrieved",
+    };
   },
 
   /**
@@ -134,7 +159,7 @@ export const InvestmentsRepository = {
           risks: string[];
         }
       >
-    >(`/investments/products/${productId}`);
+    >(ApiEndpoints.investmentAsset(productId));
     return response.data;
   },
 
@@ -143,10 +168,119 @@ export const InvestmentsRepository = {
   // ==========================================================================
 
   /**
-   * Create a new investment
+   * Create a new investment / buy asset (maps to POST /investments/buy)
+   * Supports payment via either user Wallet (walletId) OR user Card (cardId).
    */
-  create: async (data: CreateInvestmentRequest): Promise<ApiResponse<Investment>> => {
-    const response = await apiClient.post<ApiResponse<Investment>>("/investments", data);
+  create: async (data: CreateInvestmentRequest & Record<string, any>): Promise<ApiResponse<Investment>> => {
+    const payload = {
+      ...data,
+      assetId: data.assetId || data.productId || data.symbol || (data as any).id,
+      quantity: data.quantity || 1,
+      walletId: data.walletId || data.sourceAccountId || (data as any).accountId,
+      cardId: data.cardId,
+      paymentMethod: data.paymentMethod || (data.cardId ? "card" : "wallet"),
+    };
+    const response = await apiClient.post<ApiResponse<Investment>>(ApiEndpoints.investmentsBuy, payload);
+    return response.data;
+  },
+
+  /**
+   * Swap between two investment assets (stocks, ETFs, crypto, bonds)
+   */
+  swap: async (data: {
+    fromAssetId: string;
+    toAssetId: string;
+    fromQuantity?: number;
+    usdAmount?: number;
+    amount?: number;
+  }): Promise<ApiResponse<any>> => {
+    const response = await apiClient.post<ApiResponse<any>>(ApiEndpoints.investmentsSwap, data);
+    return response.data;
+  },
+
+  /**
+   * Get live CoinMarketCap cryptocurrency market listings
+   */
+  getCryptoMarket: async (refresh = false): Promise<ApiResponse<any>> => {
+    const response = await apiClient.get<ApiResponse<any>>(ApiEndpoints.investmentsCrypto, {
+      params: refresh ? { refresh: "true" } : undefined,
+    });
+    return response.data;
+  },
+
+  /**
+   * Get live Equities (Stocks & ETFs) market listings
+   */
+  getStockMarket: async (refresh = false): Promise<ApiResponse<any>> => {
+    const response = await apiClient.get<ApiResponse<any>>(ApiEndpoints.investmentsStocks, {
+      params: refresh ? { refresh: "true" } : undefined,
+    });
+    return response.data;
+  },
+
+  /**
+   * Get live Forex interbank exchange rates & currency pairs
+   */
+  getForexRates: async (refresh = false): Promise<ApiResponse<any>> => {
+    const response = await apiClient.get<ApiResponse<any>>(ApiEndpoints.investmentsForexRates, {
+      params: refresh ? { refresh: "true" } : undefined,
+    });
+    return response.data;
+  },
+
+  /**
+   * Convert currency via live Forex engine
+   */
+  convertForex: async (params: { from: string; to: string; amount: number }): Promise<ApiResponse<any>> => {
+    const response = await apiClient.get<ApiResponse<any>>(ApiEndpoints.investmentsForexConvert, { params });
+    return response.data;
+  },
+
+  /**
+   * Execute real wallet-to-wallet currency exchange via Forex engine
+   */
+  exchangeForex: async (data: {
+    fromCurrency: string;
+    toCurrency: string;
+    amount: number;
+    walletId: string;
+    targetWalletId?: string;
+  }): Promise<ApiResponse<any>> => {
+    const response = await apiClient.post<ApiResponse<any>>(ApiEndpoints.investmentsForexExchange, data);
+    return response.data;
+  },
+
+  /**
+   * Admin: Get platform-wide investments, portfolios, savings goals & market overview
+   */
+  getAdminOverview: async (): Promise<ApiResponse<any>> => {
+    const response = await apiClient.get<ApiResponse<any>>(ApiEndpoints.investmentsAdminOverview);
+    return response.data;
+  },
+
+  /**
+   * Admin: Force-sync live market feeds (CoinMarketCap, Stocks & Forex)
+   */
+  syncAdminMarkets: async (): Promise<ApiResponse<any>> => {
+    const response = await apiClient.post<ApiResponse<any>>(ApiEndpoints.investmentsAdminSync);
+    return response.data;
+  },
+
+  /**
+   * Admin: Create or update market asset / forex rate
+   */
+  upsertAdminAsset: async (data: Record<string, any>): Promise<ApiResponse<any>> => {
+    const response = data.assetId || data._id
+      ? await apiClient.put<ApiResponse<any>>(ApiEndpoints.investmentAdminAsset(data.assetId || data._id), data)
+      : await apiClient.post<ApiResponse<any>>(ApiEndpoints.investmentsAdminAssets, data);
+    return response.data;
+  },
+
+  /**
+   * Admin: Deactivate market asset
+   */
+  deleteAdminAsset: async (assetId: string): Promise<ApiResponse<any>> => {
+    const response = await apiClient.delete<ApiResponse<any>>(ApiEndpoints.investmentAdminAsset(assetId));
     return response.data;
   },
 
@@ -205,13 +339,15 @@ export const InvestmentsRepository = {
   // ==========================================================================
 
   /**
-   * Withdraw from investment
+   * Withdraw / sell from investment (maps to POST /investments/sell)
    */
   withdraw: async (
     investmentId: UUID,
     data: {
       amount?: number; // If not provided, withdraw all
+      quantity?: number;
       destinationAccountId: UUID;
+      walletId?: UUID;
       pin: string;
     },
   ): Promise<
@@ -229,7 +365,12 @@ export const InvestmentsRepository = {
         penalty?: number;
         netAmount: number;
       }>
-    >(`/investments/${investmentId}/withdraw`, data);
+    >(ApiEndpoints.investmentsSell, {
+      portfolioId: investmentId,
+      quantity: data.quantity || data.amount || 1,
+      walletId: data.walletId || data.destinationAccountId,
+      pin: data.pin,
+    });
     return response.data;
   },
 
@@ -296,7 +437,9 @@ export const InvestmentsRepository = {
         date: string;
         description: string;
       }>
-    >(`/investments/${investmentId}/transactions`, { params });
+    >(ApiEndpoints.investmentsPortfolioTransactions, {
+      params: { ...params, portfolioId: investmentId },
+    });
     return response.data;
   },
 
@@ -397,9 +540,18 @@ export const InvestmentsRepository = {
     targetDate: string;
     initialAmount?: number;
     sourceAccountId?: UUID;
+    accountId?: UUID;
+    walletId?: UUID;
+    category?: string;
+    description?: string;
     autoSaveEnabled?: boolean;
     autoSaveAmount?: number;
-    autoSaveFrequency?: "daily" | "weekly" | "monthly";
+    autoSaveFrequency?: "daily" | "weekly" | "biweekly" | "monthly";
+    autoSave?: {
+      enabled: boolean;
+      amount: number;
+      frequency: "daily" | "weekly" | "biweekly" | "monthly";
+    };
   }): Promise<
     ApiResponse<{
       id: UUID;
@@ -410,6 +562,13 @@ export const InvestmentsRepository = {
       progress: number;
     }>
   > => {
+    const payload = {
+      ...data,
+      walletId: data.walletId || data.sourceAccountId || data.accountId,
+      autoSaveEnabled: data.autoSaveEnabled ?? data.autoSave?.enabled ?? false,
+      autoSaveAmount: data.autoSaveAmount ?? data.autoSave?.amount,
+      autoSaveFrequency: data.autoSaveFrequency ?? data.autoSave?.frequency,
+    };
     const response = await apiClient.post<
       ApiResponse<{
         id: UUID;
@@ -419,7 +578,7 @@ export const InvestmentsRepository = {
         targetDate: string;
         progress: number;
       }>
-    >(ApiEndpoints.investmentsSavings, data);
+    >(ApiEndpoints.investmentsSavings, payload);
     return response.data;
   },
 
@@ -447,8 +606,11 @@ export const InvestmentsRepository = {
   /**
    * Delete savings goal
    */
-  deleteSavingsGoal: async (goalId: UUID): Promise<ApiResponse<{ message: string }>> => {
-    const response = await apiClient.delete<ApiResponse<{ message: string }>>(ApiEndpoints.investmentSavingsGoal(goalId));
+  deleteSavingsGoal: async (goalId: UUID, transferToWalletId?: UUID): Promise<ApiResponse<{ message: string }>> => {
+    const response = await apiClient.delete<ApiResponse<{ message: string }>>(
+      ApiEndpoints.investmentSavingsGoal(goalId),
+      transferToWalletId ? { data: { transferToWalletId } } : undefined,
+    );
     return response.data;
   },
 
@@ -460,11 +622,15 @@ export const InvestmentsRepository = {
     data: {
       amount: number;
       sourceAccountId: UUID;
+      walletId?: UUID;
     },
   ): Promise<ApiResponse<{ message: string; newBalance: number }>> => {
     const response = await apiClient.post<ApiResponse<{ message: string; newBalance: number }>>(
       ApiEndpoints.investmentSavingsDeposit(goalId),
-      data,
+      {
+        ...data,
+        walletId: data.walletId || data.sourceAccountId,
+      },
     );
     return response.data;
   },
@@ -473,15 +639,50 @@ export const InvestmentsRepository = {
   // EXTENDED METHODS (map to available backend endpoints)
   // ==========================================================================
 
-  /** Get investment portfolio */
+  /** Get investment portfolio + summary */
   getPortfolio: async (): Promise<ApiResponse<any>> => {
-    const response = await apiClient.get<ApiResponse<any>>(ApiEndpoints.investmentsPortfolio);
-    return response.data;
+    const [portfolioRes, summaryRes] = await Promise.allSettled([
+      apiClient.get<ApiResponse<any>>(ApiEndpoints.investmentsPortfolio),
+      apiClient.get<ApiResponse<any>>(ApiEndpoints.investmentsSummary),
+    ]);
+
+    const pData =
+      portfolioRes.status === "fulfilled"
+        ? (portfolioRes.value.data?.data ?? portfolioRes.value.data ?? {})
+        : {};
+    const sData =
+      summaryRes.status === "fulfilled"
+        ? (summaryRes.value.data?.data ?? summaryRes.value.data ?? {})
+        : {};
+
+    const summary = sData?.summary || sData || {};
+    const portfolios = Array.isArray(pData)
+      ? pData
+      : Array.isArray(pData?.portfolios)
+        ? pData.portfolios
+        : [];
+
+    return {
+      success: true,
+      data: {
+        ...summary,
+        ...pData,
+        portfolio: {
+          totalValue: summary.portfolioValue ?? summary.currentValue ?? summary.totalNetWorth ?? 0,
+          totalInvested: summary.totalInvested ?? 0,
+          totalReturns: summary.totalGainLoss ?? summary.totalReturns ?? 0,
+          returnPercentage: summary.returnPercentage ?? 0,
+          ...summary,
+        },
+        portfolios,
+      },
+      message: "Portfolio retrieved",
+    };
   },
 
   /** Get product by ID — alias for getProductDetails */
   getProductById: async (productId: UUID): Promise<ApiResponse<any>> => {
-    const response = await apiClient.get<ApiResponse<any>>(`/investments/products/${productId}`);
+    const response = await apiClient.get<ApiResponse<any>>(ApiEndpoints.investmentAsset(productId));
     return response.data;
   },
 
@@ -525,7 +726,16 @@ export const InvestmentsRepository = {
 
   /** Withdraw from savings goal */
   withdrawFromSavingsGoal: async (goalId: UUID, data?: any): Promise<ApiResponse<any>> => {
-    const response = await apiClient.post<ApiResponse<any>>(ApiEndpoints.investmentSavingsWithdraw(goalId), data);
+    const payload = data
+      ? {
+          ...data,
+          walletId: data.walletId || data.accountId || data.sourceAccountId,
+        }
+      : undefined;
+    const response = await apiClient.post<ApiResponse<any>>(
+      ApiEndpoints.investmentSavingsWithdraw(goalId),
+      payload,
+    );
     return response.data;
   },
 };
