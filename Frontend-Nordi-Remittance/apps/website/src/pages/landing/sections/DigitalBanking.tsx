@@ -109,8 +109,8 @@ const FeatureItem: React.FC<FeatureItemProps> = ({ feature, index }) => (
         : feature.icon}
     </div>
     <div>
-      <h4 className="text-sm sm:text-base font-black text-neutral-900 dark:text-neutral-100 uppercase tracking-tight">{feature.title}</h4>
-      <p className="mt-1 text-[10px] sm:text-xs text-neutral-400 font-bold opacity-75 leading-relaxed">{feature.description}</p>
+      <h4 className="text-sm sm:text-base font-semibold text-neutral-900 dark:text-neutral-100 uppercase tracking-tight">{feature.title}</h4>
+      <p className="mt-1 text-[10px] sm:text-xs text-neutral-400 font-medium opacity-75 leading-relaxed">{feature.description}</p>
     </div>
   </motion.div>
 );
@@ -287,10 +287,10 @@ const DigitalBanking: React.FC = () => {
                 "bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 shadow-sm hover:shadow-xl transition-all group"
               )}
             >
-              <span className="mb-4 inline-block text-sm font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">
-                <div className="text-xl sm:text-2xl font-black text-indigo-600 dark:text-indigo-400 tabular-nums tracking-tighter group-hover:scale-110 transition-transform">{stat.value}</div>
+              <span className="mb-4 inline-block text-sm font-medium uppercase tracking-widest text-blue-600 dark:text-blue-400">
+                <div className="text-xl sm:text-2xl font-semibold text-indigo-600 dark:text-indigo-400 tabular-nums tracking-tighter group-hover:scale-110 transition-transform">{stat.value}</div>
               </span>
-              <div className="text-[10px] sm:text-xs text-neutral-400 font-black uppercase tracking-widest mt-1">{stat.label}</div>
+              <div className="text-[10px] sm:text-xs text-neutral-400 font-medium uppercase tracking-widest mt-1">{stat.label}</div>
             </div>
           ))}
         </motion.div>
