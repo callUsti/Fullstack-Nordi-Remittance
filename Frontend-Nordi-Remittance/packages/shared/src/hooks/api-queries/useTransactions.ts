@@ -27,6 +27,19 @@ export const useTransactions = (filters?: TransactionFilters) => {
 };
 
 /**
+ * Admin: Get all platform transactions (/transactions/admin/all)
+ */
+export const useAdminAllTransactions = (filters?: TransactionFilters) => {
+  return useQuery({
+    queryKey: [...queryKeys.transactions.all, "admin-all", filters],
+    queryFn: async () => {
+      const response = await TransactionsRepository.getAllAdminTransactions(filters);
+      return response;
+    },
+  });
+};
+
+/**
  * Get transaction by ID
  */
 export const useTransaction = (transactionId: UUID) => {
