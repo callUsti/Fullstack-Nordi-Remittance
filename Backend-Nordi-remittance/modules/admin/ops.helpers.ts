@@ -95,12 +95,23 @@ export function updateWalletBalance(wallet: any, currency: string, amount: numbe
  */
 export async function hasPermission(adminId: string, permission: string): Promise<boolean> {
   const admin = await AdminUsers.findById(adminId).populate('permissions');
-  if (!admin) return false;
-
-  if (admin.role === 'super_admin') return true;
+  if (admin) {
+    if (admin.role === 'super_admin' || admin.role === 'admin') return true;
+    const populatedPerms = admin.permissions as any;
+    if (populatedPerms && typeof populatedPerms === 'object' && populatedPerms[permission] === true) {
+      return true;
+    }
+  } else {
+    // Fallback if admin logged in via Users collection with admin/super_admin role
+    const Users = (await import('../users/users.model.js')).default;
+    const userAdmin = await Users.findById(adminId).select('role').lean() as any;
+    if (userAdmin && (userAdmin.role === 'super_admin' || userAdmin.role === 'admin')) {
+      return true;
+    }
+  }
 
   const permissions = await AdminPermissions.findOne({ admin: adminId });
-  if (!permissions) return false;
+  if (!permissions) return Boolean(admin);
 
   return (permissions as any)[permission] === true;
 }
