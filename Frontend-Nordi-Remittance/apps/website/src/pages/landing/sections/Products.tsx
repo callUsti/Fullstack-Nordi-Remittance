@@ -131,17 +131,17 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index }) => (
     </div>
 
     {/* Content */}
-    <h3 className="text-base sm:text-xl font-black text-neutral-900 dark:text-white group-hover:text-indigo-600 transition-colors uppercase tracking-tight">
+    <h3 className="text-base sm:text-xl font-semibold text-neutral-900 dark:text-white group-hover:text-indigo-600 transition-colors uppercase tracking-tight">
       {product.title}
     </h3>
-    <p className="mt-2 text-[11px] sm:text-sm text-neutral-500 dark:text-neutral-400 font-bold opacity-80 leading-relaxed">{product.description}</p>
+    <p className="mt-2 text-[11px] sm:text-sm text-neutral-500 dark:text-neutral-400 font-medium opacity-80 leading-relaxed">{product.description}</p>
 
     {/* Features */}
     <ul className="mt-6 space-y-2">
       {product.features.map((feature) => (
         <li
           key={feature}
-          className="flex items-center gap-2 text-[10px] sm:text-xs text-neutral-400 dark:text-neutral-500 font-black uppercase tracking-widest group-hover:text-neutral-600 transition-colors"
+          className="flex items-center gap-2 text-[10px] sm:text-xs text-neutral-400 dark:text-neutral-500 font-medium uppercase tracking-widest group-hover:text-neutral-600 transition-colors"
         >
           <div className="w-1 h-1 rounded-full bg-indigo-500/50" />
           {feature}
