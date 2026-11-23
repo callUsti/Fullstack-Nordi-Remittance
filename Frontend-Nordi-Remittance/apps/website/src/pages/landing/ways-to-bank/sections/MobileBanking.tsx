@@ -100,9 +100,9 @@ const MobileBanking: React.FC = () => {
             <div key={stat.label} className="text-center p-4 sm:p-6 rounded-2xl bg-white dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 shadow-sm hover:shadow-xl transition-all">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <stat.icon className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-600 dark:text-cyan-400" />
-                <span className="text-xl sm:text-3xl font-black text-neutral-900 dark:text-white tabular-nums tracking-tighter">{stat.value}</span>
+                <span className="text-xl sm:text-3xl font-bold text-neutral-900 dark:text-white tabular-nums tracking-tighter">{stat.value}</span>
               </div>
-              <p className="text-[10px] sm:text-xs text-neutral-400 font-bold uppercase tracking-widest">{stat.label}</p>
+              <p className="text-[10px] sm:text-xs text-neutral-400 font-medium uppercase tracking-widest">{stat.label}</p>
             </div>
           ))}
         </motion.div>
@@ -136,11 +136,11 @@ const MobileBanking: React.FC = () => {
 
                   {/* Balance Card */}
                   <div className="p-6 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 mb-6 shadow-2xl">
-                    <p className="text-[10px] sm:text-xs text-cyan-100 font-bold uppercase tracking-widest mb-1">Legacy Balance</p>
-                    <p className="text-2xl sm:text-3xl font-black text-white tabular-nums tracking-tighter">₦2,458,900.00</p>
+                    <p className="text-[10px] sm:text-xs text-cyan-100 font-medium uppercase tracking-widest mb-1">Legacy Balance</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-white tabular-nums tracking-tighter">₦2,458,900.00</p>
                     <div className="flex gap-2 mt-6">
                       {['Send', 'Top-up'].map(btn => (
-                        <div key={btn} className="flex-1 py-3 rounded-2xl bg-white/20 text-center text-[10px] sm:text-xs font-black text-white uppercase tracking-widest hover:bg-white/30 transition-colors cursor-pointer">
+                        <div key={btn} className="flex-1 py-3 rounded-2xl bg-white/20 text-center text-[10px] sm:text-xs font-medium text-white uppercase tracking-widest hover:bg-white/30 transition-colors cursor-pointer">
                           {btn}
                         </div>
                       ))}
@@ -154,7 +154,7 @@ const MobileBanking: React.FC = () => {
                         <div className="w-12 h-12 mx-auto rounded-2xl bg-white/10 flex items-center justify-center mb-1 group-hover/icon:bg-white/20 transition-all border border-white/5">
                           <Download className="w-5 h-5 text-white/70" />
                         </div>
-                        <p className="text-[9px] text-white/80 font-bold uppercase tracking-tighter">{action}</p>
+                        <p className="text-[9px] text-white/80 font-medium uppercase tracking-tighter">{action}</p>
                       </div>
                     ))}
                   </div>
@@ -191,8 +191,8 @@ const MobileBanking: React.FC = () => {
                       ? React.cloneElement(feature.icon as React.ReactElement, { className: "w-5 h-5 sm:w-6 sm:h-6" })
                       : feature.icon}
                   </div>
-                  <h4 className="font-black text-[13px] sm:text-base text-neutral-900 dark:text-white mb-1.5 uppercase tracking-tight leading-tight">{feature.name}</h4>
-                  <p className="text-[10px] sm:text-[13px] text-neutral-500 dark:text-neutral-400 font-bold leading-relaxed">{feature.description}</p>
+                  <h4 className="font-semibold text-[13px] sm:text-base text-neutral-900 dark:text-white mb-1.5 uppercase tracking-tight leading-tight">{feature.name}</h4>
+                  <p className="text-[10px] sm:text-[13px] text-neutral-500 dark:text-neutral-400 font-semibold leading-relaxed">{feature.description}</p>
                 </div>
               ))}
             </div>
@@ -204,13 +204,13 @@ const MobileBanking: React.FC = () => {
                 <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
                   <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" />
                 </div>
-                <h4 className="text-sm sm:text-lg font-black text-white uppercase tracking-tight">Military-Grade</h4>
+                <h4 className="text-sm sm:text-lg font-semibold text-white uppercase tracking-tight">Military-Grade</h4>
               </div>
               <div className="grid grid-cols-2 gap-3 relative z-10">
                 {securityFeatures.map((feature) => (
-                  <div key={feature} className="flex items-center gap-3 text-[11px] sm:text-sm text-neutral-400 font-bold group/item">
+                  <div key={feature} className="flex items-center gap-3 text-[11px] sm:text-sm text-neutral-400 font-medium group/item">
                     <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center group-hover/item:scale-110 transition-transform">
-                      <Check className="w-3 h-3 text-emerald-400 font-bold" />
+                      <Check className="w-3 h-3 text-emerald-400 font-medium" />
                     </div>
                     {feature}
                   </div>
@@ -220,13 +220,13 @@ const MobileBanking: React.FC = () => {
 
             {/* Download CTAs */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button variant="primary" size="lg" className="w-full bg-neutral-900 hover:bg-black text-white font-black py-4 px-8 shadow-xl border border-white/10 uppercase tracking-widest text-xs sm:text-sm">
+              <Button variant="primary" size="lg" className="w-full bg-neutral-900 hover:bg-black text-white font-medium py-4 px-8 shadow-xl border border-white/10 uppercase tracking-widest text-xs sm:text-sm">
                 <svg className="w-5 h-5 sm:w-6 sm:h-6 mr-3" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
                 </svg>
                 App Store
               </Button>
-              <Button variant="primary" size="lg" className="w-full bg-neutral-900 hover:bg-black text-white font-black py-4 px-8 shadow-xl border border-white/10 uppercase tracking-widest text-xs sm:text-sm">
+              <Button variant="primary" size="lg" className="w-full bg-neutral-900 hover:bg-black text-white font-medium py-4 px-8 shadow-xl border border-white/10 uppercase tracking-widest text-xs sm:text-sm">
                 <svg className="w-5 h-5 sm:w-6 sm:h-6 mr-3" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 0 1-.61-.92V2.734a1 1 0 0 1 .609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.198l2.807 1.626a1 1 0 0 1 0 1.73l-2.808 1.626L15.206 12l2.492-2.491zM5.864 2.658L16.8 8.99l-2.302 2.302-8.634-8.634z"/>
                 </svg>
