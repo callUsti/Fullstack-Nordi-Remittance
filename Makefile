@@ -7,7 +7,7 @@
 .PHONY: help up down dev prod build logs health status clean \
         kafka-ui mongo-ui kafka-topics kafka-create-topics \
         ml-up ml-logs ml-health backend-shell ml-shell \
-        tf-plan tf-apply deploy-k8s install
+        tf-plan tf-apply deploy-k8s install dev-local dev-local-init dev-local-stop
 
 # ── Config ────────────────────────────────────────────────────────────────────
 COMPOSE_DEV  := docker compose -f docker-compose.yml
@@ -30,34 +30,34 @@ help: ## Show all available commands
 	@echo "$(CYAN)  ─────────────────────────────────────────────$(RESET)"
 	@echo ""
 	@echo "$(BOLD)  🚀 Quick Start:$(RESET)"
-	@echo "  $(GREEN)make up$(RESET)              Start all services (dev)"
+	@echo "  $(GREEN)make up$(RESET)              Start all services (dev via Docker)"
+	@echo "  $(GREEN)make dev-local$(RESET)       Start Backend API + Website Frontend locally (no Docker, no Kafka)"
 	@echo "  $(GREEN)make prod$(RESET)            Start all services (production)"
 	@echo "  $(GREEN)make down$(RESET)            Stop all services"
 	@echo ""
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
-		awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-22s$(RESET) %s\n", $$1, $$2}'
+	@powershell -NoProfile -Command "Get-Content '$(MAKEFILE_LIST)' | Where-Object { $$_ -match '^[a-zA-Z_-]+:.*?## ' } | ForEach-Object { $$parts = $$_ -split ':.*?## '; Write-Host ('  ' + $$parts[0].PadRight(22)) -ForegroundColor Green -NoNewline; Write-Host (' ' + $$parts[1]) }"
 	@echo ""
 
 # ── Development Stack ─────────────────────────────────────────────────────────
 
-up: ## Start full dev stack (API + Frontend + ML + Kafka + DB)
+up: ## Start full dev stack (API + Frontend + ML + Redis + DB)
 	@echo "$(CYAN)Starting Nordi Remittance development stack...$(RESET)"
 	$(COMPOSE_DEV) up -d --build
 	@echo ""
 	@echo "$(GREEN)✓ Stack is up!$(RESET)"
 	@echo "  API:       http://localhost:3000"
 	@echo "  Frontend:  http://localhost:5173"
-	@echo "  ML:        http://localhost:8000"
-	@echo "  Kafka UI:  http://localhost:8090"
-	@echo "  Mongo UI:  http://localhost:8081"
+# 	@echo "  ML:        http://localhost:8000"
+# @echo "  Kafka UI:  http://localhost:8090"
+# 	@echo "  Mongo UI:  http://localhost:8081"
 
-up-infra: ## Start only infrastructure (MongoDB, Redis, Kafka) — no app
+up-infra: ## Start only infrastructure (MongoDB, Redis) — no app
 	@echo "$(CYAN)Starting infrastructure services...$(RESET)"
-	$(COMPOSE_DEV) up -d mongo redis kafka kafka-ui
+	$(COMPOSE_DEV) up -d mongo redis
 	@echo "$(GREEN)✓ Infrastructure ready$(RESET)"
 
 up-api: ## Start API + infrastructure (no frontend/ML)
-	$(COMPOSE_DEV) up -d mongo redis kafka api
+	$(COMPOSE_DEV) up -d mongo redis api
 	@echo "$(GREEN)✓ API stack ready$(RESET)"
 
 down: ## Stop all dev services
@@ -69,6 +69,19 @@ down-v: ## Stop all dev services and remove volumes (destructive)
 	@echo "$(YELLOW)⚠ Volumes removed — all data lost$(RESET)"
 
 dev: up ## Alias for 'make up'
+
+# ── Local Development (No Docker) ─────────────────────────────────────────────
+
+dev-local: ## Start Backend API and Website Frontend locally (Kafka disabled)
+	@powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\dev-local.ps1"
+
+# dev-local-init: ## Re-initialize local KRaft storage and recreate all Kafka topics
+# @echo "$(CYAN)Re-initializing local KRaft storage and topics...$(RESET)"
+# @cd Backend-Nordi-remittance && $(MAKE) kafka-init kafka-create-topics
+#
+# dev-local-stop: ## Stop local Kafka broker
+# @echo "$(CYAN)Stopping local Kafka broker...$(RESET)"
+# @cd Backend-Nordi-remittance && $(MAKE) kafka-stop
 
 restart: down up ## Restart all dev services
 
@@ -86,7 +99,7 @@ prod: ## Start full production stack (with resource limits + auth)
 	@echo ""
 	@echo "$(GREEN)✓ Production stack is up!$(RESET)"
 	@echo "  API:       http://localhost:3000"
-	@echo "  Kafka UI:  http://localhost:8090  (auth required)"
+# @echo "  Kafka UI:  http://localhost:8090  (auth required)"
 
 prod-down: ## Stop production stack
 	$(COMPOSE_PROD) down
@@ -118,9 +131,9 @@ logs-api: ## Tail API logs
 logs-ml: ## Tail ML service logs
 	$(COMPOSE_DEV) logs -f --tail=100 ml
 
-logs-kafka: ## Tail Kafka logs
-	$(COMPOSE_DEV) logs -f --tail=50 kafka
-
+# logs-kafka: ## Tail Kafka logs
+# $(COMPOSE_DEV) logs -f --tail=50 kafka
+#
 logs-db: ## Tail MongoDB logs
 	$(COMPOSE_DEV) logs -f --tail=50 mongo
 
@@ -132,8 +145,8 @@ health: ## Check health of all services
 		&& echo "$(GREEN)✓ API$(RESET)" || echo "$(RED)✗ API not reachable$(RESET)"
 	@curl -sf http://localhost:8000/health | python3 -m json.tool 2>/dev/null \
 		&& echo "$(GREEN)✓ ML Service$(RESET)" || echo "$(RED)✗ ML not reachable$(RESET)"
-	@curl -sf http://localhost:8090/actuator/health 2>/dev/null | grep -q "UP" \
-		&& echo "$(GREEN)✓ Kafka UI$(RESET)" || echo "$(YELLOW)⚠ Kafka UI pending$(RESET)"
+# @curl -sf http://localhost:8090/actuator/health 2>/dev/null | grep -q "UP" \
+# && echo "$(GREEN)✓ Kafka UI$(RESET)" || echo "$(YELLOW)⚠ Kafka UI pending$(RESET)"
 
 status: ## Show all running containers
 	$(COMPOSE_DEV) ps
@@ -143,47 +156,47 @@ ports: ## Check all service ports
 	@lsof -i :3000 -sTCP:LISTEN -t >/dev/null 2>&1 && echo "$(GREEN)✓ 3000 (API): running$(RESET)"      || echo "$(YELLOW)· 3000 (API): not running$(RESET)"
 	@lsof -i :5173 -sTCP:LISTEN -t >/dev/null 2>&1 && echo "$(GREEN)✓ 5173 (Frontend): running$(RESET)" || echo "$(YELLOW)· 5173 (Frontend): not running$(RESET)"
 	@lsof -i :8000 -sTCP:LISTEN -t >/dev/null 2>&1 && echo "$(GREEN)✓ 8000 (ML): running$(RESET)"       || echo "$(YELLOW)· 8000 (ML): not running$(RESET)"
-	@lsof -i :9092 -sTCP:LISTEN -t >/dev/null 2>&1 && echo "$(GREEN)✓ 9092 (Kafka): running$(RESET)"    || echo "$(YELLOW)· 9092 (Kafka): not running$(RESET)"
-	@lsof -i :8090 -sTCP:LISTEN -t >/dev/null 2>&1 && echo "$(GREEN)✓ 8090 (Kafka UI): running$(RESET)" || echo "$(YELLOW)· 8090 (Kafka UI): not running$(RESET)"
+# @lsof -i :9092 -sTCP:LISTEN -t >/dev/null 2>&1 && echo "$(GREEN)✓ 9092 (Kafka): running$(RESET)"    || echo "$(YELLOW)· 9092 (Kafka): not running$(RESET)"
+# @lsof -i :8090 -sTCP:LISTEN -t >/dev/null 2>&1 && echo "$(GREEN)✓ 8090 (Kafka UI): running$(RESET)" || echo "$(YELLOW)· 8090 (Kafka UI): not running$(RESET)"
 	@lsof -i :27017 -sTCP:LISTEN -t >/dev/null 2>&1 && echo "$(GREEN)✓ 27017 (MongoDB): running$(RESET)" || echo "$(YELLOW)· 27017 (MongoDB): not running$(RESET)"
 	@lsof -i :6379 -sTCP:LISTEN -t >/dev/null 2>&1 && echo "$(GREEN)✓ 6379 (Redis): running$(RESET)"    || echo "$(YELLOW)· 6379 (Redis): not running$(RESET)"
 
 # ── UIs ───────────────────────────────────────────────────────────────────────
 
-kafka-ui: ## Open Kafka UI in browser
-	@echo "$(CYAN)Opening Kafka UI at http://localhost:8090$(RESET)"
-	@open http://localhost:8090 2>/dev/null || xdg-open http://localhost:8090 2>/dev/null || echo "Visit http://localhost:8090"
+# kafka-ui: ## Open Kafka UI in browser
+# @echo "$(CYAN)Opening Kafka UI at http://localhost:8090$(RESET)"
+# @open http://localhost:8090 2>/dev/null || xdg-open http://localhost:8090 2>/dev/null || echo "Visit http://localhost:8090"
 
 mongo-ui: ## Open MongoDB Express in browser
 	@echo "$(CYAN)Opening MongoDB Express at http://localhost:8081$(RESET)"
 	@open http://localhost:8081 2>/dev/null || xdg-open http://localhost:8081 2>/dev/null || echo "Visit http://localhost:8081"
 
-# ── Kafka ─────────────────────────────────────────────────────────────────────
-
-kafka-topics: ## List all Kafka topics (via Docker)
-	$(COMPOSE_DEV) exec kafka /opt/kafka/bin/kafka-topics.sh \
-		--bootstrap-server localhost:9092 --list
-
-kafka-create-topics: ## Create all Nordi Kafka topics in Docker
-	@for topic in \
-		nordi.transaction.initiated nordi.transaction.processed \
-		nordi.transaction.completed nordi.transaction.failed \
-		nordi.kyc.submitted nordi.kyc.verified nordi.kyc.rejected \
-		nordi.security.fraud_alert \
-		nordi.user.registered nordi.user.login nordi.user.deleted \
-		nordi.notifications.push nordi.notifications.email nordi.notifications.sms \
-		nordi.dlq; do \
-		$(COMPOSE_DEV) exec kafka /opt/kafka/bin/kafka-topics.sh \
-			--bootstrap-server localhost:9092 \
-			--create --topic $$topic --partitions 3 --replication-factor 1 --if-not-exists; \
-	done
-	@echo "$(GREEN)✓ All Nordi topics created$(RESET)"
-
-kafka-status: ## Check Kafka broker status
-	@$(COMPOSE_DEV) exec kafka /opt/kafka/bin/kafka-broker-api-versions.sh \
-		--bootstrap-server localhost:9092 >/dev/null 2>&1 \
-		&& echo "$(GREEN)✓ Kafka is running$(RESET)" \
-		|| echo "$(RED)✗ Kafka not reachable$(RESET)"
+# # ── Kafka (DISABLED — commented out, kept for scalability) ─────────────────────────────────────────────────────────────────────
+#
+# kafka-topics: ## List all Kafka topics (via Docker)
+# $(COMPOSE_DEV) exec kafka /opt/kafka/bin/kafka-topics.sh \
+# --bootstrap-server localhost:9092 --list
+#
+# kafka-create-topics: ## Create all Nordi Kafka topics in Docker
+# @for topic in \
+# nordi.transaction.initiated nordi.transaction.processed \
+# nordi.transaction.completed nordi.transaction.failed \
+# nordi.kyc.submitted nordi.kyc.verified nordi.kyc.rejected \
+# nordi.security.fraud_alert \
+# nordi.user.registered nordi.user.login nordi.user.deleted \
+# nordi.notifications.push nordi.notifications.email nordi.notifications.sms \
+# nordi.dlq; do \
+# $(COMPOSE_DEV) exec kafka /opt/kafka/bin/kafka-topics.sh \
+# --bootstrap-server localhost:9092 \
+# --create --topic $$topic --partitions 3 --replication-factor 1 --if-not-exists; \
+# done
+# @echo "$(GREEN)✓ All Nordi topics created$(RESET)"
+#
+# kafka-status: ## Check Kafka broker status
+# @$(COMPOSE_DEV) exec kafka /opt/kafka/bin/kafka-broker-api-versions.sh \
+# --bootstrap-server localhost:9092 >/dev/null 2>&1 \
+# && echo "$(GREEN)✓ Kafka is running$(RESET)" \
+# || echo "$(RED)✗ Kafka not reachable$(RESET)"
 
 # ── Shells ────────────────────────────────────────────────────────────────────
 
@@ -224,32 +237,32 @@ install: ## Install all dependencies (backend + frontend)
 install-ml: ## Install ML Python dependencies
 	cd Nordi-Machine-Learning && $(MAKE) setup
 
-# ── Kubernetes ────────────────────────────────────────────────────────────────
-
-k8s-apply: ## Apply all k8s manifests (backend + ML)
-	@echo "$(CYAN)Applying backend k8s manifests...$(RESET)"
-	cd Backend-Nordi-remittance && $(MAKE) k8s-apply
-	@echo "$(CYAN)Applying ML k8s manifests...$(RESET)"
-	cd Nordi-Machine-Learning && $(MAKE) k8s-apply
-	@echo "$(GREEN)✓ All k8s manifests applied$(RESET)"
-
-k8s-status: ## Show k8s status for all services
-	cd Backend-Nordi-remittance && $(MAKE) k8s-status
-
-k8s-delete: ## Delete all k8s resources
-	cd Backend-Nordi-remittance && $(MAKE) k8s-delete
-	cd Nordi-Machine-Learning && $(MAKE) k8s-delete
-
-# ── Terraform ─────────────────────────────────────────────────────────────────
-
-tf-init: ## Initialize Terraform
-	cd Backend-Nordi-remittance && $(MAKE) tf-init
-
-tf-plan: ## Preview infrastructure changes
-	cd Backend-Nordi-remittance && $(MAKE) tf-plan
-
-tf-apply: ## Apply infrastructure to AWS
-	cd Backend-Nordi-remittance && $(MAKE) tf-apply
+# # ── Kubernetes (DISABLED — commented out, kept for scalability) ────────────────────────────────────────────────────────────────
+#
+# k8s-apply: ## Apply all k8s manifests (backend + ML)
+# @echo "$(CYAN)Applying backend k8s manifests...$(RESET)"
+# cd Backend-Nordi-remittance && $(MAKE) k8s-apply
+# @echo "$(CYAN)Applying ML k8s manifests...$(RESET)"
+# cd Nordi-Machine-Learning && $(MAKE) k8s-apply
+# @echo "$(GREEN)✓ All k8s manifests applied$(RESET)"
+#
+# k8s-status: ## Show k8s status for all services
+# cd Backend-Nordi-remittance && $(MAKE) k8s-status
+#
+# k8s-delete: ## Delete all k8s resources
+# cd Backend-Nordi-remittance && $(MAKE) k8s-delete
+# cd Nordi-Machine-Learning && $(MAKE) k8s-delete
+#
+# # ── Terraform (DISABLED — commented out, kept for scalability) ─────────────────────────────────────────────────────────────────
+#
+# tf-init: ## Initialize Terraform
+# cd Backend-Nordi-remittance && $(MAKE) tf-init
+#
+# tf-plan: ## Preview infrastructure changes
+# cd Backend-Nordi-remittance && $(MAKE) tf-plan
+#
+# tf-apply: ## Apply infrastructure to AWS
+# cd Backend-Nordi-remittance && $(MAKE) tf-apply
 
 # ── CI / Quality ──────────────────────────────────────────────────────────────
 
@@ -280,13 +293,13 @@ nuke: ## Nuclear option — remove EVERYTHING including volumes
 
 # ── Full Setup (First-time) ───────────────────────────────────────────────────
 
-setup: install up kafka-create-topics ## First-time setup: install → start → create Kafka topics
+setup: install up ## First-time setup: install → start
 	@echo ""
 	@echo "$(GREEN)$(BOLD)✓ Nordi Remittance is ready!$(RESET)"
 	@echo ""
 	@echo "  API:       $(CYAN)http://localhost:3000$(RESET)"
 	@echo "  Frontend:  $(CYAN)http://localhost:5173$(RESET)"
 	@echo "  ML:        $(CYAN)http://localhost:8000$(RESET)"
-	@echo "  Kafka UI:  $(CYAN)http://localhost:8090$(RESET)"
+# @echo "  Kafka UI:  $(CYAN)http://localhost:8090$(RESET)"
 	@echo "  Mongo UI:  $(CYAN)http://localhost:8081$(RESET)"
 	@echo ""
