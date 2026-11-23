@@ -491,18 +491,25 @@ export function validateTransferData(data: any): ValidationResult {
     );
   }
 
-  // Must have either recipient wallet or external account
-  if (!data.toWalletId && !data.toAccountNumber) {
+  // Must have either recipient wallet, user email/account, or external account
+  const hasRecipient =
+    data.toWalletId ||
+    data.toAccountNumber ||
+    data.destinationAccountId ||
+    data.recipientAccountNumber ||
+    data.recipientEmail;
+
+  if (!hasRecipient) {
     addError(
       errors,
       "recipient",
-      "Recipient wallet ID or account number is required",
+      "Recipient wallet ID, email, or account number is required",
       "REQUIRED",
     );
   }
 
   if (data.toAccountNumber) {
-    if (!data.toBankName) {
+    if (!data.toBankName && !data.bankName) {
       addError(
         errors,
         "toBankName",
@@ -510,7 +517,7 @@ export function validateTransferData(data: any): ValidationResult {
         "REQUIRED",
       );
     }
-    if (!data.toAccountName) {
+    if (!data.toAccountName && !data.accountName) {
       addError(
         errors,
         "toAccountName",
