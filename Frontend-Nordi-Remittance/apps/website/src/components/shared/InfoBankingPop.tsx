@@ -16,11 +16,14 @@ export const Success: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   return (
     <AnimatePresence>
       <motion.div
-        {...fadeInUp}
+        variants={fadeInUp}
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
         className="fixed inset-0 z-50 flex items-center justify-center bg-gray-800  bg-opacity-75 backdrop-blur-lg"
       >
         <div className="w-[80%] items-center justify-center rounded-lg bg-white dark:bg-neutral-800 p-8 text-center lg:w-[30%] ">
-          <p className="text-md mb-4 mt-2 font-bold text-blue-700 lg:text-lg">
+          <p className="text-md mb-4 mt-2 font-semibold text-blue-700 lg:text-lg">
             NORDEA
           </p>
           <img src={confirmed} alt="error png" className="mx-auto w-[50%]" />
@@ -45,11 +48,14 @@ export const Error: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   return (
     <AnimatePresence>
       <motion.div
-        {...fadeInUp}
+        variants={fadeInUp}
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
         className="fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-75 backdrop-blur-lg"
       >
         <div className="w-[80%] items-center justify-center rounded-lg bg-white dark:bg-neutral-800 p-8 text-center shadow-lg lg:w-[30%] ">
-          <p className="text-md mb-4 mt-2 font-bold text-blue-700 lg:text-lg">
+          <p className="text-md mb-4 mt-2 font-semibold text-blue-700 lg:text-lg">
             NORDEA
           </p>
           <img src={confirmed} alt="error png" className=" mx-auto w-[50%]" />
