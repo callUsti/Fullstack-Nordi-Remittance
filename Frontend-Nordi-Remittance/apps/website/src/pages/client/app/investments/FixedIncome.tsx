@@ -40,8 +40,11 @@ import {
   useClientInvestmentProducts,
   useClientPortfolio,
   useClientInvestmentPerformance,
+  useCreateInvestment,
 } from "../../client-usecase/useinvestments-client-usecase";
+import { useClientWallets } from "../../client-usecase/useaccounts-client-usecase";
 import { useUIStore } from "@store/ui.store";
+import { useToastStore } from "@store/toast.store";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -63,6 +66,41 @@ const pct = (n: number) => `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
 
 const FixedIncome: React.FC = () => {
   const { products: apiProducts, isLoading } = useClientInvestmentProducts({ type: "fixed_income" as any });
+  const { wallets } = useClientWallets();
+  const createInvestment = useCreateInvestment();
+  const { showToast } = useToastStore();
+
+  const [selectedBond, setSelectedBond] = useState<any | null>(null);
+  const [investAmount, setInvestAmount] = useState("");
+  const [selectedWalletId, setSelectedWalletId] = useState("");
+
+  const defaultWalletId = wallets[0]?._id || wallets[0]?.id || "";
+  const walletIdToUse = selectedWalletId || defaultWalletId;
+
+  const handleInvestSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedBond || !investAmount || Number(investAmount) <= 0) {
+      showToast("Enter a valid investment amount", "error");
+      return;
+    }
+    const minInv = Number(selectedBond.minInvestment ?? selectedBond.minimumInvestment ?? 0);
+    if (Number(investAmount) < minInv) {
+      showToast(`Minimum investment is ${fmt(minInv)}`, "error");
+      return;
+    }
+    try {
+      await createInvestment.mutateAsync({
+        productId: selectedBond._id || selectedBond.id || selectedBond.assetId || selectedBond.name,
+        amount: Number(investAmount),
+        quantity: 1,
+        sourceAccountId: walletIdToUse,
+      } as any);
+      setSelectedBond(null);
+      setInvestAmount("");
+    } catch {
+      // handled by mutation onError
+    }
+  };
 
   const defaultBonds = [
     {
@@ -170,7 +208,7 @@ const FixedIncome: React.FC = () => {
                   onClick={() => setRiskFilter(r)}
                   className={`rounded-xl px-3 py-1.5 text-[10px] font-medium capitalize transition-colors sm:text-xs ${
                     riskFilter === r
-                      ? "bg-indigo-600 text-white dark:bg-indigo-500"
+                      ? "bg-blue-600 text-white dark:bg-blue-500"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
                   }`}
                 >
@@ -201,7 +239,7 @@ const FixedIncome: React.FC = () => {
                           </p>
                         </div>
                         <span
-                          className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold sm:text-xs ${
+                          className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium sm:text-xs ${
                             ratingColors[bondRating] ?? "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
                           }`}
                         >
@@ -245,7 +283,11 @@ const FixedIncome: React.FC = () => {
 
                       {/* Invest Button */}
                       <motion.button
-                        className="mt-auto w-full rounded-xl bg-indigo-600 py-2.5 text-xs font-medium text-white transition-colors hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400 sm:text-sm"
+                        onClick={() => {
+                          setSelectedBond(bond);
+                          setInvestAmount(String(bond.minInvestment ?? bond.minimumInvestment ?? 500));
+                        }}
+                        className="mt-auto w-full rounded-xl bg-blue-600 py-2.5 text-xs font-medium text-white transition-colors hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400 sm:text-sm"
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.98 }}
                       >
@@ -255,6 +297,74 @@ const FixedIncome: React.FC = () => {
                   </DashCard>
                 );
               })}
+            </div>
+          )}
+
+          {/* Fixed Income Investment Modal */}
+          {selectedBond && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+              <DashCard className="w-full max-w-md">
+                <h3 className="mb-1 text-base font-semibold text-gray-900 dark:text-white">
+                  Invest in {selectedBond.name}
+                </h3>
+                <p className="mb-4 text-xs text-gray-500 dark:text-gray-400">
+                  Yield: {selectedBond.yield ?? selectedBond.interestRate ?? 0}% p.a. • Tenure:{" "}
+                  {selectedBond.tenure ?? selectedBond.maturityPeriod ?? "—"}
+                </p>
+                <form onSubmit={handleInvestSubmit} className="space-y-4">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                      Amount (USD)
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      step="any"
+                      value={investAmount}
+                      onChange={(e) => setInvestAmount(e.target.value)}
+                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                      required
+                    />
+                  </div>
+                  {wallets.length > 0 && (
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                        Source Wallet
+                      </label>
+                      <select
+                        value={walletIdToUse}
+                        onChange={(e) => setSelectedWalletId(e.target.value)}
+                        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                      >
+                        {wallets.map((w: any) => {
+                          const wid = w._id || w.id;
+                          return (
+                            <option key={wid} value={wid}>
+                              {w.name || `${w.currency || "USD"} Wallet`} ({fmt(w.balance ?? w.availableBalance ?? 0)})
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
+                  )}
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedBond(null)}
+                      className="rounded-xl border border-gray-200 px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={createInvestment.isPending}
+                      className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {createInvestment.isPending ? "Processing…" : "Confirm Investment"}
+                    </button>
+                  </div>
+                </form>
+              </DashCard>
             </div>
           )}
         </motion.div>
