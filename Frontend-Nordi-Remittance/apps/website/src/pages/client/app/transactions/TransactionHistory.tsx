@@ -36,6 +36,7 @@ import { TransactionListSkeleton, StatsGridSkeleton, FormSkeleton } from "@compo
 import { dashboardItemVariants } from "@core/animation/Animation";
 import { useClientTransactions } from "../../client-usecase/usetransaction-client-usecase";
 import { useUIStore } from "@store/ui.store";
+import ClientTransactionsTable from "./ClientTransactionsTable";
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }).format(n);
@@ -91,7 +92,7 @@ const TransactionRow: React.FC<TransactionRowProps> = ({ tx, show }) => (
       </div>
     </div>
     <p
-      className={`text-xs font-bold sm:text-sm ${
+      className={`text-xs font-medium sm:text-sm ${
         (tx.type || "").toLowerCase().includes("credit") || (tx.type || "").toLowerCase().includes("in")
           ? "text-emerald-600 dark:text-emerald-400"
           : "text-red-600 dark:text-red-400"
@@ -109,13 +110,20 @@ const TransactionHistory: React.FC = () => {
   const { transactions: allTxns, isLoading } = useClientTransactions();
 
   const filtered = allTxns.filter((t: any) => {
-    const matchSearch = !search || (t.description || "").toLowerCase().includes(search.toLowerCase());
+    const q = search.toLowerCase();
+    const matchSearch =
+      !q ||
+      (t.description || "").toLowerCase().includes(q) ||
+      (t.purpose || "").toLowerCase().includes(q) ||
+      (t.senderBank || "").toLowerCase().includes(q) ||
+      (t.recipientName || "").toLowerCase().includes(q) ||
+      (t.referenceNumber || t.reference || "").toLowerCase().includes(q);
     const matchType = typeFilter === "all" || (t.type || "").toLowerCase().includes(typeFilter);
     return matchSearch && matchType;
   });
 
   const inputCls =
-    "w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 transition-colors";
+    "w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors";
 
   return (
     <PageContainer>
@@ -156,16 +164,12 @@ const TransactionHistory: React.FC = () => {
       ) : filtered.length === 0 ? (
         <EmptyState title="No Transactions Found" description="Try adjusting your search or filter criteria." />
       ) : (
-        <DashCard padding="none">
+        <DashCard padding="none" className="w-full min-w-0 overflow-hidden">
           <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-800">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white sm:text-base">All Transactions</h3>
             <span className="text-xs text-gray-500 dark:text-gray-400">{filtered.length} results</span>
           </div>
-          <div className="divide-y divide-gray-100 dark:divide-gray-800">
-            {filtered.map((tx: any, i: number) => (
-              <TransactionRow key={tx._id || tx.id || i} tx={tx} show={show} />
-            ))}
-          </div>
+          <ClientTransactionsTable transactions={filtered} showBalances={show} />
         </DashCard>
       )}
     </PageContainer>
