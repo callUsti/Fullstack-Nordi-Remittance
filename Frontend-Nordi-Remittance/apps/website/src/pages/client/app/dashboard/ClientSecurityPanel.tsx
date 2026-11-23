@@ -94,7 +94,7 @@ const ClientSecurityPanel: React.FC<ClientSecurityPanelProps> = ({
           </div>
         </div>
         <div className="text-right">
-          <p className={`text-lg font-bold ${scoreColor}`}>{scorePercent}</p>
+          <p className={`text-lg font-semibold ${scoreColor}`}>{scorePercent}</p>
           <p className={`text-[10px] font-medium capitalize ${scoreColor}`}>{scoreLevel}</p>
         </div>
       </div>
@@ -105,7 +105,7 @@ const ClientSecurityPanel: React.FC<ClientSecurityPanelProps> = ({
           <div key={label} className={`flex items-center gap-2 p-2.5 rounded-xl ${bg}`}>
             <span className={color}>{icon}</span>
             <div>
-              <p className="text-sm font-bold text-gray-900 dark:text-white">{text}</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">{text}</p>
               <p className="text-[10px] text-gray-500 dark:text-gray-400">{label}</p>
             </div>
           </div>
@@ -115,19 +115,19 @@ const ClientSecurityPanel: React.FC<ClientSecurityPanelProps> = ({
       {/* Upload Documents CTA */}
       {!security.kycVerified && (
         <div
-          className="flex items-center justify-between p-2.5 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg cursor-pointer mb-4"
+          className="flex items-center justify-between p-2.5 bg-blue-50 dark:bg-blue-950/30 rounded-lg cursor-pointer mb-4"
           onClick={(e) => {
             e.stopPropagation();
             navigate("/customer/profile/documents");
           }}
         >
           <div className="flex items-center gap-2">
-            <FiUpload size={14} className="text-indigo-600 dark:text-indigo-400" />
-            <span className="text-xs font-medium text-indigo-800 dark:text-indigo-300">
+            <FiUpload size={14} className="text-blue-600 dark:text-blue-400" />
+            <span className="text-xs font-medium text-blue-800 dark:text-blue-300">
               Upload Documents
             </span>
           </div>
-          <FiChevronRight size={14} className="text-indigo-600 dark:text-indigo-400" />
+          <FiChevronRight size={14} className="text-blue-600 dark:text-blue-400" />
         </div>
       )}
 
