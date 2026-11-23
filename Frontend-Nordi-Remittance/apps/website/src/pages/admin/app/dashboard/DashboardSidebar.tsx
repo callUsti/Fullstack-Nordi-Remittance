@@ -123,7 +123,7 @@ const QuickStatsPanel: React.FC<{ stats: QuickStats }> = ({ stats }) => (
       ].map(({ icon, label, value, color }) => (
         <div key={label} className="flex flex-col items-center justify-center p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
           <div className={`mb-1 ${color}`}>{icon}</div>
-          <span className="text-sm font-bold text-gray-800 dark:text-gray-200">{value}</span>
+          <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{value}</span>
           <span className="text-[10px] text-gray-500 dark:text-gray-400">{label}</span>
         </div>
       ))}
@@ -190,7 +190,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   const [lowerRef, lowerInView] = useInView();
 
   return (
-    <div className="w-full lg:w-80 xl:w-96 space-y-4 shrink-0">
+    <div className="w-full min-w-0 lg:w-80 xl:w-96 space-y-4 shrink-0">
       {/* Alerts + Approvals — always rendered (top of sidebar) */}
       {isAlertsLoading ? (
         <>
