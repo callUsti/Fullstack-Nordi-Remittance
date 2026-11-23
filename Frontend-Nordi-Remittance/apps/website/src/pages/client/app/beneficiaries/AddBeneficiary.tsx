@@ -38,7 +38,7 @@ const AddBeneficiary: React.FC = () => {
   };
 
   const inputCls =
-    "w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 transition-colors";
+    "w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors";
   const labelCls = "block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5";
 
   return (
@@ -72,7 +72,7 @@ const AddBeneficiary: React.FC = () => {
                     onClick={() => setForm((p) => ({ ...p, type: opt.v }))}
                     className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-medium transition-all sm:px-4 sm:text-sm ${
                       form.type === opt.v
-                        ? "bg-indigo-600 text-white"
+                        ? "bg-blue-600 text-white"
                         : "border border-gray-200 bg-gray-100 text-gray-600 hover:bg-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                     }`}
                   >
@@ -114,7 +114,7 @@ const AddBeneficiary: React.FC = () => {
             <motion.button
               type="submit"
               disabled={addMutation.isPending}
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 py-3 text-xs font-medium text-white disabled:opacity-50 sm:text-sm"
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-xs font-medium text-white disabled:opacity-50 sm:text-sm"
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
