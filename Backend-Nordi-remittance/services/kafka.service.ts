@@ -1,5 +1,152 @@
 // ============================================================================
-// Nordi-Remittance — Kafka Service
+// Nordi-Remittance — Kafka Service  (DISABLED — NO-OP ADAPTER ACTIVE)
+// ----------------------------------------------------------------------------
+// Kafka is intentionally disconnected at this stage of the product (too heavy
+// for the current scale). To keep every module, ledger hook, outbox relay and
+// event publisher untouched, this file now exports a NULL-OBJECT adapter with
+// the exact same public API as the real service:
+//
+//   • publish()        → resolves immediately (event is dropped, debug-logged)
+//   • subscribe()      → resolves immediately (no consumer started)
+//   • connectProducer / ensureTopics / disconnect → no-ops
+//   • healthCheck()    → { connected: false, ..., disabled: true }
+//
+// The ORIGINAL kafkajs implementation is preserved verbatim, commented out, at
+// the bottom of this file.
+//
+// TO RE-ENABLE KAFKA (scale-up path):
+//   1. Delete the "ACTIVE NO-OP ADAPTER" section below.
+//   2. Uncomment the "ORIGINAL IMPLEMENTATION" block at the bottom of the file.
+//   3. Set KAFKA_ENABLED=true and the KAFKA_* variables in .env.
+//   4. Uncomment the kafka services in docker-compose*.yml and the Kafka
+//      targets in the Makefiles / scripts/dev-local.ps1.
+// No call-site in any module needs to change.
+// ============================================================================
+
+import Logger from "../logs/logger.js";
+
+// ============================================================================
+// ACTIVE NO-OP ADAPTER
+// ============================================================================
+
+export const KAFKA_ENABLED = false; // hard-off until the real implementation below is restored
+
+export const KafkaTopics = {
+  // Transactions
+  TRANSACTION_INITIATED: "nordi.transaction.initiated",
+  TRANSACTION_PROCESSED: "nordi.transaction.processed",
+  TRANSACTION_COMPLETED: "nordi.transaction.completed",
+  TRANSACTION_FAILED: "nordi.transaction.failed",
+
+  // KYC & Compliance
+  KYC_SUBMITTED: "nordi.kyc.submitted",
+  KYC_VERIFIED: "nordi.kyc.verified",
+  KYC_REJECTED: "nordi.kyc.rejected",
+  FRAUD_ALERT: "nordi.security.fraud_alert",
+
+  // User Lifecycle
+  USER_REGISTERED: "nordi.user.registered",
+  USER_LOGGED_IN: "nordi.user.login",
+  USER_DELETED: "nordi.user.deleted",
+
+  // Notifications
+  NOTIFICATIONS_PUSH: "nordi.notifications.push",
+  NOTIFICATIONS_EMAIL: "nordi.notifications.email",
+
+  // Documents and Audit
+  DOCUMENT_EVENTS: "nordi.document.events",
+  AUDIT_EVENTS: "nordi.audit.events",
+  ANALYTICS_EVENTS: "nordi.analytics.events",
+  NOTIFICATIONS_SMS: "nordi.notifications.sms",
+
+  // Dead letter queue
+  DLQ: "nordi.dlq",
+} as const;
+
+export type KafkaTopic = (typeof KafkaTopics)[keyof typeof KafkaTopics];
+
+export interface KafkaEvent<T = unknown> {
+  eventId: string;
+  topic: KafkaTopic;
+  timestamp: number;
+  source: string;
+  payload: T;
+  metadata?: Record<string, string>;
+  retryCount?: number;
+}
+
+interface ConsumerHandler {
+  topic: KafkaTopic | KafkaTopic[];
+  groupId?: string;
+  handler: (event: KafkaEvent, rawMessage: unknown) => Promise<void>;
+  options?: {
+    maxRetries?: number;
+    retryDelayMs?: number;
+    batchSize?: number;
+  };
+}
+
+class KafkaService {
+  async ensureTopics(): Promise<void> {
+    /* Kafka disabled */
+  }
+
+  async connectProducer(): Promise<void> {
+    /* Kafka disabled */
+  }
+
+  async publish<T>(
+    topic: KafkaTopic,
+    _payload: T,
+    _key?: string,
+    _headers?: Record<string, string>,
+  ): Promise<void> {
+    Logger.debug?.(`[Kafka:disabled] event dropped for topic ${topic}`);
+  }
+
+  async subscribe(config: ConsumerHandler): Promise<void> {
+    Logger.debug?.(
+      `[Kafka:disabled] consumer not started for ${Array.isArray(config.topic) ? config.topic.join(",") : config.topic}`,
+    );
+  }
+
+  async healthCheck(): Promise<{
+    connected: boolean;
+    brokers: number;
+    topics: string[];
+    disabled?: boolean;
+  }> {
+    return { connected: false, brokers: 0, topics: [], disabled: true };
+  }
+
+  async disconnect(): Promise<void> {
+    /* Kafka disabled */
+  }
+}
+
+let kafkaServiceInstance: KafkaService | null = null;
+
+export function getKafkaService(): KafkaService {
+  if (!kafkaServiceInstance) {
+    kafkaServiceInstance = new KafkaService();
+  }
+  return kafkaServiceInstance;
+}
+
+export async function initializeKafka(): Promise<KafkaService> {
+  Logger.info("[Kafka] Disabled — running with no-op event adapter");
+  return getKafkaService();
+}
+
+export { KafkaService };
+export default KafkaService;
+
+// ============================================================================
+// ORIGINAL IMPLEMENTATION (kafkajs) — COMMENTED OUT, KEPT FOR SCALABILITY
+// ============================================================================
+/*
+// ============================================================================
+// Nordi-Remittance â€” Kafka Service
 // Production-grade message bus for heavy processing & event-driven architecture
 // ============================================================================
 
@@ -119,7 +266,7 @@ class KafkaService {
   }
 
   // --------------------------------------------------------------------------
-  // ADMIN — Topic Management
+  // ADMIN â€” Topic Management
   // --------------------------------------------------------------------------
 
   async ensureTopics(): Promise<void> {
@@ -424,9 +571,12 @@ export async function initializeKafka(): Promise<KafkaService> {
   const service = getKafkaService();
   await service.ensureTopics();
   await service.connectProducer();
-  Logger.info("[Kafka] ✅ Initialized successfully");
+  Logger.info("[Kafka] âœ… Initialized successfully");
   return service;
 }
 
 export { KafkaService };
 export default KafkaService;
+
+*/
+
