@@ -129,7 +129,7 @@ export const ErrorFallback: React.FC<ErrorFallbackProps> = ({
       </p>
 
       {/* Error details (dev mode) */}
-      {error && process.env.NODE_ENV === 'development' && (
+      {error && Boolean((import.meta as any).env?.DEV) && (
         <details className="mb-6 w-full max-w-lg">
           <summary className="text-sm text-neutral-500 dark:text-neutral-400 cursor-pointer hover:text-neutral-700 dark:text-neutral-200">
             View error details
@@ -199,7 +199,7 @@ export const NotFound: React.FC<NotFoundProps> = ({
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.1, type: 'spring' }}
-        className="text-8xl font-bold text-neutral-200 mb-4"
+        className="text-8xl font-medium text-neutral-200 mb-4"
       >
         404
       </motion.div>
