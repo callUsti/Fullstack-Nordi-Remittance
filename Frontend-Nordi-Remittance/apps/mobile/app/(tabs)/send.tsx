@@ -1,6 +1,6 @@
 // ============================================================================
 // SEND & PAY SCREEN — Unified money movement hub with sub-nav
-// Uses shared hooks, mobile reusables, and luxury aesthetic tokens
+// Uses shared hooks, mobile reusables, AdaptiveScreen & luxury aesthetic tokens
 // ============================================================================
 import React, { useState, useMemo } from 'react';
 import {
@@ -11,9 +11,7 @@ import {
   TouchableOpacity,
   TextInput,
   Platform,
-  StatusBar,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMobileTheme } from '@/core/theme/useMobileTheme';
 import { SubNavTabs } from '@/components/shared/ScreenHeader';
@@ -21,58 +19,70 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Avatar } from '@/components/ui/Avatar';
+import { Icon } from '@/components/ui/Icon';
 import { QuerySection } from '@/components/shared/QuerySection';
-import { EmptyState } from '@/components/shared/EmptyState';
 import { BeneficiaryCard } from '@/components/banking/BeneficiaryCard';
+import { AdaptiveScreen } from '@/components/layout/AdaptiveScreen';
+import { SPACING, FONT_SIZES, ICON_SIZES, RADIUS } from '@/constants/sizings';
 
 // Shared API Queries
 import { useWallets, useBeneficiaries } from '@nordi/shared/hooks/api-queries/useAccounts';
 import { useLoans } from '@nordi/shared/hooks/api-queries/useLoans';
 import { useSavingsGoals } from '@nordi/shared/hooks/api-queries/useInvestments';
 
-const STATUS_BAR_H = Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : 0;
-
 const TABS = [
   { key: 'send', label: 'Send' },
   { key: 'bills', label: 'Bills' },
   { key: 'beneficiaries', label: 'Beneficiaries' },
-  { key: 'savings', label: 'Savings Goals' },
+  { key: 'savings', label: 'Savings' },
   { key: 'loans', label: 'Loans' },
 ];
 
 const TRANSFER_CHANNELS = [
-  { label: 'Domestic', icon: 'home-outline', route: '/screens/Homescreens/Transfer', key: 'domestic' },
-  { label: 'International', icon: 'globe-outline', route: '/screens/Transactions/AccessInternational', key: 'intl' },
-  { label: 'Access-to-Access', icon: 'business-outline', route: '/screens/Transactions/AccessToAccess', key: 'internal' },
-  { label: 'SwiftPay', icon: 'flash-outline', route: '/screens/Transactions/AccessSwiftPay', key: 'swift' },
-  { label: 'QR Pay', icon: 'qr-code-outline', route: '/(tabs)/scan', key: 'qr' },
-  { label: 'Crypto', icon: 'logo-bitcoin', route: '/screens/Transactions/AccessCrypto', key: 'crypto' },
+  { label: 'Domestic', icon: 'Home', route: '/screens/send-money/DomesticTransfer', key: 'domestic' },
+  { label: 'International', icon: 'Globe', route: '/screens/send-money/InternationalTransfer', key: 'intl' },
+  { label: 'Access Pay', icon: 'Building', route: '/screens/Transactions/AccessToAccess', key: 'internal' },
+  { label: 'Instant Pay', icon: 'Zap', route: '/screens/send-money/InstantPayment', key: 'swift' },
+  { label: 'Scan QR', icon: 'QrCode', route: '/(tabs)/scan', key: 'qr' },
+  { label: 'Crypto Transfer', icon: 'Coins', route: '/screens/send-money/CryptoTransfer', key: 'crypto' },
 ];
 
 const BILL_CATEGORIES = [
-  { id: 'elec', label: 'Electricity', icon: 'flash', due: 'Due Nov 5', amount: 120 },
-  { id: 'water', label: 'Water', icon: 'water', due: 'Due Nov 10', amount: 45 },
-  { id: 'net', label: 'Internet', icon: 'wifi', due: 'Due Nov 12', amount: 65 },
-  { id: 'mobile', label: 'Mobile', icon: 'phone-portrait', due: 'Due Nov 8', amount: 30 },
-  { id: 'tv', label: 'Cable TV', icon: 'tv', due: 'Due Nov 15', amount: 55 },
-  { id: 'rent', label: 'Mortgage/Rent', icon: 'home', due: 'Due Nov 1', amount: 800 },
+  { id: 'elec', label: 'Electricity', icon: 'Zap', due: 'Due Nov 5', amount: 120 },
+  { id: 'water', label: 'Water', icon: 'Droplet', due: 'Due Nov 10', amount: 45 },
+  { id: 'net', label: 'Internet', icon: 'Wifi', due: 'Due Nov 12', amount: 65 },
+  { id: 'mobile', label: 'Mobile', icon: 'Smartphone', due: 'Due Nov 8', amount: 30 },
+  { id: 'tv', label: 'Cable TV', icon: 'Tv', due: 'Due Nov 15', amount: 55 },
+  { id: 'rent', label: 'Rent / Mortgage', icon: 'Home', due: 'Due Nov 1', amount: 800 },
 ];
 
 export default function SendPayScreen() {
   const [activeTab, setActiveTab] = useState('send');
   const [amount, setAmount] = useState('');
-  const [selectedChannel, setSelectedChannel] = useState('/screens/Homescreens/Transfer');
+  const [selectedChannel, setSelectedChannel] = useState('/screens/send-money/DomesticTransfer');
   const [beneficiarySearch, setBeneficiarySearch] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
 
   const router = useRouter();
   const theme = useMobileTheme();
   const s = createStyles(theme);
 
   // Queries
-  const { data: walletsData, isLoading: isLoadingWallets } = useWallets();
+  const { data: walletsData, refetch: refetchWallets } = useWallets();
   const { data: beneficiariesData, isLoading: isLoadingBen, isError: isErrorBen, refetch: refetchBen } = useBeneficiaries();
   const { data: loansData, isLoading: isLoadingLoans, isError: isErrorLoans, refetch: refetchLoans } = useLoans();
   const { data: savingsData, isLoading: isLoadingSavings, isError: isErrorSavings, refetch: refetchSavings } = useSavingsGoals();
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.allSettled([
+      refetchWallets?.(),
+      refetchBen?.(),
+      refetchLoans?.(),
+      refetchSavings?.(),
+    ]);
+    setRefreshing(false);
+  };
 
   // Primary available balance calculation
   const availableBalance = useMemo(() => {
@@ -88,7 +98,7 @@ export default function SendPayScreen() {
     const list = Array.isArray(beneficiariesData)
       ? beneficiariesData
       : (beneficiariesData as any)?.data || [];
-    
+
     if (list.length > 0) {
       return list.map((b: any) => ({
         id: b.id || b.beneficiaryId || String(Math.random()),
@@ -100,7 +110,6 @@ export default function SendPayScreen() {
       }));
     }
 
-    // Default high-profile fallback if initial backend has no saved items
     return [
       { id: '1', name: 'Alice Morgan', bankName: 'Nordi Remit', accountNumber: '•••• 8821', currency: 'USD', isFavorite: true },
       { id: '2', name: 'Bob Kim', bankName: 'Chase Bank', accountNumber: '•••• 3190', currency: 'USD', isFavorite: false },
@@ -145,14 +154,14 @@ export default function SendPayScreen() {
     });
   };
 
-  // ── SEND TAB ─────────────────────────────────────────────────────────────
+  // ── SEND TAB CONTENT ───────────────────────────────────────────────────────
   const renderSend = () => (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
+    <View style={s.tabContentWrapper}>
       {/* High-density Amount Card */}
-      <Card variant="default" style={s.cardWrapper}>
+      <Card style={s.cardWrapper}>
         <CardContent style={s.cardInner}>
           <View style={s.amountHeaderRow}>
-            <Text style={s.amountLabel}>You send</Text>
+            <Text style={s.amountLabel}>AMOUNT TO SEND</Text>
             <View style={s.balancePill}>
               <Text style={s.balanceText}>
                 Bal: ${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -173,14 +182,14 @@ export default function SendPayScreen() {
           </View>
 
           <View style={s.quickChipRow}>
-            {['50', '100', '500', '1,000', '5,000'].map(q => (
+            {['50', '100', '500', '1000', '5000'].map((q) => (
               <TouchableOpacity
                 key={q}
-                style={[s.quickChip, amount === q.replace(',', '') && s.quickChipActive]}
-                onPress={() => setAmount(q.replace(',', ''))}
+                style={[s.quickChip, amount === q && s.quickChipActive]}
+                onPress={() => setAmount(q)}
                 activeOpacity={0.7}
               >
-                <Text style={[s.quickChipText, amount === q.replace(',', '') && s.quickChipTextActive]}>
+                <Text style={[s.quickChipText, amount === q && s.quickChipTextActive]}>
                   ${q}
                 </Text>
               </TouchableOpacity>
@@ -191,12 +200,12 @@ export default function SendPayScreen() {
 
       {/* Transfer Channels */}
       <View style={s.sectionHeaderRow}>
-        <Text style={s.sectionTitle}>Transfer Channel</Text>
-        <Text style={s.sectionSub}>Select destination</Text>
+        <Text style={s.sectionTitle}>TRANSFER CHANNEL</Text>
+        <Text style={s.sectionSub}>Pick route</Text>
       </View>
 
       <View style={s.channelGrid}>
-        {TRANSFER_CHANNELS.map(ch => {
+        {TRANSFER_CHANNELS.map((ch) => {
           const isSelected = selectedChannel === ch.route;
           return (
             <TouchableOpacity
@@ -206,9 +215,9 @@ export default function SendPayScreen() {
               activeOpacity={0.8}
             >
               <View style={[s.channelIconWrapper, isSelected && s.channelIconWrapperSelected]}>
-                <Ionicons
-                  name={ch.icon as any}
-                  size={18}
+                <Icon
+                  name={ch.icon}
+                  size={ICON_SIZES.sm}
                   color={isSelected ? theme.primary : theme.text}
                 />
               </View>
@@ -227,7 +236,6 @@ export default function SendPayScreen() {
           size="lg"
           fullWidth
           onPress={handleInitiateTransfer}
-          leftIcon={<Ionicons name="arrow-forward" size={18} color="#ffffff" />}
         >
           {amount ? `Continue with $${amount}` : 'Continue Transfer'}
         </Button>
@@ -235,7 +243,7 @@ export default function SendPayScreen() {
 
       {/* Recent Beneficiaries Horizontal Bar */}
       <View style={s.sectionHeaderRow}>
-        <Text style={s.sectionTitle}>Recent Recipients</Text>
+        <Text style={s.sectionTitle}>RECENT RECIPIENTS</Text>
         <TouchableOpacity onPress={() => setActiveTab('beneficiaries')}>
           <Text style={s.viewAllLink}>View All</Text>
         </TouchableOpacity>
@@ -244,11 +252,11 @@ export default function SendPayScreen() {
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.recipientsRow}>
         <TouchableOpacity
           style={s.addRecipientItem}
-          onPress={() => router.push('/screens/Transactions/AccessToOthers' as any)}
+          onPress={() => router.push('/screens/beneficiaries/AddBeneficiary')}
           activeOpacity={0.7}
         >
           <View style={s.addRecipientCircle}>
-            <Ionicons name="add" size={20} color={theme.primary} />
+            <Icon name="Plus" size={ICON_SIZES.sm} color={theme.primary} />
           </View>
           <Text style={s.recipientName}>Add New</Text>
         </TouchableOpacity>
@@ -259,7 +267,7 @@ export default function SendPayScreen() {
             style={s.recipientItem}
             onPress={() => {
               router.push({
-                pathname: '/screens/Homescreens/Transfer' as any,
+                pathname: '/screens/send-money/DomesticTransfer' as any,
                 params: { recipientId: ben.id, name: ben.name },
               });
             }}
@@ -272,13 +280,13 @@ export default function SendPayScreen() {
           </TouchableOpacity>
         ))}
       </ScrollView>
-    </ScrollView>
+    </View>
   );
 
-  // ── BILLS TAB ────────────────────────────────────────────────────────────
+  // ── BILLS TAB CONTENT ──────────────────────────────────────────────────────
   const renderBills = () => (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
-      <Card variant="default" style={s.cardWrapper}>
+    <View style={s.tabContentWrapper}>
+      <Card style={s.cardWrapper}>
         <CardContent style={s.billsSummaryRow}>
           <View style={s.billsStat}>
             <Text style={s.billsStatValue}>$1,115.00</Text>
@@ -286,27 +294,27 @@ export default function SendPayScreen() {
           </View>
           <View style={s.dividerVertical} />
           <View style={s.billsStat}>
-            <Badge variant="warning">3 Pending</Badge>
+            <Badge variant="warning" size="sm">3 Pending</Badge>
             <Text style={s.billsStatLabel}>Next: Nov 5</Text>
           </View>
           <View style={s.dividerVertical} />
           <View style={s.billsStat}>
-            <Badge variant="success">2 Auto-pay</Badge>
+            <Badge variant="success" size="sm">2 Auto-pay</Badge>
             <Text style={s.billsStatLabel}>Active</Text>
           </View>
         </CardContent>
       </Card>
 
       <View style={s.sectionHeaderRow}>
-        <Text style={s.sectionTitle}>Utility & Recurring Bills</Text>
+        <Text style={s.sectionTitle}>UTILITIES & RECURRING</Text>
       </View>
 
       <View style={s.billsGrid}>
-        {BILL_CATEGORIES.map(bill => (
-          <Card key={bill.id} variant="default" style={s.billCard}>
+        {BILL_CATEGORIES.map((bill) => (
+          <Card key={bill.id} style={s.billCard}>
             <CardContent style={s.billCardInner}>
               <View style={s.billIconBox}>
-                <Ionicons name={bill.icon as any} size={20} color={theme.primary} />
+                <Icon name={bill.icon} size={ICON_SIZES.sm} color={theme.primary} />
               </View>
               <Text style={s.billName}>{bill.label}</Text>
               <Text style={s.billAmount}>${bill.amount}</Text>
@@ -326,17 +334,17 @@ export default function SendPayScreen() {
           </Card>
         ))}
       </View>
-    </ScrollView>
+    </View>
   );
 
-  // ── BENEFICIARIES TAB ────────────────────────────────────────────────────
+  // ── BENEFICIARIES TAB CONTENT ──────────────────────────────────────────────
   const renderBeneficiaries = () => (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
+    <View style={s.tabContentWrapper}>
       <View style={s.searchWrap}>
-        <Ionicons name="search-outline" size={16} color={theme.textMuted} />
+        <Icon name="Search" size={ICON_SIZES.sm} color={theme.textMuted} />
         <TextInput
           style={s.searchInput}
-          placeholder="Search beneficiaries by name or bank..."
+          placeholder="Search by name or bank..."
           placeholderTextColor={theme.textMuted}
           value={beneficiarySearch}
           onChangeText={setBeneficiarySearch}
@@ -348,8 +356,7 @@ export default function SendPayScreen() {
           variant="outline"
           size="md"
           fullWidth
-          leftIcon={<Ionicons name="person-add-outline" size={16} color={theme.primary} />}
-          onPress={() => router.push('/screens/Transactions/AccessToOthers' as any)}
+          onPress={() => router.push('/screens/beneficiaries/AddBeneficiary')}
         >
           Add New Beneficiary
         </Button>
@@ -370,7 +377,7 @@ export default function SendPayScreen() {
               beneficiary={ben}
               onSendMoney={(recipient) => {
                 router.push({
-                  pathname: '/screens/Homescreens/Transfer' as any,
+                  pathname: '/screens/send-money/DomesticTransfer' as any,
                   params: { recipientId: recipient.id, name: recipient.name },
                 });
               }}
@@ -378,19 +385,18 @@ export default function SendPayScreen() {
           ))}
         </View>
       </QuerySection>
-    </ScrollView>
+    </View>
   );
 
-  // ── SAVINGS GOALS TAB ────────────────────────────────────────────────────
+  // ── SAVINGS GOALS TAB CONTENT ──────────────────────────────────────────────
   const renderSavings = () => (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
+    <View style={s.tabContentWrapper}>
       <View style={s.addBenCtaRow}>
         <Button
           variant="primary"
           size="md"
           fullWidth
-          leftIcon={<Ionicons name="add-circle-outline" size={18} color="#ffffff" />}
-          onPress={() => router.push('/screens/banking/accounts' as any)}
+          onPress={() => router.push('/screens/savings/CreateGoal')}
         >
           Create New Savings Vault
         </Button>
@@ -406,11 +412,11 @@ export default function SendPayScreen() {
           {savingsList.map((goal: any) => {
             const pct = Math.min(100, Math.round((goal.saved / goal.target) * 100));
             return (
-              <Card key={goal.id} variant="default" style={s.goalCard}>
+              <Card key={goal.id} style={s.goalCard}>
                 <CardContent style={s.goalCardInner}>
                   <View style={s.goalTopRow}>
                     <View style={s.goalIconCircle}>
-                      <Ionicons name="shield-checkmark-outline" size={18} color={theme.primary} />
+                      <Icon name="PiggyBank" size={ICON_SIZES.sm} color={theme.primary} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={s.goalName}>{goal.name}</Text>
@@ -418,7 +424,7 @@ export default function SendPayScreen() {
                         ${Number(goal.saved).toLocaleString()} of ${Number(goal.target).toLocaleString()}
                       </Text>
                     </View>
-                    <Badge variant={pct >= 80 ? 'success' : 'info'}>{pct}%</Badge>
+                    <Badge variant={pct >= 80 ? 'success' : 'outline'} size="sm">{pct}%</Badge>
                   </View>
 
                   <View style={s.progressBarTrack}>
@@ -430,21 +436,20 @@ export default function SendPayScreen() {
           })}
         </View>
       </QuerySection>
-    </ScrollView>
+    </View>
   );
 
-  // ── LOANS TAB ────────────────────────────────────────────────────────────
+  // ── LOANS TAB CONTENT ──────────────────────────────────────────────────────
   const renderLoans = () => (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
+    <View style={s.tabContentWrapper}>
       <View style={s.addBenCtaRow}>
         <Button
           variant="primary"
           size="md"
           fullWidth
-          leftIcon={<Ionicons name="document-text-outline" size={18} color="#ffffff" />}
-          onPress={() => router.push('/screens/banking/loans' as any)}
+          onPress={() => router.push('/screens/loans/ApplyForLoan')}
         >
-          Apply for a Loan or Credit Line
+          Apply for Credit Line
         </Button>
       </View>
 
@@ -456,14 +461,14 @@ export default function SendPayScreen() {
       >
         <View style={s.cardList}>
           {loansList.map((loan: any) => (
-            <Card key={loan.id} variant="default" style={s.loanCard}>
+            <Card key={loan.id} style={s.loanCard}>
               <CardContent style={s.loanCardInner}>
                 <View style={s.loanTopRow}>
                   <View>
                     <Text style={s.loanTitle}>{loan.name}</Text>
                     <Text style={s.loanSub}>{loan.rate}% APR · {loan.tenure || 'Flexible'}</Text>
                   </View>
-                  <Badge variant="success">Active</Badge>
+                  <Badge variant="success" size="sm">Active</Badge>
                 </View>
 
                 <View style={s.loanMetricsGrid}>
@@ -497,7 +502,7 @@ export default function SendPayScreen() {
           ))}
         </View>
       </QuerySection>
-    </ScrollView>
+    </View>
   );
 
   const renderActiveTab = () => {
@@ -516,201 +521,207 @@ export default function SendPayScreen() {
   };
 
   return (
-    <View style={s.container}>
-      <View style={s.topNavHeader}>
+    <AdaptiveScreen withTabBar={true} onRefresh={onRefresh} refreshing={refreshing}>
+      {/* Top Header */}
+      <View style={s.topHeader}>
         <View>
-          <Text style={s.navTitle}>Send & Pay</Text>
-          <Text style={s.navSubtitle}>Unified remittance & payments</Text>
+          <Text style={s.headerSubtitle}>MONEY MOVEMENT</Text>
+          <Text style={s.headerTitle}>Send & Pay</Text>
         </View>
         <TouchableOpacity
-          style={s.historyButton}
-          onPress={() => router.push('/screens/banking/transactions' as any)}
-          accessibilityLabel="Transaction History"
+          style={s.headerBtn}
+          onPress={() => router.push('/screens/Transactions' as any)}
+          activeOpacity={0.7}
         >
-          <Ionicons name="time-outline" size={20} color={theme.text} />
+          <Icon name="Clock" size={ICON_SIZES.sm} color={theme.primary} />
         </TouchableOpacity>
       </View>
 
-      <SubNavTabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
+      {/* Sub Nav Tab Bar */}
+      <View style={s.subNavWrap}>
+        <SubNavTabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
+      </View>
 
+      {/* Active Tab View */}
       {renderActiveTab()}
-    </View>
+    </AdaptiveScreen>
   );
 }
 
 const createStyles = (theme: ReturnType<typeof useMobileTheme>) =>
   StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.background,
-    },
-    topNavHeader: {
+    topHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingTop: Platform.OS === 'ios' ? 56 : STATUS_BAR_H + 16,
-      paddingBottom: 10,
-      paddingHorizontal: 16,
+      marginBottom: SPACING.sm,
+      marginTop: SPACING.xs,
     },
-    navTitle: {
-      fontSize: 20,
+    headerSubtitle: {
+      fontSize: FONT_SIZES.nano,
+      letterSpacing: 1.2,
+      fontWeight: '700',
+      color: theme.primary,
+      marginBottom: 2,
+    },
+    headerTitle: {
+      fontSize: FONT_SIZES.hero,
       fontWeight: '800',
       color: theme.text,
-      letterSpacing: -0.4,
+      letterSpacing: -0.5,
     },
-    navSubtitle: {
-      fontSize: 11,
-      color: theme.textMuted,
-      marginTop: 2,
-    },
-    historyButton: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: theme.surface,
-      alignItems: 'center',
-      justifyContent: 'center',
+    headerBtn: {
+      width: 34,
+      height: 34,
+      borderRadius: RADIUS.lg,
+      backgroundColor: theme.surfaceAlt,
       borderWidth: 1,
       borderColor: theme.border,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
-    scrollContent: {
-      paddingBottom: 120,
+    subNavWrap: {
+      marginBottom: SPACING.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.border,
+    },
+    tabContentWrapper: {
+      paddingBottom: SPACING.lg,
     },
     cardWrapper: {
-      marginHorizontal: 16,
-      marginTop: 12,
-      marginBottom: 16,
+      backgroundColor: theme.surface,
+      borderRadius: RADIUS.xl,
+      borderWidth: 1,
+      borderColor: theme.border,
+      marginBottom: SPACING.md,
     },
     cardInner: {
-      padding: 16,
+      padding: SPACING.md,
     },
     amountHeaderRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 8,
+      marginBottom: SPACING.xs,
     },
     amountLabel: {
-      fontSize: 12,
-      fontWeight: '600',
+      fontSize: FONT_SIZES.micro,
+      fontWeight: '700',
+      letterSpacing: 1,
       color: theme.textMuted,
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
     },
     balancePill: {
       backgroundColor: theme.surfaceAlt,
       paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 8,
+      paddingVertical: 2,
+      borderRadius: RADIUS.full,
     },
     balanceText: {
-      fontSize: 11,
+      fontSize: FONT_SIZES.nano,
       fontWeight: '600',
-      color: theme.textMuted,
+      color: theme.text,
     },
     amountInputRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginVertical: 4,
+      paddingVertical: SPACING.xs,
     },
     currencyPrefix: {
-      fontSize: 32,
-      fontWeight: '700',
-      color: theme.textMuted,
-      marginRight: 6,
+      fontSize: FONT_SIZES.hero,
+      fontWeight: '800',
+      color: theme.text,
+      marginRight: SPACING.xs,
     },
     amountInput: {
       flex: 1,
-      fontSize: 34,
+      fontSize: FONT_SIZES.hero,
       fontWeight: '800',
       color: theme.text,
-      letterSpacing: -1,
       padding: 0,
     },
     quickChipRow: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 6,
-      marginTop: 12,
+      alignItems: 'center',
+      gap: SPACING.xs,
+      marginTop: SPACING.sm,
     },
     quickChip: {
-      backgroundColor: theme.surfaceAlt,
-      borderRadius: 8,
       paddingHorizontal: 10,
-      paddingVertical: 5,
+      paddingVertical: 4,
+      borderRadius: RADIUS.full,
+      backgroundColor: theme.surfaceAlt,
       borderWidth: 1,
       borderColor: theme.border,
     },
     quickChipActive: {
-      backgroundColor: theme.primarySoft,
+      backgroundColor: theme.primary,
       borderColor: theme.primary,
     },
     quickChipText: {
-      fontSize: 11,
+      fontSize: FONT_SIZES.nano,
       fontWeight: '700',
       color: theme.text,
     },
     quickChipTextActive: {
-      color: theme.primary,
+      color: '#FFFFFF',
     },
     sectionHeaderRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: 16,
-      marginBottom: 10,
-      marginTop: 6,
+      marginTop: SPACING.sm,
+      marginBottom: SPACING.xs,
+      paddingHorizontal: SPACING.xxs,
     },
     sectionTitle: {
-      fontSize: 14,
+      fontSize: FONT_SIZES.micro,
       fontWeight: '700',
-      color: theme.text,
-      letterSpacing: -0.2,
+      letterSpacing: 1,
+      color: theme.textMuted,
     },
     sectionSub: {
-      fontSize: 11,
+      fontSize: FONT_SIZES.nano,
       color: theme.textMuted,
     },
     viewAllLink: {
-      fontSize: 12,
+      fontSize: FONT_SIZES.caption,
       fontWeight: '600',
       color: theme.primary,
     },
     channelGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      paddingHorizontal: 12,
-      gap: 8,
-      marginBottom: 14,
+      gap: SPACING.xs,
+      marginBottom: SPACING.md,
     },
     channelCard: {
-      width: '31%',
+      width: '31.5%',
       backgroundColor: theme.surface,
-      borderRadius: 12,
-      paddingVertical: 12,
-      paddingHorizontal: 8,
-      alignItems: 'center',
-      gap: 6,
+      borderRadius: RADIUS.lg,
       borderWidth: 1,
       borderColor: theme.border,
+      paddingVertical: SPACING.sm,
+      paddingHorizontal: SPACING.xs,
+      alignItems: 'center',
     },
     channelCardSelected: {
       borderColor: theme.primary,
       backgroundColor: theme.primarySoft,
     },
     channelIconWrapper: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
+      width: 32,
+      height: 32,
+      borderRadius: RADIUS.md,
       backgroundColor: theme.surfaceAlt,
       alignItems: 'center',
       justifyContent: 'center',
+      marginBottom: SPACING.xs,
     },
     channelIconWrapperSelected: {
-      backgroundColor: theme.surface,
+      backgroundColor: `${theme.primary}20`,
     },
     channelLabel: {
-      fontSize: 10,
+      fontSize: FONT_SIZES.micro,
       fontWeight: '600',
       color: theme.text,
       textAlign: 'center',
@@ -720,179 +731,184 @@ const createStyles = (theme: ReturnType<typeof useMobileTheme>) =>
       fontWeight: '700',
     },
     ctaWrapper: {
-      paddingHorizontal: 16,
-      marginBottom: 18,
+      marginBottom: SPACING.lg,
     },
     recipientsRow: {
-      paddingHorizontal: 16,
-      gap: 12,
-      paddingBottom: 8,
-    },
-    recipientItem: {
+      flexDirection: 'row',
       alignItems: 'center',
-      gap: 5,
-      width: 54,
+      gap: SPACING.md,
+      paddingVertical: SPACING.xs,
     },
     addRecipientItem: {
       alignItems: 'center',
-      gap: 5,
-      width: 54,
     },
     addRecipientCircle: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
+      width: 38,
+      height: 38,
+      borderRadius: 19,
       borderWidth: 1.5,
       borderStyle: 'dashed',
       borderColor: theme.primary,
       alignItems: 'center',
       justifyContent: 'center',
+      marginBottom: 4,
+    },
+    recipientItem: {
+      alignItems: 'center',
     },
     recipientName: {
-      fontSize: 10,
-      fontWeight: '500',
-      color: theme.textMuted,
-      textAlign: 'center',
+      fontSize: FONT_SIZES.nano,
+      fontWeight: '600',
+      color: theme.text,
+      marginTop: 4,
+      maxWidth: 52,
     },
     billsSummaryRow: {
       flexDirection: 'row',
-      justifyContent: 'space-around',
+      justifyContent: 'space-between',
       alignItems: 'center',
-      paddingVertical: 14,
+      padding: SPACING.md,
     },
     billsStat: {
       alignItems: 'center',
-      gap: 4,
+      flex: 1,
     },
     billsStatValue: {
-      fontSize: 18,
+      fontSize: FONT_SIZES.titleSm,
       fontWeight: '800',
       color: theme.text,
     },
     billsStatLabel: {
-      fontSize: 10,
+      fontSize: FONT_SIZES.nano,
       color: theme.textMuted,
+      marginTop: 2,
     },
     dividerVertical: {
       width: 1,
-      height: 28,
+      height: 24,
       backgroundColor: theme.border,
     },
     billsGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      paddingHorizontal: 12,
-      gap: 8,
+      gap: SPACING.xs,
     },
     billCard: {
-      width: '48%',
-      marginBottom: 4,
+      width: '48.5%',
+      backgroundColor: theme.surface,
+      borderRadius: RADIUS.lg,
+      borderWidth: 1,
+      borderColor: theme.border,
+      marginBottom: SPACING.xs,
     },
     billCardInner: {
-      padding: 12,
+      padding: SPACING.sm,
       alignItems: 'center',
-      gap: 4,
     },
     billIconBox: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
+      width: 32,
+      height: 32,
+      borderRadius: RADIUS.md,
       backgroundColor: theme.surfaceAlt,
       alignItems: 'center',
       justifyContent: 'center',
-      marginBottom: 2,
+      marginBottom: 6,
     },
     billName: {
-      fontSize: 11,
-      fontWeight: '700',
+      fontSize: FONT_SIZES.body,
+      fontWeight: '600',
       color: theme.text,
     },
     billAmount: {
-      fontSize: 15,
+      fontSize: FONT_SIZES.titleSm,
       fontWeight: '800',
       color: theme.text,
+      marginTop: 2,
     },
     billDue: {
-      fontSize: 10,
+      fontSize: FONT_SIZES.nano,
       color: theme.textMuted,
-      marginBottom: 6,
+      marginBottom: 8,
     },
     searchWrap: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
       backgroundColor: theme.surface,
-      marginHorizontal: 16,
-      marginTop: 12,
-      borderRadius: 10,
-      paddingHorizontal: 12,
-      paddingVertical: 9,
+      borderRadius: RADIUS.lg,
       borderWidth: 1,
       borderColor: theme.border,
+      paddingHorizontal: SPACING.md,
+      paddingVertical: SPACING.xs + 2,
+      marginBottom: SPACING.sm,
     },
     searchInput: {
       flex: 1,
-      fontSize: 13,
+      marginLeft: SPACING.xs,
+      fontSize: FONT_SIZES.body,
       color: theme.text,
       padding: 0,
     },
     addBenCtaRow: {
-      paddingHorizontal: 16,
-      marginVertical: 12,
+      marginBottom: SPACING.sm,
     },
     beneficiaryList: {
-      paddingHorizontal: 16,
+      gap: SPACING.xs,
     },
     cardList: {
-      paddingHorizontal: 16,
-      gap: 10,
+      gap: SPACING.xs,
     },
     goalCard: {
-      marginBottom: 2,
+      backgroundColor: theme.surface,
+      borderRadius: RADIUS.lg,
+      borderWidth: 1,
+      borderColor: theme.border,
     },
     goalCardInner: {
-      padding: 14,
+      padding: SPACING.md,
     },
     goalTopRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 10,
-      marginBottom: 10,
+      marginBottom: SPACING.sm,
     },
     goalIconCircle: {
       width: 32,
       height: 32,
-      borderRadius: 16,
+      borderRadius: RADIUS.md,
       backgroundColor: theme.surfaceAlt,
       alignItems: 'center',
       justifyContent: 'center',
+      marginRight: SPACING.sm,
     },
     goalName: {
-      fontSize: 13,
+      fontSize: FONT_SIZES.body,
       fontWeight: '700',
       color: theme.text,
     },
     goalMeta: {
-      fontSize: 11,
+      fontSize: FONT_SIZES.caption,
       color: theme.textMuted,
       marginTop: 1,
     },
     progressBarTrack: {
-      height: 5,
+      height: 4,
       backgroundColor: theme.surfaceAlt,
-      borderRadius: 3,
+      borderRadius: RADIUS.full,
       overflow: 'hidden',
     },
     progressBarFill: {
       height: '100%',
-      borderRadius: 3,
+      borderRadius: RADIUS.full,
     },
     loanCard: {
-      marginBottom: 2,
+      backgroundColor: theme.surface,
+      borderRadius: RADIUS.lg,
+      borderWidth: 1,
+      borderColor: theme.border,
     },
     loanCardInner: {
-      padding: 14,
-      gap: 12,
+      padding: SPACING.md,
+      gap: SPACING.sm,
     },
     loanTopRow: {
       flexDirection: 'row',
@@ -900,12 +916,12 @@ const createStyles = (theme: ReturnType<typeof useMobileTheme>) =>
       alignItems: 'flex-start',
     },
     loanTitle: {
-      fontSize: 14,
+      fontSize: FONT_SIZES.body,
       fontWeight: '700',
       color: theme.text,
     },
     loanSub: {
-      fontSize: 11,
+      fontSize: FONT_SIZES.caption,
       color: theme.textMuted,
       marginTop: 2,
     },
@@ -913,19 +929,19 @@ const createStyles = (theme: ReturnType<typeof useMobileTheme>) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       backgroundColor: theme.surfaceAlt,
-      borderRadius: 8,
-      padding: 10,
+      borderRadius: RADIUS.md,
+      padding: SPACING.sm,
     },
     loanMetric: {
       alignItems: 'center',
     },
     loanMetricValue: {
-      fontSize: 13,
+      fontSize: FONT_SIZES.body,
       fontWeight: '700',
       color: theme.text,
     },
     loanMetricLabel: {
-      fontSize: 9,
+      fontSize: FONT_SIZES.nano,
       color: theme.textMuted,
       marginTop: 2,
     },
