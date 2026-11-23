@@ -125,6 +125,77 @@ export async function updateTransactionStatus(req: AuthenticatedRequest, res: Re
   }
 }
 
+export async function getRemittanceCountries(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const countries = TransactionsTransferService.getRemittanceCountries();
+    sendSuccess(res, countries);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getRemittanceQuote(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    if (!req.user) throw new UnauthorizedError("Authentication required");
+    const quote = TransactionsTransferService.getRemittanceQuote(req.body);
+    sendSuccess(res, quote);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getRecipients(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    if (!req.user) throw new UnauthorizedError("Authentication required");
+    const data = await TransactionsTransferService.getRecipients(req.user.userId);
+    sendSuccess(res, data);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function createRecipient(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    if (!req.user) throw new UnauthorizedError("Authentication required");
+    const data = await TransactionsTransferService.createRecipient(req.user.userId, req.body);
+    sendCreated(res, data, "Recipient created successfully");
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function sendRemittance(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    if (!req.user) throw new UnauthorizedError("Authentication required");
+    const result = await TransactionsTransferService.sendRemittance(req.user.userId, req.body, req.ip || "", req.headers["user-agent"] || "");
+    sendCreated(res, result, "Remittance submitted successfully");
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getTransferVerificationSetting(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await TransactionsTransferService.getTransferVerificationSetting();
+    sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function setTransferVerificationSetting(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    if (!req.user) throw new UnauthorizedError("Authentication required");
+    const result = await TransactionsTransferService.setTransferVerificationSetting(
+      Boolean(req.body.requireInternationalCodes),
+      req.user.userId,
+    );
+    sendSuccess(res, result, "International transfer verification setting updated");
+  } catch (error) {
+    next(error);
+  }
+}
+
 export default {
   internalTransfer,
   deposit,
@@ -136,4 +207,11 @@ export default {
   cancelTransaction,
   getAllTransactions,
   updateTransactionStatus,
+  getRemittanceCountries,
+  getRemittanceQuote,
+  getRecipients,
+  createRecipient,
+  sendRemittance,
+  getTransferVerificationSetting,
+  setTransferVerificationSetting,
 };
