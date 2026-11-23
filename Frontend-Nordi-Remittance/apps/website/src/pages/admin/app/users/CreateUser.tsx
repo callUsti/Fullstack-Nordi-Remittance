@@ -131,12 +131,12 @@ const CreateUser: React.FC = () => {
   return (
     <FormContainer step={step} totalSteps={totalSteps}>
       <div
-        className="mx-auto flex w-full flex-col items-center justify-center rounded-lg lg:w-[70%]"
+        className="flex w-full flex-col items-center justify-center rounded-lg px-2 sm:px-4"
         style={{ backgroundColor: theme.background.secondary }}
       >
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="w-full rounded-md p-6 md:w-[80%] lg:w-full"
+          className="w-full rounded-md p-4 sm:p-6 md:w-[80%] lg:w-full"
           style={{ backgroundColor: theme.surface.primary }}
         >
           <div className="w-full lg:p-6">
