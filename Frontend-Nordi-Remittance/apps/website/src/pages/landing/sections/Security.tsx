@@ -94,8 +94,8 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ feature, index }) => (
         : feature.icon}
     </div>
     <div>
-      <h4 className="text-base sm:text-lg font-black text-white uppercase tracking-tight">{feature.title}</h4>
-      <p className="mt-2 text-[11px] sm:text-sm text-slate-400 font-bold opacity-75 leading-relaxed">
+      <h4 className="text-base sm:text-lg font-semibold text-white uppercase tracking-tight">{feature.title}</h4>
+      <p className="mt-2 text-[11px] sm:text-sm text-slate-400 font-semibold opacity-75 leading-relaxed">
         {feature.description}
       </p>
     </div>
