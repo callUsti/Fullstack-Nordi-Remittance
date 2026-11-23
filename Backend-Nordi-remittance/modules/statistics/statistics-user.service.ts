@@ -16,9 +16,12 @@ function getWalletTotalBalance(wallet: any): number {
   if (wallet.balances instanceof Map) {
     let total = 0;
     wallet.balances.forEach((value: number) => {
-      total += value;
+      total += Number(value) || 0;
     });
     return total;
+  }
+  if (wallet.balances && typeof wallet.balances === 'object') {
+    return Object.values(wallet.balances).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0);
   }
   return 0;
 }
@@ -60,15 +63,20 @@ export class StatisticsUserService {
     const cachedStats = await cacheGet(cacheKey);
     if (cachedStats) return cachedStats;
 
-    const wallets = await Wallets.find({ user: userId, status: 'active' });
+    const wallets = await Wallets.find({ user: userId, isDeleted: { $ne: true }, status: { $ne: 'closed' } });
     const totalBalance = wallets.reduce((sum, w) => sum + getWalletTotalBalance(w), 0);
 
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const walletIds = wallets.map((w) => w._id);
 
     const transactionStats = await Transactions.aggregate([
       {
         $match: {
-          $or: [{ sender: userId }, { recipient: userId }],
+          $or: [
+            { initiatedBy: userId },
+            { wallet: { $in: walletIds } },
+            { recipientWallet: { $in: walletIds } },
+          ],
           createdAt: { $gte: thirtyDaysAgo },
           status: 'completed',
         },
@@ -78,7 +86,16 @@ export class StatisticsUserService {
           _id: {
             type: '$type',
             direction: {
-              $cond: [{ $eq: ['$sender', userId] }, 'sent', 'received'],
+              $cond: [
+                {
+                  $or: [
+                    { $in: ['$type', ['deposit', 'credit', 'funding', 'bonus', 'refund', 'loan_disbursement']] },
+                    { $in: ['$recipientWallet', walletIds] },
+                  ],
+                },
+                'received',
+                'sent',
+              ],
             },
           },
           count: { $sum: 1 },
@@ -87,10 +104,21 @@ export class StatisticsUserService {
       },
     ]);
 
+    let monthlyIncome = 0;
+    let monthlyExpenses = 0;
+    for (const item of transactionStats) {
+      if (item._id?.direction === 'received') {
+        monthlyIncome += Number(item.total) || 0;
+      } else {
+        monthlyExpenses += Number(item.total) || 0;
+      }
+    }
+
     const spendingByCategory = await Transactions.aggregate([
       {
         $match: {
-          sender: userId,
+          initiatedBy: userId,
+          type: { $in: ['withdrawal', 'transfer', 'payment', 'debit', 'fee', 'investment', 'loan_repayment'] },
           createdAt: { $gte: thirtyDaysAgo },
           status: 'completed',
         },
@@ -108,7 +136,8 @@ export class StatisticsUserService {
     const dailySpending = await Transactions.aggregate([
       {
         $match: {
-          sender: userId,
+          initiatedBy: userId,
+          type: { $in: ['withdrawal', 'transfer', 'payment', 'debit', 'fee', 'investment', 'loan_repayment'] },
           createdAt: { $gte: thirtyDaysAgo },
           status: 'completed',
         },
@@ -136,6 +165,11 @@ export class StatisticsUserService {
     const totalSavings = savingsGoals.reduce((sum, g) => sum + g.currentAmount, 0);
 
     const stats = {
+      totalBalance,
+      monthlyIncome,
+      monthlyExpenses,
+      totalReceived: monthlyIncome,
+      totalSent: monthlyExpenses,
       wallets: {
         count: wallets.length,
         totalBalance,
