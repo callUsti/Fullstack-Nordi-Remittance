@@ -1,261 +1,377 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+// ============================================================================
+// ACCESS & SECURITY SCREEN — Nordi Remittance Mobile
+// Ultra-minimalist, sleek security center with live score, 2FA, & devices
+// ============================================================================
+
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Switch, Platform } from 'react-native';
+import { useRouter } from 'expo-router';
+import { AdaptiveScreen } from '@/components/layout/AdaptiveScreen';
 import { useMobileTheme } from '@/core/theme/useMobileTheme';
+import { Icon } from '@/components/ui/Icon';
+import { Card, CardContent } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { SPACING, FONT_SIZES, ICON_SIZES, RADIUS } from '@/constants/sizings';
+
+interface AccessItem {
+  id: string;
+  icon: string;
+  label: string;
+  desc: string;
+  enabled: boolean;
+  route?: string;
+}
+
+interface AccessSection {
+  title: string;
+  items: AccessItem[];
+}
 
 export default function AccessScreen() {
+  const router = useRouter();
   const theme = useMobileTheme();
   const styles = createStyles(theme);
 
-  const accessItems = [
+  const [sections, setSections] = useState<AccessSection[]>([
     {
-      title: 'Quick Access',
+      title: 'Authentication & Access',
       items: [
-        { icon: 'finger-print', label: 'Biometric Login', enabled: true },
-        { icon: 'phone-portrait', label: 'Device Management', enabled: true },
-        { icon: 'key', label: 'Password Manager', enabled: false }
-      ]
+        { id: 'bio', icon: 'fingerprint', label: 'Biometric Access', desc: 'Face ID / Fingerprint verification', enabled: true, route: '/screens/security/BiometricAccess' },
+        { id: '2fa', icon: 'shield-check', label: 'Two-Factor Authentication', desc: 'Time-based OTP codes on sign-in', enabled: true, route: '/screens/security/TwoFactorAuth' },
+        { id: 'applock', icon: 'lock', label: 'App Auto-Lock', desc: 'Require PIN after 2 minutes idle', enabled: true },
+      ],
     },
     {
-      title: 'Security',
+      title: 'Privacy & Visibility',
       items: [
-        { icon: 'shield-checkmark', label: '2-Factor Authentication', enabled: true },
-        { icon: 'lock-closed', label: 'App Lock', enabled: true },
-        { icon: 'eye-off', label: 'Hide Balance', enabled: false }
-      ]
+        { id: 'balance', icon: 'eye-off', label: 'Stealth Mode', desc: 'Mask account balances by default', enabled: false },
+        { id: 'notify', icon: 'bell', label: 'Security Alerts', desc: 'Real-time suspicious transaction notifications', enabled: true, route: '/screens/security/SecurityAlertsList' },
+      ],
     },
     {
-      title: 'Permissions',
+      title: 'Device Permissions',
       items: [
-        { icon: 'camera', label: 'Camera Access', enabled: true },
-        { icon: 'location', label: 'Location Services', enabled: true },
-        { icon: 'notifications', label: 'Push Notifications', enabled: true }
-      ]
-    }
-  ];
+        { id: 'cam', icon: 'camera', label: 'Camera Scanner', desc: 'Needed for QR transfers & verification', enabled: true },
+        { id: 'loc', icon: 'map-pin', label: 'Location Services', desc: 'Geo-fraud protection during logins', enabled: true },
+      ],
+    },
+  ]);
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    setRefreshing(false);
+  };
+
+  const toggleItem = (itemId: string) => {
+    setSections((prev) =>
+      prev.map((sec) => ({
+        ...sec,
+        items: sec.items.map((it) => (it.id === itemId ? { ...it, enabled: !it.enabled } : it)),
+      }))
+    );
+  };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>My Access</Text>
-        <TouchableOpacity style={styles.helpButton}>
-          <Ionicons name="help-circle" size={24} color={theme.primary} />
+    <AdaptiveScreen withTabBar={true} onRefresh={onRefresh} refreshing={refreshing}>
+      {/* Top Header */}
+      <View style={styles.topHeader}>
+        <View>
+          <Text style={styles.headerSubtitle}>ACCOUNT INTEGRITY</Text>
+          <Text style={styles.headerTitle}>Access & Security</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.headerBtn}
+          onPress={() => router.push('/screens/security/ActivityLogs')}
+          activeOpacity={0.7}
+        >
+          <Icon name="Clock" size={ICON_SIZES.sm} color={theme.primary} />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.securityScore}>
-        <View style={styles.scoreHeader}>
-          <Text style={styles.scoreTitle}>Security Score</Text>
-          <Text style={styles.scoreValue}>85%</Text>
-        </View>
-        <View style={styles.scoreBar}>
-          <View style={[styles.scoreProgress, { width: '85%' }]} />
-        </View>
-        <Text style={styles.scoreText}>Your account security is good</Text>
-      </View>
-
-      {accessItems.map((section, index) => (
-        <View key={index} style={styles.section}>
-          <Text style={styles.sectionTitle}>{section.title}</Text>
-          <View style={styles.sectionContent}>
-            {section.items.map((item, itemIndex) => (
-              <TouchableOpacity key={itemIndex} style={styles.accessItem}>
-                <View style={styles.accessItemLeft}>
-                  <View style={[styles.accessItemIcon, { backgroundColor: item.enabled ? theme.primarySoft : theme.surfaceAlt }]}>
-                    <Ionicons name={item.icon as any} size={20} color={item.enabled ? theme.primary : theme.iconMuted} />
-                  </View>
-                  <Text style={[styles.accessItemLabel, { color: item.enabled ? theme.text : theme.textMuted }]}>{item.label}</Text>
+      {/* Security Score Banner */}
+      <Card style={styles.scoreCard}>
+        <CardContent style={styles.scoreContent}>
+          <View style={styles.scoreRow}>
+            <View style={styles.scoreBadgeWrap}>
+              <Icon name="ShieldCheck" size={ICON_SIZES.lg} color={theme.success} />
+              <View style={styles.scoreTextGroup}>
+                <View style={styles.badgeLine}>
+                  <Text style={styles.scoreLabel}>Security Rating</Text>
+                  <Badge variant="success" size="sm">Optimal 94%</Badge>
                 </View>
-                <View style={[styles.toggle, { backgroundColor: item.enabled ? theme.primary : theme.border }]}>
-                  <View style={[styles.toggleKnob, { transform: [{ translateX: item.enabled ? 20 : 0 }] }]} />
-                </View>
-              </TouchableOpacity>
-            ))}
+                <Text style={styles.scoreSubtext}>All critical biometric and 2FA modules are enabled.</Text>
+              </View>
+            </View>
           </View>
+          <View style={styles.progressBarTrack}>
+            <View style={[styles.progressBarFill, { width: '94%', backgroundColor: theme.success }]} />
+          </View>
+        </CardContent>
+      </Card>
+
+      {/* Access Control Sections */}
+      {sections.map((section, idx) => (
+        <View key={idx} style={styles.sectionWrap}>
+          <Text style={styles.sectionHeading}>{section.title.toUpperCase()}</Text>
+          <Card style={styles.sectionCard}>
+            <CardContent style={{ paddingVertical: SPACING.xs, paddingHorizontal: SPACING.md }}>
+              {section.items.map((item, itemIdx) => {
+                const isLast = itemIdx === section.items.length - 1;
+                return (
+                  <View key={item.id} style={[styles.itemRow, !isLast && styles.itemBorder]}>
+                    <View style={styles.itemLeft}>
+                      <View style={[styles.iconBox, { backgroundColor: item.enabled ? theme.primarySoft : theme.surfaceAlt }]}>
+                        <Icon
+                          name={item.icon}
+                          size={ICON_SIZES.sm}
+                          color={item.enabled ? theme.primary : theme.textMuted}
+                        />
+                      </View>
+                      <TouchableOpacity
+                        style={styles.labelCol}
+                        activeOpacity={item.route ? 0.7 : 1}
+                        onPress={() => item.route && router.push(item.route as any)}
+                      >
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <Text style={styles.itemTitle}>{item.label}</Text>
+                          {item.route && (
+                            <Icon name="ChevronRight" size={ICON_SIZES.nano} color={theme.textMuted} style={{ marginLeft: 4 }} />
+                          )}
+                        </View>
+                        <Text style={styles.itemDesc} numberOfLines={1}>{item.desc}</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <Switch
+                      value={item.enabled}
+                      onValueChange={() => toggleItem(item.id)}
+                      trackColor={{ false: theme.border, true: theme.primary }}
+                      thumbColor={Platform.OS === 'android' ? (item.enabled ? theme.surface : theme.textMuted) : undefined}
+                      style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
+                    />
+                  </View>
+                );
+              })}
+            </CardContent>
+          </Card>
         </View>
       ))}
 
-      <View style={styles.deviceInfo}>
-        <Text style={styles.deviceTitle}>Current Device</Text>
-        <View style={styles.deviceDetails}>
-          <View style={styles.deviceIcon}>
-            <Ionicons name="phone-portrait" size={24} color={theme.primary} />
-          </View>
-          <View style={styles.deviceText}>
-            <Text style={styles.deviceName}>iPhone 13 Pro</Text>
-            <Text style={styles.deviceStatus}>Last accessed: Just now</Text>
-          </View>
-          <TouchableOpacity style={styles.deviceAction}>
-            <Ionicons name="settings-outline" size={20} color={theme.iconMuted} />
-          </TouchableOpacity>
-        </View>
+      {/* Active Device Session */}
+      <View style={styles.sectionWrap}>
+        <Text style={styles.sectionHeading}>ACTIVE HARDWARE SESSION</Text>
+        <Card style={styles.deviceCard}>
+          <CardContent style={styles.deviceContent}>
+            <View style={styles.deviceLeft}>
+              <View style={[styles.deviceIconBox, { backgroundColor: theme.primarySoft }]}>
+                <Icon name="Smartphone" size={ICON_SIZES.md} color={theme.primary} />
+              </View>
+              <View style={styles.deviceMeta}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Text style={styles.deviceTitle}>Active Device</Text>
+                  <Badge variant="outline" size="sm" style={{ marginLeft: 6 }}>Current</Badge>
+                </View>
+                <Text style={styles.deviceSub}>London, UK • Authenticated via Touch/FaceID</Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={styles.deviceManageBtn}
+              onPress={() => router.push('/screens/security/SecuritySettings')}
+              activeOpacity={0.7}
+            >
+              <Icon name="Settings" size={ICON_SIZES.xs} color={theme.textMuted} />
+            </TouchableOpacity>
+          </CardContent>
+        </Card>
       </View>
-    </ScrollView>
+    </AdaptiveScreen>
   );
 }
 
-const createStyles = (theme: ReturnType<typeof useMobileTheme>) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.background
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    paddingTop: 60
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: theme.text
-  },
-  helpButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: theme.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  securityScore: {
-    margin: 20,
-    padding: 20,
-    backgroundColor: theme.surface,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2
-  },
-  scoreHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12
-  },
-  scoreTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.text
-  },
-  scoreValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: theme.primary
-  },
-  scoreBar: {
-    height: 8,
-    backgroundColor: theme.surfaceAlt,
-    borderRadius: 4,
-    overflow: 'hidden'
-  },
-  scoreProgress: {
-    height: '100%',
-    backgroundColor: theme.primary,
-    borderRadius: 4
-  },
-  scoreText: {
-    fontSize: 14,
-    color: theme.textMuted,
-    marginTop: 8
-  },
-  section: {
-    marginTop: 24,
-    paddingHorizontal: 20
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: theme.text,
-    marginBottom: 16
-  },
-  sectionContent: {
-    backgroundColor: theme.surface,
-    borderRadius: 16,
-    overflow: 'hidden'
-  },
-  accessItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border
-  },
-  accessItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  accessItemIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12
-  },
-  accessItemLabel: {
-    fontSize: 16
-  },
-  toggle: {
-    width: 44,
-    height: 24,
-    borderRadius: 12,
-    padding: 2
-  },
-  toggleKnob: {
-    width: 20,
-    height: 20,
-    backgroundColor: theme.surface,
-    borderRadius: 10
-  },
-  deviceInfo: {
-    margin: 20,
-    marginTop: 24
-  },
-  deviceTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: theme.text,
-    marginBottom: 16
-  },
-  deviceDetails: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.surface,
-    padding: 16,
-    borderRadius: 16
-  },
-  deviceIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: theme.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16
-  },
-  deviceText: {
-    flex: 1
-  },
-  deviceName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.text
-  },
-  deviceStatus: {
-    fontSize: 14,
-    color: theme.textMuted,
-    marginTop: 4
-  },
-  deviceAction: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: theme.surfaceAlt,
-    alignItems: 'center',
-    justifyContent: 'center'
-  }
-});
+const createStyles = (theme: ReturnType<typeof useMobileTheme>) =>
+  StyleSheet.create({
+    topHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: SPACING.lg,
+      marginTop: SPACING.xs,
+    },
+    headerSubtitle: {
+      fontSize: FONT_SIZES.nano,
+      letterSpacing: 1.2,
+      fontWeight: '700',
+      color: theme.primary,
+      marginBottom: 2,
+    },
+    headerTitle: {
+      fontSize: FONT_SIZES.hero,
+      fontWeight: '800',
+      color: theme.text,
+      letterSpacing: -0.5,
+    },
+    headerBtn: {
+      width: 34,
+      height: 34,
+      borderRadius: RADIUS.lg,
+      backgroundColor: theme.surfaceAlt,
+      borderWidth: 1,
+      borderColor: theme.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    scoreCard: {
+      backgroundColor: theme.surface,
+      borderRadius: RADIUS.xl,
+      borderWidth: 1,
+      borderColor: theme.border,
+      marginBottom: SPACING.lg,
+    },
+    scoreContent: {
+      padding: SPACING.md,
+    },
+    scoreRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: SPACING.sm,
+    },
+    scoreBadgeWrap: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    scoreTextGroup: {
+      marginLeft: SPACING.sm,
+      flex: 1,
+    },
+    badgeLine: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 2,
+    },
+    scoreLabel: {
+      fontSize: FONT_SIZES.subhead,
+      fontWeight: '700',
+      color: theme.text,
+    },
+    scoreSubtext: {
+      fontSize: FONT_SIZES.caption,
+      color: theme.textMuted,
+    },
+    progressBarTrack: {
+      height: 5,
+      backgroundColor: theme.surfaceAlt,
+      borderRadius: RADIUS.full,
+      overflow: 'hidden',
+      marginTop: SPACING.xs,
+    },
+    progressBarFill: {
+      height: '100%',
+      borderRadius: RADIUS.full,
+    },
+    sectionWrap: {
+      marginBottom: SPACING.lg,
+    },
+    sectionHeading: {
+      fontSize: FONT_SIZES.micro,
+      fontWeight: '700',
+      letterSpacing: 1,
+      color: theme.textMuted,
+      marginBottom: SPACING.xs,
+      marginLeft: SPACING.xxs,
+    },
+    sectionCard: {
+      backgroundColor: theme.surface,
+      borderRadius: RADIUS.lg,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    itemRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: SPACING.sm,
+    },
+    itemBorder: {
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.border,
+    },
+    itemLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+      marginRight: SPACING.sm,
+    },
+    iconBox: {
+      width: 32,
+      height: 32,
+      borderRadius: RADIUS.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: SPACING.sm,
+    },
+    labelCol: {
+      flex: 1,
+    },
+    itemTitle: {
+      fontSize: FONT_SIZES.body,
+      fontWeight: '600',
+      color: theme.text,
+    },
+    itemDesc: {
+      fontSize: FONT_SIZES.caption,
+      color: theme.textMuted,
+      marginTop: 1,
+    },
+    deviceCard: {
+      backgroundColor: theme.surface,
+      borderRadius: RADIUS.lg,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    deviceContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: SPACING.md,
+    },
+    deviceLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    deviceIconBox: {
+      width: 34,
+      height: 34,
+      borderRadius: RADIUS.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: SPACING.sm,
+    },
+    deviceMeta: {
+      flex: 1,
+    },
+    deviceTitle: {
+      fontSize: FONT_SIZES.body,
+      fontWeight: '600',
+      color: theme.text,
+    },
+    deviceSub: {
+      fontSize: FONT_SIZES.caption,
+      color: theme.textMuted,
+      marginTop: 2,
+    },
+    deviceManageBtn: {
+      width: 28,
+      height: 28,
+      borderRadius: RADIUS.sm,
+      backgroundColor: theme.surfaceAlt,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginLeft: SPACING.xs,
+    },
+  });
