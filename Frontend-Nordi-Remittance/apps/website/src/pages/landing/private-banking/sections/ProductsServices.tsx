@@ -147,21 +147,21 @@ const ProductsServices: React.FC = () => {
                   : category.icon}
               </div>
 
-              <h3 className="text-xl sm:text-2xl font-black text-neutral-900 dark:text-white mb-2 sm:mb-3 uppercase tracking-tight leading-tight">{category.name}</h3>
+              <h3 className="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-white mb-2 sm:mb-3 uppercase tracking-tight leading-tight">{category.name}</h3>
               <p className="text-[13px] sm:text-sm text-neutral-500 dark:text-neutral-400 font-medium mb-6 sm:mb-8 leading-relaxed">{category.description}</p>
 
               <ul className="space-y-3 sm:space-y-4 mb-8 sm:mb-12">
                 {category.products.map((product) => (
                   <li key={product} className="flex items-center gap-3 group/item">
                     <div className="w-5 h-5 rounded-full bg-amber-400/10 flex items-center justify-center shrink-0 group-hover/item:scale-110 transition-transform">
-                      <Check className="w-3 h-3 text-amber-600 font-bold" />
+                      <Check className="w-3 h-3 text-amber-600 font-medium" />
                     </div>
-                    <span className="text-[13px] sm:text-sm text-neutral-600 dark:text-neutral-300 font-bold group-hover/item:text-neutral-900 dark:group-hover/item:text-white transition-colors">{product}</span>
+                    <span className="text-[13px] sm:text-sm text-neutral-600 dark:text-neutral-300 font-medium group-hover/item:text-neutral-900 dark:group-hover/item:text-white transition-colors">{product}</span>
                   </li>
                 ))}
               </ul>
 
-              <Button variant="outline" className="w-full py-4 rounded-2xl border-2 font-bold group-hover:bg-violet-600 group-hover:border-violet-600 group-hover:text-white transition-all">
+              <Button variant="outline" className="w-full py-4 rounded-2xl border-2 font-medium group-hover:bg-violet-600 group-hover:border-violet-600 group-hover:text-white transition-all">
                 Explore Solutions
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
@@ -179,7 +179,7 @@ const ProductsServices: React.FC = () => {
           <div className="absolute top-0 right-0 w-64 h-64 bg-amber-400/10 rounded-full -mr-32 -mt-32 blur-[80px]" />
           
           <div className="text-center mb-10 sm:mb-16 relative z-10">
-            <h3 className="text-2xl sm:text-4xl font-black mb-3 sm:mb-4 uppercase tracking-tighter">Premium Lifestyle Services</h3>
+            <h3 className="text-2xl sm:text-4xl font-bold mb-3 sm:mb-4 uppercase tracking-tighter">Premium Lifestyle Services</h3>
             <p className="text-sm sm:text-lg text-neutral-400 font-medium">Global concierge and exclusive privileges for legacy members</p>
           </div>
 
@@ -196,18 +196,18 @@ const ProductsServices: React.FC = () => {
                 <div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto rounded-2xl bg-amber-400/10 text-amber-400 flex items-center justify-center mb-4 sm:mb-5 group-hover:scale-110 group-hover:bg-amber-400 group-hover:text-neutral-900 transition-all shadow-inner">
                   <service.icon className="w-6 h-6 sm:w-7 sm:h-7" />
                 </div>
-                <h4 className="font-black text-[13px] sm:text-sm mb-1.5 uppercase tracking-tight">{service.name}</h4>
-                <p className="text-[10px] sm:text-[11px] text-neutral-400 font-bold leading-tight uppercase tracking-widest">{service.description}</p>
+                <h4 className="font-semibold text-[13px] sm:text-sm mb-1.5 uppercase tracking-tight">{service.name}</h4>
+                <p className="text-[10px] sm:text-[11px] text-neutral-400 font-semibold leading-tight uppercase tracking-widest">{service.description}</p>
               </motion.div>
             ))}
           </div>
 
           <div className="flex flex-col sm:flex-row justify-center gap-4 relative z-10">
-            <Button variant="primary" size="lg" className="w-full sm:w-auto bg-amber-400 hover:bg-amber-500 text-neutral-900 font-bold py-4 px-10 shadow-xl shadow-amber-400/20">
+            <Button variant="primary" size="lg" className="w-full sm:w-auto bg-amber-400 hover:bg-amber-500 text-neutral-900 font-medium py-4 px-10 shadow-xl shadow-amber-400/20">
               <ArrowRight className="w-5 h-5 mr-3" />
               Request Catalog
             </Button>
-            <Button variant="outline" size="lg" className="w-full sm:w-auto border-white/20 text-white hover:bg-white/5 font-bold py-4 px-10">
+            <Button variant="outline" size="lg" className="w-full sm:w-auto border-white/20 text-white hover:bg-white/5 font-medium py-4 px-10">
               Speak to Concierge
             </Button>
           </div>
