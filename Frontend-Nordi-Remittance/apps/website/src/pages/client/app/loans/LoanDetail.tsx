@@ -47,21 +47,45 @@ const fmt = (v: number, currency = "USD") =>
 const fmtDate = (d?: string) =>
   d ? new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "—";
 
-// ─── Payment modal ────────────────────────────────────────────────────────────
+// ─── Payment modal (Manual Repay Form — Enforces >= Monthly Requirement) ─────
 const PaymentModal: React.FC<{
   loan: any;
   wallets: any[];
   onClose: () => void;
 }> = ({ loan, wallets, onClose }) => {
-  const [amount, setAmount] = useState<number>(loan.monthlyPayment ?? 0);
+  const baseMonthly =
+    Number(loan.monthlyPayment) ||
+    Number(loan.principalAmount || loan.amount || 0) / Math.max(1, Number(loan.term) || 12);
+  const defaultCount = Number(loan.defaultCount || 0) + Number(loan.missedPayments || 0);
+  const defaultFeePct = Number(loan.defaultFeePercentage ?? loan.lateFeePercentage ?? 2.5);
+  const defaultFeeAddon =
+    defaultCount > 0 ? Math.round(baseMonthly * ((defaultCount * defaultFeePct) / 100) * 100) / 100 : 0;
+  const minimumMonthlyRequirement = Math.min(
+    Number(loan.outstandingBalance || 0),
+    Math.round((baseMonthly + defaultFeeAddon) * 100) / 100,
+  );
+
+  const [amount, setAmount] = useState<number>(minimumMonthlyRequirement || 100);
   const [walletId, setWalletId] = useState<string>(wallets[0]?._id || wallets[0]?.id || "");
   const [paymentType, setPaymentType] = useState<"regular" | "full">("regular");
 
   const payMutation = useMakeLoanPayment();
 
-  const effectiveAmount = paymentType === "full" ? loan.outstandingBalance : amount;
+  const effectiveAmount =
+    paymentType === "full" ? Number(loan.outstandingBalance || 0) : Number(amount || 0);
 
-  const handlePay = () => {
+  const selectedWallet = wallets.find((w: any) => (w._id || w.id) === walletId) || wallets[0];
+  const selectedWalletBalance = Number(
+    selectedWallet?.rawTotalBalance ?? selectedWallet?.balance ?? 0,
+  );
+
+  const isBelowMinimum =
+    paymentType === "regular" && effectiveAmount < minimumMonthlyRequirement - 0.01;
+  const isInsufficientFunds = selectedWallet && selectedWalletBalance < effectiveAmount;
+
+  const handlePay = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isBelowMinimum || isInsufficientFunds || !walletId) return;
     payMutation.mutate(
       { loanId: loan._id || loan.loanId, data: { amount: effectiveAmount, accountId: walletId } },
       {
@@ -75,88 +99,153 @@ const PaymentModal: React.FC<{
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
     >
       <motion.div
         initial={{ scale: 0.95 }}
         animate={{ scale: 1 }}
         exit={{ scale: 0.95 }}
-        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-900"
+        className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-800 dark:bg-gray-900"
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white">Make Payment</h3>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">
+        <div className="mb-3 flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">Repay Loan</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Manual repayment — select the account to debit from
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
             <X size={16} />
           </button>
         </div>
 
-        <div className="space-y-4">
+        <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-xs text-blue-800 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200">
+          <div className="flex items-center justify-between">
+            <span>Outstanding Balance:</span>
+            <span className="font-bold">{fmt(loan.outstandingBalance ?? 0, loan.currency)}</span>
+          </div>
+          <div className="mt-1 flex items-center justify-between">
+            <span>Minimum Monthly Requirement:</span>
+            <span className="font-bold">{fmt(minimumMonthlyRequirement, loan.currency)}</span>
+          </div>
+          {defaultCount > 0 && (
+            <div className="mt-1 flex items-center justify-between text-rose-600 dark:text-rose-400">
+              <span>Default Fee Applied ({defaultCount}x @{defaultFeePct}%):</span>
+              <span className="font-semibold">+{fmt(defaultFeeAddon, loan.currency)}</span>
+            </div>
+          )}
+        </div>
+
+        <form onSubmit={handlePay} className="space-y-4">
           {/* Payment type */}
           <div className="flex gap-2">
             {(["regular", "full"] as const).map((t) => (
               <button
                 key={t}
-                onClick={() => setPaymentType(t)}
-                className={`flex-1 rounded-xl border py-2 text-sm font-medium capitalize transition-colors
-                  ${paymentType === t ? "border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-950/30 dark:text-blue-300" : "border-gray-200 text-gray-600 dark:border-gray-700 dark:text-gray-400"}`}
+                type="button"
+                onClick={() => {
+                  setPaymentType(t);
+                  if (t === "regular" && amount < minimumMonthlyRequirement) {
+                    setAmount(minimumMonthlyRequirement);
+                  }
+                }}
+                className={`flex-1 rounded-xl border py-2 text-xs font-semibold capitalize transition-colors
+                  ${
+                    paymentType === t
+                      ? "border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-950/30 dark:text-blue-300"
+                      : "border-gray-200 text-gray-600 dark:border-gray-700 dark:text-gray-400"
+                  }`}
               >
-                {t === "full" ? "Pay Off Balance" : "Regular Payment"}
+                {t === "full" ? "Full Payoff" : "Monthly / Custom Repay"}
               </button>
             ))}
           </div>
 
           {paymentType === "regular" && (
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
+              <label htmlFor="repay-amount-input" className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                Amount to Repay (Minimum: {fmt(minimumMonthlyRequirement, loan.currency)})
+              </label>
               <input
+                id="repay-amount-input"
+                name="amount"
                 type="number"
-                min={1}
+                step="0.01"
+                min={minimumMonthlyRequirement}
                 max={loan.outstandingBalance}
                 value={amount}
                 onChange={(e) => setAmount(Number(e.target.value))}
-                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                className={`w-full rounded-xl border bg-white px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 dark:bg-gray-900 dark:text-white ${
+                  isBelowMinimum
+                    ? "border-rose-400 focus:ring-rose-500"
+                    : "border-gray-200 focus:ring-blue-500 dark:border-gray-700"
+                }`}
               />
-              <p className="mt-1 text-xs text-gray-400">Monthly payment: {fmt(loan.monthlyPayment ?? 0)}</p>
+              {isBelowMinimum ? (
+                <p className="mt-1 text-xs font-medium text-rose-600 dark:text-rose-400">
+                  Repayment amount cannot be below the monthly requirement of {fmt(minimumMonthlyRequirement, loan.currency)}.
+                </p>
+              ) : (
+                <p className="mt-1 text-[11px] text-gray-400">
+                  Must be at least {fmt(minimumMonthlyRequirement, loan.currency)} (monthly requirement).
+                </p>
+              )}
             </div>
           )}
 
           {paymentType === "full" && (
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-950/20">
               <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">
-                Payoff amount: {fmt(loan.outstandingBalance ?? 0)}
+                Full Payoff Amount: {fmt(loan.outstandingBalance ?? 0, loan.currency)}
               </p>
-              <p className="mt-0.5 text-xs text-emerald-600 dark:text-emerald-400">This will close your loan account.</p>
+              <p className="mt-0.5 text-xs text-emerald-600 dark:text-emerald-400">
+                This will pay off your entire remaining loan balance and close the loan.
+              </p>
             </div>
           )}
 
-          {/* Wallet */}
+          {/* Account / Wallet Selector */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Pay from Wallet</label>
+            <label htmlFor="repay-wallet-select" className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+              Select Account to Debit From
+            </label>
             <select
+              id="repay-wallet-select"
+              name="walletId"
               value={walletId}
               onChange={(e) => setWalletId(e.target.value)}
               className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
             >
               {wallets.map((w: any) => (
                 <option key={w._id || w.id} value={w._id || w.id}>
-                  {w.walletNumber || w.accountNumber || "Wallet"} — {w.currency || "USD"}
+                  {w.displayName || w.typeLabel || "Account"} ({w.walletNumber || w.accountNumber || "Wallet"}) — Balance:{" "}
+                  {fmt(w.rawTotalBalance ?? w.balance ?? 0, w.primaryCurrency || w.currency || "USD")}
                 </option>
               ))}
             </select>
+            {isInsufficientFunds && (
+              <p className="mt-1 text-xs font-medium text-rose-600 dark:text-rose-400">
+                Insufficient funds in selected account ({fmt(selectedWalletBalance)} available). Please choose another account.
+              </p>
+            )}
           </div>
 
           <div className="flex gap-2 pt-2">
             <ActionButton label="Cancel" variant="secondary" onClick={onClose} />
             <button
-              onClick={handlePay}
-              disabled={payMutation.isPending || !walletId}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+              type="submit"
+              disabled={payMutation.isPending || !walletId || isBelowMinimum || Boolean(isInsufficientFunds)}
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {payMutation.isPending && <Loader2 size={16} className="animate-spin" />}
-              {payMutation.isPending ? "Processing…" : `Pay ${fmt(effectiveAmount)}`}
+              {payMutation.isPending ? "Debiting Account…" : `Repay ${fmt(effectiveAmount, loan.currency)}`}
             </button>
           </div>
-        </div>
+        </form>
       </motion.div>
     </motion.div>
   );
@@ -230,28 +319,28 @@ const LoanDetail: React.FC = () => {
               label="Principal"
               value={fmt(loan.principalAmount ?? 0, loan.currency)}
               icon={<Banknote size={18} />}
-              iconColor="from-blue-500 to-blue-600"
+              iconColor="bg-blue-600"
               index={0}
             />
             <StatCard
               label="Outstanding"
               value={fmt(loan.outstandingBalance ?? 0, loan.currency)}
               icon={<DollarSign size={18} />}
-              iconColor="from-amber-500 to-amber-600"
+              iconColor="bg-amber-600"
               index={1}
             />
             <StatCard
               label="Monthly Payment"
               value={fmt(loan.monthlyPayment ?? 0, loan.currency)}
               icon={<CalendarClock size={18} />}
-              iconColor="from-emerald-500 to-emerald-600"
+              iconColor="bg-emerald-600"
               index={2}
             />
             <StatCard
               label="Interest Rate"
               value={`${loan.interestRate ?? 0}%`}
               icon={<Percent size={18} />}
-              iconColor="from-purple-500 to-purple-600"
+              iconColor="bg-blue-600"
               index={3}
             />
           </StatsGrid>
@@ -307,7 +396,7 @@ const LoanDetail: React.FC = () => {
               {loan.nextPaymentDate && (
                 <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/20">
                   <p className="text-xs font-medium text-blue-600 dark:text-blue-400">Next Payment Due</p>
-                  <p className="mt-0.5 text-lg font-bold text-blue-800 dark:text-blue-200">
+                  <p className="mt-0.5 text-lg font-semibold text-blue-800 dark:text-blue-200">
                     {fmt(loan.nextPaymentAmount ?? loan.monthlyPayment ?? 0, loan.currency)}
                   </p>
                   <p className="text-xs text-blue-600 dark:text-blue-400">{fmtDate(loan.nextPaymentDate)}</p>
