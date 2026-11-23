@@ -606,3 +606,84 @@ export const useRequestAccountDeletion = () => {
     },
   });
 };
+
+// ============================================================================
+// ADMIN LEGAL & REGULATORY HOOKS (/legal/admin/*)
+// ============================================================================
+
+export const useAdminDisputes = (params?: any) => {
+  return useQuery({
+    queryKey: [...queryKeys.legal.all, "admin-disputes", params],
+    queryFn: async () => {
+      const response = await LegalRepository.getAdminDisputes(params);
+      return response.data;
+    },
+  });
+};
+
+export const useUpdateAdminDispute = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
+
+  return useMutation({
+    mutationFn: async ({ claimId, data }: { claimId: string; data: any }) => {
+      const response = await LegalRepository.updateAdminDispute(claimId, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.legal.all });
+      showToast("Dispute claim updated", "success");
+    },
+    onError: (error: Error) => {
+      showToast(error.message || "Failed to update dispute", "error");
+    },
+  });
+};
+
+export const useAdminRegulatoryFilings = (params?: any) => {
+  return useQuery({
+    queryKey: [...queryKeys.legal.all, "admin-regulatory", params],
+    queryFn: async () => {
+      const response = await LegalRepository.getAdminRegulatoryFilings(params);
+      return response.data;
+    },
+  });
+};
+
+export const useCreateAdminRegulatoryFiling = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
+
+  return useMutation({
+    mutationFn: async (data: any) => {
+      const response = await LegalRepository.createAdminRegulatoryFiling(data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.legal.all });
+      showToast("Regulatory filing created", "success");
+    },
+    onError: (error: Error) => {
+      showToast(error.message || "Failed to create regulatory filing", "error");
+    },
+  });
+};
+
+export const useSubmitAdminRegulatoryFiling = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
+
+  return useMutation({
+    mutationFn: async ({ filingId, data }: { filingId: string; data?: any }) => {
+      const response = await LegalRepository.submitAdminRegulatoryFiling(filingId, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.legal.all });
+      showToast("Regulatory filing submitted", "success");
+    },
+    onError: (error: Error) => {
+      showToast(error.message || "Failed to submit regulatory filing", "error");
+    },
+  });
+};
