@@ -8,6 +8,7 @@ import * as Yup from "yup";
 import { Zap, User, Building, DollarSign, Shield, Lock, Info, Clock } from "@constants/icons";
 import { useClientWallets } from "../../client-usecase/useaccounts-client-usecase";
 import { useTransfer, useClientRecentRecipients } from "../../client-usecase/usetransaction-client-usecase";
+import { parseApiError, type ParsedApiError } from "@core/errors/apiErrors";
 import {
   TransferLayout,
   StepIndicator,
@@ -53,6 +54,7 @@ const InstantPayment: React.FC = () => {
   const [result, setResult] = useState<{
     success: boolean;
     reference?: string;
+    error?: ParsedApiError;
   } | null>(null);
 
   // Hooks
@@ -60,7 +62,7 @@ const InstantPayment: React.FC = () => {
   const { recipients: recentArr } = useClientRecentRecipients(6);
   const transfer = useTransfer();
 
-  const wallets: AccountOption[] = walletsArr;
+  const wallets: AccountOption[] = walletsArr as any;
   const recentRecipients = recentArr;
 
   // Form
@@ -93,8 +95,8 @@ const InstantPayment: React.FC = () => {
               reference: data?.referenceNumber || data?.id || `TXN${Date.now().toString().slice(-9)}`,
             });
           },
-          onError: () => {
-            setResult({ success: false });
+          onError: (err: any) => {
+            setResult({ success: false, error: parseApiError(err) });
           },
         },
       );
@@ -134,11 +136,12 @@ const InstantPayment: React.FC = () => {
         <TCard>
           <TransferResult
             success={result.success}
-            title={result.success ? "Payment Sent!" : "Payment Failed"}
+            title={result.success ? "Payment Sent!" : result.error?.title || "Payment Failed"}
             subtitle={
               result.success
                 ? `$${Number(values.amount).toFixed(2)} sent instantly to ${values.recipientName}.`
-                : "Something went wrong. Please try again."
+                : [result.error?.message, result.error?.guidance].filter(Boolean).join(" ") ||
+                  "Something went wrong. Please try again."
             }
             reference={result.reference}
             details={
@@ -192,9 +195,9 @@ const InstantPayment: React.FC = () => {
                       key={r.id}
                       type="button"
                       onClick={() => selectRecent(r)}
-                      className="flex min-w-[72px] flex-col items-center gap-1.5 rounded-lg border border-gray-200 p-2 transition-colors hover:border-indigo-400 dark:border-gray-700 dark:hover:border-indigo-600"
+                      className="flex min-w-[72px] flex-col items-center gap-1.5 rounded-lg border border-gray-200 p-2 transition-colors hover:border-blue-400 dark:border-gray-700 dark:hover:border-blue-600"
                     >
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 text-xs font-bold text-white">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-xs font-medium text-white">
                         {(r.firstName || r.name || "?").charAt(0).toUpperCase()}
                       </div>
                       <span className="max-w-[68px] truncate text-[11px] font-medium text-gray-700 dark:text-gray-300">
@@ -299,7 +302,7 @@ const InstantPayment: React.FC = () => {
             )}
 
             {/* Limits */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               {[
                 {
                   label: "Per Transfer",
