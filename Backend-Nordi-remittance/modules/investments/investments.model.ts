@@ -74,7 +74,7 @@ const InvestmentAccountSchema = new Schema({
   wallet: { type: Schema.Types.ObjectId, ref: "Wallets", required: true },
   accountType: {
     type: String,
-    enum: ["stocks", "crypto", "mutual_funds", "bonds", "etf", "commodities"],
+    enum: ["stocks", "crypto", "mutual_funds", "bonds", "etf", "commodities", "forex", "multi_asset"],
     required: true,
   },
   status: {
@@ -99,14 +99,13 @@ const InvestmentAccountSchema = new Schema({
 });
 
 // Immutability guard: once an investment is bound to a wallet, it cannot be moved
-InvestmentAccountSchema.pre('save', function (this: any, next: any) {
+InvestmentAccountSchema.pre('save', function (this: any) {
   if (this.walletLocked && this.isModified('wallet')) {
-    return next(new Error('Cannot change wallet on a locked investment. Investment-wallet binding is immutable.'));
+    throw new Error('Cannot change wallet on a locked investment. Investment-wallet binding is immutable.');
   }
   if (this.wallet && !this.walletLocked) {
     this.walletLocked = true;
   }
-  next();
 });
 
 const AssetSchema = new Schema({
@@ -115,7 +114,7 @@ const AssetSchema = new Schema({
   name: { type: String, required: true },
   assetType: {
     type: String,
-    enum: ["stock", "crypto", "mutual_fund", "bond", "etf", "commodity"],
+    enum: ["stock", "crypto", "mutual_fund", "bond", "etf", "commodity", "forex"],
     required: true,
   },
   exchange: { type: String },
@@ -173,9 +172,20 @@ const PortfolioTransactionSchema = new Schema({
   asset: { type: Schema.Types.ObjectId, ref: "Assets", required: true },
   transactionType: {
     type: String,
-    enum: ["buy", "sell", "dividend", "fee", "bonus"],
+    enum: ["buy", "sell", "swap", "dividend", "fee", "bonus"],
     required: true,
   },
+  paymentMethod: {
+    type: String,
+    enum: ["wallet", "card", "portfolio_swap"],
+    default: "wallet",
+  },
+  wallet: { type: Schema.Types.ObjectId, ref: "Wallets" },
+  card: { type: Schema.Types.ObjectId, ref: "Cards" },
+  toAsset: { type: Schema.Types.ObjectId, ref: "Assets" },
+  toQuantity: { type: Number },
+  toPricePerUnit: { type: Number },
+  exchangeRate: { type: Number },
   quantity: { type: Number, required: true },
   pricePerUnit: { type: Number, required: true },
   totalAmount: { type: Number, required: true },
