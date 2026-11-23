@@ -70,6 +70,11 @@ const ROUTE_MODULES: RouteModule[] = [
     loader: () => import('./modules/transfer-verification/transfer-verification.routes.js'),
   },
   {
+    name: 'Recipients',
+    prefix: '/recipients',
+    loader: () => import('./modules/transactions/recipients.routes.js'),
+  },
+  {
     name: 'Cards',
     prefix: '/cards',
     loader: () => import('./modules/cards/cards.routes.js'),
@@ -147,13 +152,12 @@ const ROUTE_MODULES: RouteModule[] = [
     loader: () => import('./modules/ai-agent/ai-agent.routes.js'),
   },
 
-  // ── Disabled modules (uncomment to enable) ────────────────────────────
-  // {
-  //   name: 'Permissions',
-  //   prefix: '/permissions',
-  //   loader: () => import('./modules/permissions/permissions.routes.js'),
-  //   enabled: false,
-  // },
+  // ── Permissions & RBAC ────────────────────────────────────────────────
+  {
+    name: 'Permissions',
+    prefix: '/permissions',
+    loader: () => import('./modules/permissions/permissions.routes.js'),
+  },
 ];
 
 // ============================================================================
