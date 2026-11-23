@@ -3,8 +3,8 @@
 // ============================================================================
 
 // Colors
-export { default as colors, gradients, cssVars } from './colors';
-export type { ColorKey, ColorScale, PrimaryColor } from './colors';
+export { default as colors, gradients, generateCSSVariables as cssVars } from './colors';
+export type { ColorKey, ColorScale, Theme, Theme as PrimaryColor } from './colors';
 
 // Sizes
 export { 
