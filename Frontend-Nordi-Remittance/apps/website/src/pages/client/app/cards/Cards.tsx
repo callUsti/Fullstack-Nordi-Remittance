@@ -55,6 +55,9 @@ const TABS = [
 const Cards: React.FC = () => {
   const {
     cards,
+    wallets,
+    selectedWalletId,
+    setSelectedWalletId,
     isLoading,
     showBalances,
     selectedCard,
@@ -71,9 +74,11 @@ const Cards: React.FC = () => {
     setModalNotes,
     isModalPending,
     isFreezePending,
+    isLinkingAccount,
     handleOpenModal,
     handleCloseModal,
     handleToggleFreeze,
+    handleLinkAccount,
     handleModalSubmit,
   } = useMainCardManagerDomain();
 
@@ -89,7 +94,7 @@ const Cards: React.FC = () => {
           actions={
             <Link
               to="/customer/cards/apply"
-              className="flex items-center gap-2 rounded-xl bg-indigo-600 px-3 py-2 text-xs font-medium text-white shadow-md transition hover:bg-indigo-700 sm:px-4 sm:text-sm"
+              className="flex items-center gap-2 rounded-xl bg-blue-600 px-3 py-2 text-xs font-medium text-white shadow-md transition hover:bg-blue-700 sm:px-4 sm:text-sm"
             >
               <Plus size={16} /> Apply for New Card
             </Link>
@@ -149,7 +154,7 @@ const Cards: React.FC = () => {
                     onClick={() => setSelectedCard(i)}
                     className={`shrink-0 rounded-xl border-2 px-3 py-2 text-[11px] font-semibold transition-all ${
                       i === selectedCard
-                        ? "border-indigo-600 bg-indigo-50/60 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300"
+                        ? "border-blue-600 bg-blue-50/60 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300"
                         : "border-gray-100 text-gray-500 hover:border-gray-200 dark:border-gray-800 dark:text-gray-400 dark:hover:border-gray-700"
                     }`}
                   >
@@ -180,19 +185,34 @@ const Cards: React.FC = () => {
                   <div className="rounded-lg bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
                     <ArrowDownLeft size={16} />
                   </div>
-                  <span className="text-xs font-bold text-gray-900 dark:text-white">Add Money</span>
+                  <span className="text-xs font-medium text-gray-900 dark:text-white">
+                    {activeCard.cardType === "credit" ? "Fund on Credit" : "Add Money"}
+                  </span>
                 </button>
 
-                <button
-                  onClick={() => handleOpenModal("withdraw")}
-                  disabled={!isFundable(activeCard.status) || (activeCard.balance || 0) <= 0}
-                  className="flex items-center gap-2.5 rounded-xl border-2 border-gray-100 p-3.5 text-left transition-all hover:border-indigo-200 disabled:opacity-40 disabled:hover:border-gray-100 dark:border-gray-800 dark:hover:border-indigo-900"
-                >
-                  <div className="rounded-lg bg-indigo-50 p-2 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
-                    <ArrowUpRight size={16} />
-                  </div>
-                  <span className="text-xs font-bold text-gray-900 dark:text-white">Withdraw</span>
-                </button>
+                {activeCard.cardType === "credit" ? (
+                  <button
+                    onClick={() => handleOpenModal("repay")}
+                    disabled={!isFundable(activeCard.status) || (activeCard.totalDebt || 0) <= 0}
+                    className="flex items-center gap-2.5 rounded-xl border-2 border-gray-100 p-3.5 text-left transition-all hover:border-purple-200 disabled:opacity-40 disabled:hover:border-gray-100 dark:border-gray-800 dark:hover:border-purple-900"
+                  >
+                    <div className="rounded-lg bg-purple-50 p-2 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400">
+                      <ArrowUpRight size={16} />
+                    </div>
+                    <span className="text-xs font-medium text-gray-900 dark:text-white">Pay Off Debt</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleOpenModal("withdraw")}
+                    disabled={!isFundable(activeCard.status) || (activeCard.balance || 0) <= 0}
+                    className="flex items-center gap-2.5 rounded-xl border-2 border-gray-100 p-3.5 text-left transition-all hover:border-blue-200 disabled:opacity-40 disabled:hover:border-gray-100 dark:border-gray-800 dark:hover:border-blue-900"
+                  >
+                    <div className="rounded-lg bg-blue-50 p-2 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
+                      <ArrowUpRight size={16} />
+                    </div>
+                    <span className="text-xs font-medium text-gray-900 dark:text-white">Withdraw</span>
+                  </button>
+                )}
 
                 <button
                   onClick={handleToggleFreeze}
@@ -208,7 +228,7 @@ const Cards: React.FC = () => {
                       <Lock size={16} />
                     )}
                   </div>
-                  <span className="text-xs font-bold text-gray-900 dark:text-white">
+                  <span className="text-xs font-medium text-gray-900 dark:text-white">
                     {isFrozen ? "Unfreeze" : "Freeze"}
                   </span>
                 </button>
@@ -220,7 +240,7 @@ const Cards: React.FC = () => {
                   <div className="rounded-lg bg-gray-50 p-2 text-gray-500 dark:bg-gray-800">
                     <ShieldCheck size={16} />
                   </div>
-                  <span className="text-xs font-bold text-gray-900 dark:text-white">Security</span>
+                  <span className="text-xs font-medium text-gray-900 dark:text-white">Security</span>
                 </Link>
               </div>
             </DashCard>
@@ -234,9 +254,9 @@ const Cards: React.FC = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`relative px-4 py-3.5 text-xs font-bold transition-colors sm:text-sm ${
+                    className={`relative px-4 py-3.5 text-xs font-medium transition-colors sm:text-sm ${
                       activeTab === tab.id
-                        ? "text-indigo-600 dark:text-indigo-400"
+                        ? "text-blue-600 dark:text-blue-400"
                         : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                     }`}
                   >
@@ -244,7 +264,7 @@ const Cards: React.FC = () => {
                     {activeTab === tab.id && (
                       <motion.span
                         layoutId="cards-hub-tab"
-                        className="absolute -bottom-px left-3 right-3 h-0.5 rounded-full bg-indigo-600 dark:bg-indigo-400"
+                        className="absolute -bottom-px left-3 right-3 h-0.5 rounded-full bg-blue-600 dark:bg-blue-400"
                       />
                     )}
                   </button>
@@ -263,30 +283,113 @@ const Cards: React.FC = () => {
                     >
                       <div className="grid grid-cols-2 gap-4">
                         <div className="rounded-2xl bg-gray-50 p-4 dark:bg-gray-800/40">
-                          <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-gray-400">
-                            {activeCard.cardType === "credit" ? "Credit Limit" : "Available Balance"}
+                          <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-gray-400">
+                            {activeCard.cardType === "credit" ? "Spendable Credit Balance" : "Available Balance"}
                           </p>
-                          <p className="text-lg font-bold text-gray-900 dark:text-white">
-                            {showBalances
-                              ? fmt(
-                                  activeCard.cardType === "credit" ? activeCard.creditLimit : activeCard.balance,
-                                  activeCard.currency,
-                                )
-                              : "••••••"}
+                          <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                            {showBalances ? fmt(activeCard.balance || 0, activeCard.currency) : "••••••"}
                           </p>
                         </div>
                         <div className="rounded-2xl bg-gray-50 p-4 dark:bg-gray-800/40">
-                          <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                          <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-gray-400">
                             Cardholder
                           </p>
-                          <p className="truncate text-lg font-bold text-gray-900 dark:text-white">
+                          <p className="truncate text-lg font-semibold text-gray-900 dark:text-white">
                             {activeCard.cardholderName || "—"}
                           </p>
                         </div>
                       </div>
 
+                      {/* Linked Account Selector — Auto-debit if card is empty or holds Credit Card debt */}
+                      <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-4 dark:border-blue-900/40 dark:bg-blue-950/20">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div>
+                            <p className="text-xs font-semibold text-gray-900 dark:text-white">
+                              Linked Account (Auto-Debit When Empty &amp; Credit Repayment)
+                            </p>
+                            <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                              {activeCard.cardType === "credit"
+                                ? "Credit funded on this card reads as debt on this account and is debited until paid off."
+                                : "Funds are debited from this account when funding or when the card balance is empty."}
+                            </p>
+                          </div>
+                          {isLinkingAccount && <Loader2 size={14} className="animate-spin text-blue-600" />}
+                        </div>
+                        <select
+                          value={activeCard.linkedWalletId || selectedWalletId}
+                          onChange={(e) => handleLinkAccount(e.target.value)}
+                          disabled={isLinkingAccount}
+                          className="mt-2.5 w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                        >
+                          {wallets.map((w: any) => {
+                            const wId = w.id || w._id;
+                            const bal = w.primaryCurrencyBalance ?? w.balance ?? 0;
+                            const curr = w.primaryCurrency || w.currency || "USD";
+                            return (
+                              <option key={wId} value={wId}>
+                                {w.displayName || w.typeLabel || w.walletType || "Account"} ({w.walletNumber || wId.slice(-6)}) — Balance: {fmt(bal, curr)}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </div>
+
+                      {/* Credit Card Debt & Interest Breakdown */}
+                      {activeCard.cardType === "credit" && (
+                        <div className="rounded-2xl border border-purple-200 bg-purple-50/60 p-4 dark:border-purple-800/50 dark:bg-purple-950/25">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                              <p className="text-xs font-semibold text-purple-950 dark:text-purple-200">
+                                Credit Facility &amp; Account Debt Summary ({activeCard.interestRate ?? 5.0}% Interest)
+                              </p>
+                              <p className="text-[11px] text-purple-700 dark:text-purple-300">
+                                Debits occur from your linked account until the total credit debt is paid off.
+                              </p>
+                            </div>
+                            {(activeCard.totalDebt || 0) > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenModal("repay")}
+                                className="rounded-lg bg-purple-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-purple-700"
+                              >
+                                Pay Off Debt
+                              </button>
+                            )}
+                          </div>
+
+                          <div className="mt-3 grid grid-cols-2 gap-2.5 text-xs sm:grid-cols-4">
+                            <div className="rounded-xl bg-white p-2.5 dark:bg-gray-900/70">
+                              <p className="text-[10px] text-gray-500 dark:text-gray-400">Available Credit</p>
+                              <p className="font-semibold text-gray-900 dark:text-white">
+                                {fmt(activeCard.availableCredit ?? activeCard.creditLimit ?? 10000, activeCard.currency)}
+                              </p>
+                            </div>
+                            <div className="rounded-xl bg-white p-2.5 dark:bg-gray-900/70">
+                              <p className="text-[10px] text-gray-500 dark:text-gray-400">Funded Principal</p>
+                              <p className="font-semibold text-gray-900 dark:text-white">
+                                {fmt(activeCard.creditUsed || 0, activeCard.currency)}
+                              </p>
+                            </div>
+                            <div className="rounded-xl bg-white p-2.5 dark:bg-gray-900/70">
+                              <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                                Accrued Interest ({activeCard.interestRate ?? 5.0}%)
+                              </p>
+                              <p className="font-semibold text-amber-600 dark:text-amber-400">
+                                +{fmt(activeCard.accruedInterest || 0, activeCard.currency)}
+                              </p>
+                            </div>
+                            <div className="rounded-xl bg-white p-2.5 dark:bg-gray-900/70">
+                              <p className="text-[10px] text-gray-500 dark:text-gray-400">Total Debt on Account</p>
+                              <p className="font-bold text-rose-600 dark:text-rose-400">
+                                {fmt(activeCard.totalDebt || 0, activeCard.currency)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       <div>
-                        <p className="mb-2.5 text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                        <p className="mb-2.5 text-[11px] font-medium uppercase tracking-wider text-gray-400">
                           Enabled Channels
                         </p>
                         <div className="flex flex-wrap gap-2">
@@ -298,7 +401,7 @@ const Cards: React.FC = () => {
                           ].map((c) => (
                             <span
                               key={c.label}
-                              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold ${
+                              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-medium ${
                                 c.on
                                   ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
                                   : "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500"
@@ -312,7 +415,7 @@ const Cards: React.FC = () => {
 
                       {activeCard.isPhysical && activeCard.billingAddress?.city && (
                         <div>
-                          <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                          <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-gray-400">
                             Shipping Address
                           </p>
                           <p className="text-sm text-gray-700 dark:text-gray-300">
@@ -324,7 +427,7 @@ const Cards: React.FC = () => {
 
                       <Link
                         to="/customer/cards/overview"
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 transition-all hover:gap-2.5 dark:text-indigo-400"
+                        className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 transition-all hover:gap-2.5 dark:text-blue-400"
                       >
                         View all cards <ArrowRight size={14} />
                       </Link>
@@ -350,7 +453,7 @@ const Cards: React.FC = () => {
                           {transactions.slice(0, 5).map((tx: any, i: number) => (
                             <div key={tx._id || i} className="flex items-center justify-between py-3">
                               <div>
-                                <p className="text-xs font-bold text-gray-900 dark:text-white sm:text-sm">
+                                <p className="text-xs font-medium text-gray-900 dark:text-white sm:text-sm">
                                   {tx.merchantName ||
                                     txnTypeLabel[tx.transactionType as keyof typeof txnTypeLabel] ||
                                     "Card Transaction"}
@@ -358,7 +461,7 @@ const Cards: React.FC = () => {
                                 <p className="mt-0.5 text-[11px] text-gray-400">{fmtDate(tx.createdAt)}</p>
                               </div>
                               <p
-                                className={`text-xs font-extrabold sm:text-sm ${isCreditTxn(tx.transactionType) ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}
+                                className={`text-xs font-semibold sm:text-sm ${isCreditTxn(tx.transactionType) ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}
                               >
                                 {isCreditTxn(tx.transactionType) ? "+" : "-"}
                                 {showBalances ? fmt(Math.abs(tx.amount || 0), tx.currency) : "••••••"}
@@ -369,7 +472,7 @@ const Cards: React.FC = () => {
                       )}
                       <Link
                         to="/customer/cards/transactions"
-                        className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 transition-all hover:gap-2.5 dark:text-indigo-400"
+                        className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 transition-all hover:gap-2.5 dark:text-blue-400"
                       >
                         View full history <ArrowRight size={14} />
                       </Link>
@@ -409,7 +512,7 @@ const Cards: React.FC = () => {
                       </div>
                       <Link
                         to="/customer/cards/security"
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 transition-all hover:gap-2.5 dark:text-indigo-400"
+                        className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 transition-all hover:gap-2.5 dark:text-blue-400"
                       >
                         Manage security settings <ArrowRight size={14} />
                       </Link>
@@ -438,13 +541,19 @@ const Cards: React.FC = () => {
               className="w-full max-w-md overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-900"
             >
               <div className="flex items-center justify-between border-b border-gray-100 p-6 dark:border-gray-800">
-                <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
+                <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
                   {modalType === "fund" ? (
                     <ArrowDownLeft size={20} className="text-emerald-500" />
                   ) : (
-                    <ArrowUpRight size={20} className="text-indigo-500" />
+                    <ArrowUpRight size={20} className="text-blue-500" />
                   )}
-                  {modalType === "fund" ? "Add Money to Card" : "Withdraw to Wallet"}
+                  {modalType === "fund"
+                    ? activeCard.cardType === "credit"
+                      ? "Fund Card on Credit"
+                      : "Add Money from Account"
+                    : modalType === "repay"
+                      ? "Pay Off Credit Card Debt"
+                      : "Withdraw to Account"}
                 </h3>
                 <button
                   onClick={handleCloseModal}
@@ -456,7 +565,36 @@ const Cards: React.FC = () => {
 
               <form onSubmit={handleModalSubmit} className="space-y-4 p-6">
                 <div>
-                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                  <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500">
+                    {modalType === "fund"
+                      ? activeCard.cardType === "credit"
+                        ? "Select Account to Record Credit Debt On"
+                        : "Select Active Account to Debit"
+                      : modalType === "repay"
+                        ? "Select Active Account to Debit for Repayment"
+                        : "Select Destination Account"}
+                  </label>
+                  <select
+                    value={selectedWalletId}
+                    onChange={(e) => setSelectedWalletId(e.target.value)}
+                    required
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-xs font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white"
+                  >
+                    {wallets.map((w: any) => {
+                      const wId = w.id || w._id;
+                      const bal = w.primaryCurrencyBalance ?? w.balance ?? 0;
+                      const curr = w.primaryCurrency || w.currency || "USD";
+                      return (
+                        <option key={wId} value={wId}>
+                          {w.displayName || w.typeLabel || w.walletType || "Account"} ({w.walletNumber || wId.slice(-6)}) — Available: {fmt(bal, curr)}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500">
                     Amount
                   </label>
                   <div className="relative">
@@ -470,7 +608,7 @@ const Cards: React.FC = () => {
                       required
                       value={modalAmount}
                       onChange={(e) => setModalAmount(e.target.value)}
-                      className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-8 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white"
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-8 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:placeholder:text-gray-500"
                       placeholder="0.00"
                     />
                   </div>
@@ -479,17 +617,45 @@ const Cards: React.FC = () => {
                       Available on card: {fmt(activeCard.balance, activeCard.currency)}
                     </p>
                   )}
+                  {modalType === "repay" && (
+                    <p className="mt-1.5 text-[11px] text-purple-600 dark:text-purple-400">
+                      Outstanding debt on linked account: {fmt(activeCard.totalDebt || 0, activeCard.currency)}
+                    </p>
+                  )}
+                  {modalType === "fund" && activeCard.cardType === "credit" && Number(modalAmount) > 0 && (
+                    <div className="mt-2.5 space-y-1 rounded-xl border border-purple-200 bg-purple-50/70 p-3 text-xs dark:border-purple-800/50 dark:bg-purple-950/30">
+                      <div className="flex justify-between text-gray-700 dark:text-gray-300">
+                        <span>Credit Principal Funded</span>
+                        <span className="font-semibold">{fmt(Number(modalAmount), activeCard.currency)}</span>
+                      </div>
+                      <div className="flex justify-between text-amber-700 dark:text-amber-300">
+                        <span>Credit Interest ({activeCard.interestRate ?? 5.0}%)</span>
+                        <span className="font-semibold">
+                          +{fmt((Number(modalAmount) * (activeCard.interestRate ?? 5.0)) / 100, activeCard.currency)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between border-t border-purple-200 pt-1 font-bold text-rose-700 dark:border-purple-800 dark:text-rose-300">
+                        <span>Total Debt Added to Selected Account</span>
+                        <span>
+                          {fmt(
+                            Number(modalAmount) * (1 + (activeCard.interestRate ?? 5.0) / 100),
+                            activeCard.currency,
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                  <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500">
                     Note (optional)
                   </label>
                   <input
                     type="text"
                     value={modalNotes}
                     onChange={(e) => setModalNotes(e.target.value)}
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white"
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:placeholder:text-gray-500"
                     placeholder="What's this for?"
                   />
                 </div>
@@ -497,11 +663,19 @@ const Cards: React.FC = () => {
                 <motion.button
                   type="submit"
                   disabled={isModalPending}
-                  className="w-full rounded-xl bg-indigo-600 py-3.5 text-sm font-bold text-white shadow-md transition hover:bg-indigo-700 disabled:opacity-50"
+                  className="w-full rounded-xl bg-blue-600 py-3.5 text-sm font-medium text-white shadow-md transition hover:bg-blue-700 disabled:opacity-50"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {isModalPending ? "Processing..." : modalType === "fund" ? "Add Money" : "Withdraw to Wallet"}
+                  {isModalPending
+                    ? "Processing..."
+                    : modalType === "fund"
+                      ? activeCard.cardType === "credit"
+                        ? "Fund on Credit"
+                        : "Debit Account & Fund Card"
+                      : modalType === "repay"
+                        ? "Debit Account & Pay Off Debt"
+                        : "Withdraw to Account"}
                 </motion.button>
               </form>
             </motion.div>
