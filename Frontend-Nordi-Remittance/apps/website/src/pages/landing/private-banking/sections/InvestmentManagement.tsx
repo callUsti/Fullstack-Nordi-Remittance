@@ -142,18 +142,18 @@ const InvestmentManagement: React.FC = () => {
                     ? React.cloneElement(strategy.icon as React.ReactElement, { className: "w-6 h-6 sm:w-8 sm:h-8" })
                     : strategy.icon}
                 </div>
-                <span className={cn("px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest", riskColors[strategy.risk])}>
+                <span className={cn("px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-medium uppercase tracking-widest", riskColors[strategy.risk])}>
                   {strategy.risk}
                 </span>
               </div>
 
-              <h3 className="text-xl sm:text-2xl font-black text-neutral-900 dark:text-white mb-2 sm:mb-3 uppercase tracking-tight">{strategy.name}</h3>
+              <h3 className="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-white mb-2 sm:mb-3 uppercase tracking-tight">{strategy.name}</h3>
               <p className="text-[13px] sm:text-sm text-neutral-500 dark:text-neutral-400 mb-6 sm:mb-8 leading-relaxed font-medium">{strategy.description}</p>
 
               <div className="p-4 sm:p-5 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 mb-6 sm:mb-8 border border-neutral-100 dark:border-neutral-700 shadow-inner">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] sm:text-xs text-neutral-400 font-bold uppercase tracking-widest">Target Returns</span>
-                  <span className="text-xl sm:text-2xl font-black text-emerald-600 tabular-nums">{strategy.returns}</span>
+                  <span className="text-[10px] sm:text-xs text-neutral-400 font-medium uppercase tracking-widest">Target Returns</span>
+                  <span className="text-xl sm:text-2xl font-semibold text-emerald-600 tabular-nums">{strategy.returns}</span>
                 </div>
               </div>
 
@@ -161,14 +161,14 @@ const InvestmentManagement: React.FC = () => {
                 {strategy.features.map((feature) => (
                   <li key={feature} className="flex items-center gap-3">
                     <div className="w-5 h-5 rounded-full bg-emerald-400/10 flex items-center justify-center shrink-0">
-                      <Check className="w-3 h-3 text-emerald-600 font-bold" />
+                      <Check className="w-3 h-3 text-emerald-600 font-medium" />
                     </div>
-                    <span className="text-[13px] sm:text-sm text-neutral-600 dark:text-neutral-300 font-bold">{feature}</span>
+                    <span className="text-[13px] sm:text-sm text-neutral-600 dark:text-neutral-300 font-medium">{feature}</span>
                   </li>
                 ))}
               </ul>
 
-              <Button variant="outline" className="w-full py-4 rounded-2xl border-2 font-bold group-hover:bg-emerald-600 group-hover:border-emerald-600 group-hover:text-white transition-all">
+              <Button variant="outline" className="w-full py-4 rounded-2xl border-2 font-medium group-hover:bg-emerald-600 group-hover:border-emerald-600 group-hover:text-white transition-all">
                 Explore Strategy
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
@@ -189,15 +189,15 @@ const InvestmentManagement: React.FC = () => {
               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-400/10 flex items-center justify-center shadow-lg">
                 <PieChart className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-600" />
               </div>
-              <h4 className="text-lg sm:text-xl font-black text-neutral-900 dark:text-white uppercase tracking-tight">Portfolio Allocation</h4>
+              <h4 className="text-lg sm:text-xl font-semibold text-neutral-900 dark:text-white uppercase tracking-tight">Portfolio Allocation</h4>
             </div>
 
             <div className="flex items-center justify-center mb-10 sm:mb-16">
               <div className="relative w-48 h-48 sm:w-64 sm:h-64">
                 <div className="absolute inset-0 flex items-center justify-center z-10">
                   <div className="text-center group">
-                    <p className="text-2xl sm:text-4xl font-black text-neutral-900 dark:text-white tabular-nums tracking-tighter group-hover:scale-110 transition-transform">$1M+</p>
-                    <p className="text-[10px] sm:text-xs text-neutral-500 dark:text-neutral-400 font-bold uppercase tracking-widest mt-1">Min. Investment</p>
+                    <p className="text-2xl sm:text-4xl font-bold text-neutral-900 dark:text-white tabular-nums tracking-tighter group-hover:scale-110 transition-transform">$1M+</p>
+                    <p className="text-[10px] sm:text-xs text-neutral-500 dark:text-neutral-400 font-medium uppercase tracking-widest mt-1">Min. Investment</p>
                   </div>
                 </div>
                 <svg className="w-full h-full -rotate-90 filter drop-shadow-2xl" viewBox="0 0 100 100">
@@ -228,9 +228,9 @@ const InvestmentManagement: React.FC = () => {
                 <div key={asset.name} className="flex flex-col p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-100 dark:border-neutral-700 group hover:bg-white dark:hover:bg-neutral-800 transition-colors">
                   <div className="flex items-center gap-2 mb-1">
                     <div className={cn("w-2 h-2 rounded-full", asset.color)} />
-                    <span className="text-[10px] sm:text-[11px] font-black text-neutral-500 uppercase tracking-tighter truncate">{asset.name}</span>
+                    <span className="text-[10px] sm:text-[11px] font-medium text-neutral-500 uppercase tracking-tighter truncate">{asset.name}</span>
                   </div>
-                  <span className="text-sm sm:text-lg font-black text-neutral-900 dark:text-white tabular-nums">{asset.allocation}</span>
+                  <span className="text-sm sm:text-lg font-semibold text-neutral-900 dark:text-white tabular-nums">{asset.allocation}</span>
                 </div>
               ))}
             </div>
@@ -250,11 +250,11 @@ const InvestmentManagement: React.FC = () => {
                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-400/20 text-emerald-400 flex items-center justify-center shadow-lg">
                   <Target className="w-6 h-6 sm:w-7 sm:h-7" />
                 </div>
-                <h4 className="text-lg sm:text-xl font-black uppercase tracking-tight">Advisory Excellence</h4>
+                <h4 className="text-lg sm:text-xl font-semibold uppercase tracking-tight">Advisory Excellence</h4>
               </div>
 
               <p className="text-sm sm:text-lg text-emerald-100/80 mb-8 sm:mb-12 font-medium leading-relaxed">
-                Our team of <span className="text-emerald-400 font-black">CFA-certified</span> investment professionals work closely 
+                Our team of <span className="text-emerald-400 font-medium">CFA-certified</span> investment professionals work closely 
                 with you to build and manage portfolios aligned with your goals.
               </p>
 
@@ -270,15 +270,15 @@ const InvestmentManagement: React.FC = () => {
                       <item.icon className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <div>
-                      <p className="font-black text-[13px] sm:text-sm uppercase tracking-tight group-hover:text-emerald-400 transition-colors">{item.title}</p>
-                      <p className="text-[10px] sm:text-xs text-neutral-400 font-bold uppercase tracking-widest mt-1">{item.desc}</p>
+                      <p className="font-medium text-[13px] sm:text-sm uppercase tracking-tight group-hover:text-emerald-400 transition-colors">{item.title}</p>
+                      <p className="text-[10px] sm:text-xs text-neutral-400 font-medium uppercase tracking-widest mt-1">{item.desc}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <Button variant="primary" size="lg" className="w-full bg-emerald-400 hover:bg-emerald-500 text-neutral-900 font-bold py-4 px-10 shadow-xl shadow-emerald-400/20 relative z-10">
+            <Button variant="primary" size="lg" className="w-full bg-emerald-400 hover:bg-emerald-500 text-neutral-900 font-medium py-4 px-10 shadow-xl shadow-emerald-400/20 relative z-10">
               Schedule Consultation
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
