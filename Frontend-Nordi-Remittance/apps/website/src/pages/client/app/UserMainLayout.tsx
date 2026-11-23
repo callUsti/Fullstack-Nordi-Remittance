@@ -1,32 +1,40 @@
-import React from 'react'
-import UserLeftContainer from '../container/UserLeftContainer'
-import UserRightContainer from '../container/UserRightContainer'
-import UserRoutes from '../UserRoutes'
-import { useRealtimeUpdates } from '@hooks/useSocket'
-import { useSessionManager } from '@hooks/useSessionManager'
-import { SessionExpiredModal } from '@components/shared/SessionExpiredModal'
+import React, { useState } from "react";
+import UserLeftContainer from "../container/UserLeftContainer";
+import UserRightContainer from "../container/UserRightContainer";
+import UserRoutes from "../UserRoutes";
+import MobileBottomNav from "../presentation/MobileBottomNav";
+import { useRealtimeUpdates } from "@hooks/useSocket";
+import { useSessionManager } from "@hooks/useSessionManager";
+import { SessionExpiredModal } from "@components/shared/SessionExpiredModal";
 
 const UserMainLayout = () => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   // Activate all real-time WebSocket subscriptions for user role
-  useRealtimeUpdates('user');
+  useRealtimeUpdates("user");
 
   // Session management: inactivity timeout, 401 handling, multi-tab sync
-  const { modalState, handleExtendSession, handleRedirect } = useSessionManager('user');
+  const { modalState, handleExtendSession, handleRedirect } = useSessionManager("user");
 
   return (
     <>
-      <div className="flex w-full h-screen bg-white dark:bg-gray-950 transition-colors duration-200">
-        {/* Left Container - fixed, full height */}
-        <div className="h-screen">
-          <UserLeftContainer />
-        </div>
-        {/* Right Container - flex-1, scrollable */}
-        <div className="flex-1 h-screen overflow-y-auto bg-white dark:bg-gray-950 transition-colors duration-200">
-          <UserRightContainer>
+      <div className="flex h-[100dvh] w-full overflow-hidden bg-white transition-colors duration-200 dark:bg-gray-950">
+        {/* Left Container - docked on desktop (lg+), slide-over drawer on mobile/tablet */}
+        <UserLeftContainer
+          mobileOpen={mobileMenuOpen}
+          onCloseMobile={() => setMobileMenuOpen(false)}
+        />
+
+        {/* Right Container - full width on mobile, flex-1 on desktop */}
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-white transition-colors duration-200 dark:bg-gray-950">
+          <UserRightContainer onOpenMobileMenu={() => setMobileMenuOpen(true)}>
             <UserRoutes />
           </UserRightContainer>
         </div>
       </div>
+
+      {/* Sleek Mobile Bottom Tab Bar (< lg) */}
+      <MobileBottomNav onOpenMenu={() => setMobileMenuOpen(true)} />
 
       {/* Session expired / inactivity warning modal */}
       <SessionExpiredModal
@@ -38,7 +46,7 @@ const UserMainLayout = () => {
         onRedirect={handleRedirect}
       />
     </>
-  )
-}
+  );
+};
 
-export default UserMainLayout
+export default UserMainLayout;
