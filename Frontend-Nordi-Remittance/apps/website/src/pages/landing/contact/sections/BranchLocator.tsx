@@ -142,8 +142,8 @@ const BranchLocator: React.FC = () => {
           {stats.map((stat) => (
             <div key={stat.label} className="text-center p-4 sm:p-6 rounded-2xl bg-teal-50 dark:bg-teal-900/10 border border-teal-100 dark:border-teal-800/30 shadow-sm hover:shadow-xl transition-all group">
               <stat.icon className="w-6 h-6 sm:w-8 sm:h-8 text-teal-600 dark:text-teal-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
-              <p className="text-xl sm:text-3xl font-black text-neutral-900 dark:text-white tabular-nums tracking-tighter">{stat.value}</p>
-              <p className="text-[10px] sm:text-xs text-neutral-400 font-bold uppercase tracking-widest mt-1">{stat.label}</p>
+              <p className="text-xl sm:text-3xl font-bold text-neutral-900 dark:text-white tabular-nums tracking-tighter">{stat.value}</p>
+              <p className="text-[10px] sm:text-xs text-neutral-400 font-medium uppercase tracking-widest mt-1">{stat.label}</p>
             </div>
           ))}
         </motion.div>
@@ -164,7 +164,7 @@ const BranchLocator: React.FC = () => {
                 placeholder="Find Your Local Hub..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-6 py-4 rounded-2xl border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 font-black text-xs uppercase tracking-widest focus:border-teal-500 outline-none transition-all placeholder:text-neutral-400"
+                className="w-full pl-12 pr-6 py-4 rounded-2xl border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 font-medium text-xs uppercase tracking-widest focus:border-teal-500 outline-none transition-all placeholder:text-neutral-400"
               />
             </div>
 
@@ -174,7 +174,7 @@ const BranchLocator: React.FC = () => {
               <select
                 value={selectedState}
                 onChange={(e) => setSelectedState(e.target.value)}
-                className="w-full md:w-auto pl-12 pr-10 py-4 rounded-2xl border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 font-black text-xs uppercase tracking-widest focus:border-teal-500 outline-none appearance-none transition-all cursor-pointer"
+                className="w-full md:w-auto pl-12 pr-10 py-4 rounded-2xl border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 font-medium text-xs uppercase tracking-widest focus:border-teal-500 outline-none appearance-none transition-all cursor-pointer"
               >
                 {states.map((state) => (
                   <option key={state} value={state}>
@@ -185,7 +185,7 @@ const BranchLocator: React.FC = () => {
             </div>
 
             {/* Use Location Button */}
-            <Button variant="primary" size="lg" className="w-full md:w-auto bg-teal-600 hover:bg-teal-700 font-black py-4 px-8 rounded-2xl shadow-xl transition-all active:scale-95 uppercase tracking-widest text-xs">
+            <Button variant="primary" size="lg" className="w-full md:w-auto bg-teal-600 hover:bg-teal-700 font-medium py-4 px-8 rounded-2xl shadow-xl transition-all active:scale-95 uppercase tracking-widest text-xs">
               <Navigation className="w-5 h-5 mr-3 animate-pulse" />
               Target My Position
             </Button>
