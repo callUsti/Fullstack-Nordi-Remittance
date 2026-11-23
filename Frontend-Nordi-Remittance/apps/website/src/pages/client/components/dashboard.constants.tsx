@@ -8,7 +8,7 @@ import React from "react";
 import {
   Send, Receipt, ArrowDownCircle, Repeat, QrCode,
   Wallet, CreditCard, TrendingUp, TrendingDown,
-  DollarSign, MapPin, Upload,
+  DollarSign, MapPin, Upload, PiggyBank, Building2, Lock, Briefcase,
 } from "lucide-react";
 
 
@@ -18,22 +18,22 @@ export const QUICK_ACTIONS: QuickAction[] = [
   {
     title: "Send Money",
     icon: React.createElement(Send, { size: 20 }),
-    color: "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400",
-    hoverColor: "hover:bg-indigo-100 dark:hover:bg-indigo-950/80",
+    color: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
+    hoverColor: "hover:bg-blue-100 dark:hover:bg-blue-950/80",
     route: "/customer/send",
   },
   {
     title: "Pay Bills",
     icon: React.createElement(Receipt, { size: 20 }),
-    color: "bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400",
-    hoverColor: "hover:bg-purple-100 dark:hover:bg-purple-950/80",
+    color: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
+    hoverColor: "hover:bg-blue-100 dark:hover:bg-blue-950/80",
     route: "/customer/bills",
   },
   {
     title: "Deposit",
     icon: React.createElement(ArrowDownCircle, { size: 20 }),
-    color: "bg-pink-50 dark:bg-pink-950/50 text-pink-600 dark:text-pink-400",
-    hoverColor: "hover:bg-pink-100 dark:hover:bg-pink-950/80",
+    color: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
+    hoverColor: "hover:bg-blue-100 dark:hover:bg-blue-950/80",
     route: "/customer/transactions",
   },
   {
@@ -58,22 +58,22 @@ export const SIDEBAR_TOOLS: ToolLink[] = [
   {
     label: "Forex",
     icon: React.createElement(DollarSign, { size: 16 }),
-    color: "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400",
-    hover: "hover:bg-indigo-100 dark:hover:bg-indigo-950/80",
+    color: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
+    hover: "hover:bg-blue-100 dark:hover:bg-blue-950/80",
     route: "/customer/forex/rates",
   },
   {
     label: "Support",
     icon: React.createElement(MapPin, { size: 16 }),
-    color: "bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400",
-    hover: "hover:bg-purple-100 dark:hover:bg-purple-950/80",
+    color: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
+    hover: "hover:bg-blue-100 dark:hover:bg-blue-950/80",
     route: "/customer/support",
   },
   {
     label: "Docs",
     icon: React.createElement(Upload, { size: 16 }),
-    color: "bg-pink-50 dark:bg-pink-950/50 text-pink-600 dark:text-pink-400",
-    hover: "hover:bg-pink-100 dark:hover:bg-pink-950/80",
+    color: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
+    hover: "hover:bg-blue-100 dark:hover:bg-blue-950/80",
     route: "/customer/profile/documents",
   },
 ];
@@ -81,17 +81,29 @@ export const SIDEBAR_TOOLS: ToolLink[] = [
 /* ─── Account Type Map ────────────────────────────────────────────────────── */
 
 export const ACCOUNT_TYPE_MAP: Record<string, { icon: React.ReactNode; color: string }> = {
-  savings: {
+  personal: {
     icon: React.createElement(Wallet, { size: 16 }),
-    color: "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400",
+    color: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
+  },
+  savings: {
+    icon: React.createElement(PiggyBank, { size: 16 }),
+    color: "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400",
+  },
+  current: {
+    icon: React.createElement(Building2, { size: 16 }),
+    color: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
+  },
+  fixed_deposit: {
+    icon: React.createElement(Lock, { size: 16 }),
+    color: "bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400",
   },
   checking: {
     icon: React.createElement(CreditCard, { size: 16 }),
-    color: "bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400",
+    color: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
   },
   business: {
-    icon: React.createElement(TrendingUp, { size: 16 }),
-    color: "bg-pink-50 dark:bg-pink-950/50 text-pink-600 dark:text-pink-400",
+    icon: React.createElement(Briefcase, { size: 16 }),
+    color: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
   },
   investment: {
     icon: React.createElement(TrendingUp, { size: 16 }),
@@ -99,7 +111,7 @@ export const ACCOUNT_TYPE_MAP: Record<string, { icon: React.ReactNode; color: st
   },
   default: {
     icon: React.createElement(Wallet, { size: 16 }),
-    color: "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400",
+    color: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
   },
 };
 
@@ -127,7 +139,7 @@ export const NOTIFICATION_TYPE_COLORS: Record<string, string> = {
   warning: "bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400",
   error: "bg-rose-100 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400",
   success: "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400",
-  info: "bg-indigo-100 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400",
+  info: "bg-blue-100 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
 };
 
 /* ─── Insight Sentiment Map ───────────────────────────────────────────────── */
