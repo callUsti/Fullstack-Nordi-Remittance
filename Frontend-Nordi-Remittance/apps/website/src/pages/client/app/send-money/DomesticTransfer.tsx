@@ -20,6 +20,10 @@ import {
 } from "@constants/icons";
 import { useClientWallets, useClientBeneficiaries } from "../../client-usecase/useaccounts-client-usecase";
 import { useTransfer } from "../../client-usecase/usetransaction-client-usecase";
+import { parseApiError, checkInsufficientFunds, type ParsedApiError } from "@core/errors/apiErrors";
+import { TransactionErrorAlert, InsufficientFundsWarning } from "@components/shared/TransactionErrorAlert";
+import { useClientTransferLimits } from "@hooks/useTransferLimits";
+import { TransferLimitsCard, LimitExceededWarning, RequestLimitModal } from "@components/shared/TransferLimitsBanner";
 import {
   TransferLayout,
   StepIndicator,
@@ -41,9 +45,9 @@ import type { WizardStep, AccountOption } from "@components/shared/TransferPrimi
 const STEPS: WizardStep[] = [{ label: "Account" }, { label: "Details" }, { label: "Review" }];
 
 const TRANSFER_TYPES = [
-  { value: "standard", label: "Standard (Free)", fee: 0, eta: "1-3 business days" },
-  { value: "same_day", label: "Same-Day ($5.00)", fee: 5, eta: "Same day" },
-  { value: "wire", label: "Wire ($25.00)", fee: 25, eta: "Within hours" },
+  { value: "standard", label: "Standard", eta: "1-3 business days" },
+  { value: "same_day", label: "Same-Day", eta: "Same day" },
+  { value: "wire", label: "Wire", eta: "Within hours" },
 ];
 
 // ─── Validation ──────────────────────────────────────────────────────────────
@@ -75,7 +79,8 @@ const schema = Yup.object({
     then: (s) => s.required("Bank name is required"),
     otherwise: (s) => s.notRequired(),
   }),
-  amount: Yup.number().required("Enter an amount").positive("Must be positive").max(10000, "Max $10,000 per transfer"),
+  amount: Yup.number().required("Enter an amount").positive("Must be positive"),
+  fee: Yup.number().typeError("Enter a valid charge").min(0, "Charge cannot be negative").required("Enter transfer fee / charge"),
   transferType: Yup.string().required("Select transfer type"),
   transferDate: Yup.string().required("Select a date"),
   reference: Yup.string().max(50),
@@ -89,15 +94,34 @@ const DomesticTransfer: React.FC = () => {
   const [result, setResult] = useState<{
     success: boolean;
     reference?: string;
+    errorMessage?: string;
   } | null>(null);
+  const [submitError, setSubmitError] = useState<ParsedApiError | string | null>(null);
   const [beneficiarySearch, setBeneficiarySearch] = useState("");
+  const [limitModalOpen, setLimitModalOpen] = useState(false);
 
   // Hooks
   const { wallets: walletsArr, isLoading: walletsLoading } = useClientWallets();
   const { beneficiaries: beneficiariesArr, isLoading: beneLoading } = useClientBeneficiaries();
+  const { domestic: domesticLimits, limitRequests } = useClientTransferLimits();
   const transfer = useTransfer();
 
-  const wallets: AccountOption[] = walletsArr;
+  const perTxLimit = domesticLimits?.perTransaction ?? 25000;
+  const dynamicSchema = useMemo(
+    () =>
+      schema.shape({
+        amount: Yup.number()
+          .required("Enter an amount")
+          .positive("Must be positive")
+          .max(
+            perTxLimit,
+            `Per-transaction domestic limit is $${perTxLimit.toLocaleString()}. Apply to increase your limit.`,
+          ),
+      }),
+    [perTxLimit],
+  );
+
+  const wallets: AccountOption[] = walletsArr as any;
   const beneficiaries = beneficiariesArr;
 
   const filteredBeneficiaries = useMemo(
@@ -123,32 +147,65 @@ const DomesticTransfer: React.FC = () => {
       routingNumber: "",
       bankName: "",
       amount: "",
+      fee: "0",
       transferType: "standard",
       transferDate: new Date().toISOString().split("T")[0],
       reference: "",
       saveBeneficiary: false,
       agreeTos: false,
     },
-    validationSchema: schema,
+    validationSchema: dynamicSchema,
     onSubmit: (values) => {
       const selectedAccount = wallets.find((w) => w.id === values.fromAccount);
+      const selectedBene = beneficiaries.find((b: any) => b.id === values.beneficiaryId) as any;
+      const isNew = values.recipientType === "new";
+      const acctNum = isNew
+        ? values.accountNumber
+        : selectedBene?.accountNumber || selectedBene?.bankAccount?.accountNumber;
       transfer.mutate(
         {
           sourceAccountId: values.fromAccount as any,
+          fromWalletId: values.fromAccount,
+          type: "transfer",
           destinationAccountId: (values.beneficiaryId || values.accountNumber) as any,
+          recipientEmail: isNew ? undefined : selectedBene?.email,
+          recipientAccountNumber: acctNum,
+          toAccountNumber: acctNum,
+          toAccountName: isNew
+            ? values.accountName
+            : selectedBene?.name || `${selectedBene?.firstName || ""} ${selectedBene?.lastName || ""}`.trim(),
+          recipientName: isNew
+            ? values.accountName
+            : selectedBene?.name || `${selectedBene?.firstName || ""} ${selectedBene?.lastName || ""}`.trim(),
+          toBankName: isNew
+            ? values.bankName
+            : selectedBene?.bankName || selectedBene?.bankAccount?.bankName || "Nordi Bank",
+          routingNumber: isNew ? values.routingNumber : selectedBene?.routingNumber,
+          transferType: values.transferType,
+          transferDate: values.transferDate,
+          fee: Number(values.fee) || 0,
+          saveBeneficiary: values.saveBeneficiary,
           amount: Number(values.amount),
-          currency: (selectedAccount?.currency || "USD") as any,
+          currency: (selectedAccount?.primaryCurrency || selectedAccount?.currency || "USD") as any,
           description: values.reference || undefined,
-        },
+        } as any,
         {
           onSuccess: (data: any) => {
+            setSubmitError(null);
             setResult({
               success: true,
               reference: data?.referenceNumber || data?.id || `DOM${Date.now().toString().slice(-7)}`,
             });
           },
-          onError: () => {
-            setResult({ success: false });
+          onError: (err: any) => {
+            const parsed = parseApiError(err);
+            setSubmitError(parsed);
+            setResult({
+              success: false,
+              errorMessage: parsed.guidance
+                ? `${parsed.title}: ${parsed.message} ${parsed.guidance}`
+                : `${parsed.title}: ${parsed.message}`,
+            });
           },
         },
       );
@@ -159,6 +216,7 @@ const DomesticTransfer: React.FC = () => {
 
   // Per-step validation
   const goNext = async () => {
+    setSubmitError(null);
     const fieldsByStep: Record<number, string[]> = {
       0: [
         "fromAccount",
@@ -166,24 +224,46 @@ const DomesticTransfer: React.FC = () => {
           ? ["beneficiaryId"]
           : ["accountName", "accountNumber", "routingNumber", "bankName"]),
       ],
-      1: ["amount", "transferType", "transferDate"],
+      1: ["amount", "fee", "transferType", "transferDate"],
       2: ["agreeTos"],
     };
     const fields = fieldsByStep[step] || [];
     const touchMap: Record<string, boolean> = {};
     fields.forEach((f) => (touchMap[f] = true));
-    setTouched(touchMap, true);
+    await setTouched(touchMap, true);
     const errs = await formik.validateForm();
-    if (fields.some((f) => (errs as any)[f])) return;
-    if (step < 2) setStep(step + 1);
-    else handleSubmit();
+    if (fields.some((f) => (errs as any)[f])) {
+      if (step === 2 && (errs as any).agreeTos) {
+        setSubmitError(String((errs as any).agreeTos));
+      }
+      return;
+    }
+    if (step < 2) {
+      setStep(step + 1);
+      return;
+    }
+
+    // On final step, ensure no hidden errors from earlier steps silently block submission
+    const step0And1Fields = [...fieldsByStep[0], ...fieldsByStep[1]];
+    const blockingErrors = step0And1Fields
+      .map((f) => (errs as any)[f])
+      .filter(Boolean);
+    if (blockingErrors.length > 0) {
+      const allTouch: Record<string, boolean> = {};
+      step0And1Fields.forEach((f) => (allTouch[f] = true));
+      await setTouched(allTouch, true);
+      setSubmitError(`Please fix earlier step errors: ${blockingErrors.join(" · ")}`);
+      return;
+    }
+
+    await formik.submitForm();
   };
 
   // Derived
   const selectedAccount = wallets.find((w) => w.id === values.fromAccount);
-  const selectedBeneficiary = beneficiaries.find((b: any) => b.id === values.beneficiaryId);
+  const selectedBeneficiary: any = beneficiaries.find((b: any) => b.id === values.beneficiaryId);
   const transferTypeInfo = TRANSFER_TYPES.find((t) => t.value === values.transferType);
-  const fee = transferTypeInfo?.fee ?? 0;
+  const fee = Math.max(0, Number(values.fee) || 0);
   const total = (Number(values.amount) || 0) + fee;
 
   // ─── Result Screen ──────────────────────────────────────────────────
@@ -195,7 +275,9 @@ const DomesticTransfer: React.FC = () => {
             success={result.success}
             title={result.success ? "Transfer Submitted!" : "Transfer Failed"}
             subtitle={
-              result.success ? "Your domestic transfer is being processed." : "Something went wrong. Please try again."
+              result.success
+                ? "Your domestic transfer is being processed."
+                : result.errorMessage || "Something went wrong. Please try again."
             }
             reference={result.reference}
             details={
@@ -273,7 +355,7 @@ const DomesticTransfer: React.FC = () => {
                     }}
                     className={`flex-1 rounded-lg border py-2 text-sm font-medium transition-colors ${
                       values.recipientType === t
-                        ? "border-indigo-500 bg-indigo-50 text-indigo-600 dark:bg-indigo-950/30 dark:text-indigo-400"
+                        ? "border-blue-500 bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400"
                         : "border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
                     }`}
                   >
@@ -291,7 +373,7 @@ const DomesticTransfer: React.FC = () => {
                       value={beneficiarySearch}
                       onChange={(e) => setBeneficiarySearch(e.target.value)}
                       placeholder="Search recipients…"
-                      className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
+                      className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
                     />
                   </div>
 
@@ -312,11 +394,11 @@ const DomesticTransfer: React.FC = () => {
                           onClick={() => setFieldValue("beneficiaryId", b.id)}
                           className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all ${
                             values.beneficiaryId === b.id
-                              ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30"
+                              ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30"
                               : "border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600"
                           }`}
                         >
-                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
                             {(b.name || b.firstName || "?").charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0 flex-1">
@@ -399,9 +481,9 @@ const DomesticTransfer: React.FC = () => {
         {step === 1 && (
           <div className="space-y-6">
             <TCard title="Transfer Details" icon={<DollarSign size={18} />}>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-3">
                 <TInput
-                  label="Amount (USD)"
+                  label="Amount"
                   name="amount"
                   type="number"
                   value={values.amount}
@@ -410,6 +492,18 @@ const DomesticTransfer: React.FC = () => {
                   placeholder="0.00"
                   error={errors.amount}
                   touched={touched.amount}
+                  icon={<DollarSign size={16} />}
+                />
+                <TInput
+                  label="Transfer Charges / Fee"
+                  name="fee"
+                  type="number"
+                  value={values.fee}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  placeholder="0.00"
+                  error={errors.fee}
+                  touched={touched.fee}
                   icon={<DollarSign size={16} />}
                 />
                 <TInput
@@ -425,6 +519,35 @@ const DomesticTransfer: React.FC = () => {
                 />
               </div>
 
+              {(() => {
+                const activeWallet = wallets.find((w) => w.id === values.fromAccount);
+                const avail = activeWallet?.primaryCurrencyBalance ?? activeWallet?.balance ?? 0;
+                const curr = activeWallet?.primaryCurrency || activeWallet?.currency || "USD";
+                const check = checkInsufficientFunds(values.amount, values.fee, avail, curr);
+                return check.insufficient ? (
+                  <InsufficientFundsWarning
+                    totalRequired={check.totalRequired}
+                    available={check.available}
+                    shortfall={check.shortfall}
+                    currency={check.currency}
+                  />
+                ) : null;
+              })()}
+
+              <LimitExceededWarning
+                amount={Number(values.amount)}
+                limits={domesticLimits}
+                scope="domestic"
+                onApplyLimit={() => setLimitModalOpen(true)}
+              />
+
+              <TransferLimitsCard
+                scope="domestic"
+                limits={domesticLimits}
+                pendingRequests={limitRequests}
+                onOpenRequestModal={() => setLimitModalOpen(true)}
+              />
+
               {/* Transfer type */}
               <div className="mt-5 space-y-3">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Transfer Speed</label>
@@ -436,20 +559,15 @@ const DomesticTransfer: React.FC = () => {
                       onClick={() => setFieldValue("transferType", t.value)}
                       className={`rounded-lg border p-3 text-left transition-all ${
                         values.transferType === t.value
-                          ? "border-indigo-500 bg-indigo-50 ring-1 ring-indigo-500/50 dark:bg-indigo-950/30"
+                          ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500/50 dark:bg-blue-950/30"
                           : "border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600"
                       }`}
                     >
                       <div className="mb-1 flex items-center gap-2">
-                        <Clock size={14} className="text-indigo-500" />
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">
-                          {t.value === "standard" ? "Standard" : t.value === "same_day" ? "Same-Day" : "Wire"}
-                        </span>
+                        <Clock size={14} className="text-blue-500" />
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">{t.label}</span>
                       </div>
                       <p className="text-xs text-gray-500 dark:text-gray-400">{t.eta}</p>
-                      <p className="mt-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                        {t.fee === 0 ? "Free" : `$${t.fee.toFixed(2)}`}
-                      </p>
                     </button>
                   ))}
                 </div>
@@ -507,10 +625,20 @@ const DomesticTransfer: React.FC = () => {
             </ReviewSection>
 
             <ReviewSection title="From Account" icon={<Building size={16} />}>
-              <ReviewRow label="Account" value={selectedAccount?.name || selectedAccount?.walletType || "—"} />
+              <ReviewRow
+                label="Account"
+                value={selectedAccount?.displayName || selectedAccount?.name || selectedAccount?.typeLabel || "—"}
+              />
               <ReviewRow
                 label="Balance"
-                value={typeof selectedAccount?.balance === "number" ? formatCurrency(selectedAccount.balance) : "—"}
+                value={
+                  typeof (selectedAccount?.primaryCurrencyBalance ?? selectedAccount?.balance) === "number"
+                    ? formatCurrency(
+                        (selectedAccount?.primaryCurrencyBalance ?? selectedAccount?.balance) as number,
+                        selectedAccount?.primaryCurrency || selectedAccount?.currency,
+                      )
+                    : "—"
+                }
               />
             </ReviewSection>
 
@@ -551,9 +679,21 @@ const DomesticTransfer: React.FC = () => {
               name="agreeTos"
               label="I agree to the transfer terms and authorize this transaction."
               checked={values.agreeTos}
-              onChange={handleChange}
+              onChange={(e) => {
+                handleChange(e);
+                if (e.target.checked) setSubmitError(null);
+              }}
               error={errors.agreeTos}
               touched={touched.agreeTos}
+            />
+
+            <TransactionErrorAlert
+              error={submitError}
+              onDismiss={() => setSubmitError(null)}
+              onAction={(actionType) => {
+                if (actionType === "edit_amount") setStep(1);
+                else if (actionType === "retry") formik.handleSubmit();
+              }}
             />
           </div>
         )}
@@ -566,13 +706,19 @@ const DomesticTransfer: React.FC = () => {
         onNext={goNext}
         nextLabel={step === 2 ? "Confirm & Send" : "Continue"}
         loading={transfer.isPending}
-        disabled={step === 2 && !values.agreeTos}
       />
 
       <div className="flex items-center justify-center gap-2 pb-4 text-xs text-gray-400 dark:text-gray-500">
         <Info size={12} />
         <span>Transfers are encrypted and processed securely.</span>
       </div>
+
+      <RequestLimitModal
+        isOpen={limitModalOpen}
+        onClose={() => setLimitModalOpen(false)}
+        defaultScope="domestic"
+        currentLimits={domesticLimits}
+      />
     </TransferLayout>
   );
 };
