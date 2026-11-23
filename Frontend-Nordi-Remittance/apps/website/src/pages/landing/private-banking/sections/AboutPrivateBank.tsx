@@ -103,7 +103,7 @@ const AboutPrivateBank: React.FC = () => {
               <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-2xl bg-amber-400/10 text-amber-600 flex items-center justify-center mb-3 sm:mb-5 shadow-inner group-hover:bg-amber-400 group-hover:text-white transition-all">
                 <value.icon className="w-6 h-6 sm:w-8 sm:h-8" />
               </div>
-              <h4 className="font-bold text-neutral-900 dark:text-white mb-1.5 sm:mb-2 text-sm sm:text-base uppercase tracking-tight">{value.title}</h4>
+              <h4 className="font-semibold text-neutral-900 dark:text-white mb-1.5 sm:mb-2 text-sm sm:text-base uppercase tracking-tight">{value.title}</h4>
               <p className="text-[10px] sm:text-[13px] text-neutral-500 dark:text-neutral-400 leading-relaxed group-hover:text-neutral-600 transition-colors">{value.description}</p>
             </div>
           ))}
@@ -122,7 +122,7 @@ const AboutPrivateBank: React.FC = () => {
               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-400/10 flex items-center justify-center">
                 <History className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" />
               </div>
-              <h4 className="text-lg sm:text-xl font-black text-neutral-900 dark:text-white uppercase tracking-tight">Our Journey</h4>
+              <h4 className="text-lg sm:text-xl font-semibold text-neutral-900 dark:text-white uppercase tracking-tight">Our Journey</h4>
             </div>
 
             <div className="relative pl-8 sm:pl-10">
@@ -138,8 +138,8 @@ const AboutPrivateBank: React.FC = () => {
                 >
                   <div className="absolute -left-[2.05rem] sm:-left-[2.55rem] w-6 h-6 rounded-full bg-amber-400 border-4 border-white dark:border-neutral-800 shadow-md flex items-center justify-center shrink-0 z-10" />
                   <div className="bg-white dark:bg-neutral-800/80 p-4 sm:p-6 rounded-2xl border border-neutral-100 dark:border-neutral-700 shadow-sm">
-                    <span className="text-[10px] sm:text-xs font-black text-amber-600 uppercase tracking-[0.2em] mb-1 block">{milestone.year}</span>
-                    <h5 className="font-bold text-neutral-900 dark:text-white text-base sm:text-lg mb-1 leading-tight">{milestone.title}</h5>
+                    <span className="text-[10px] sm:text-xs font-medium text-amber-600 uppercase tracking-[0.2em] mb-1 block">{milestone.year}</span>
+                    <h5 className="font-semibold text-neutral-900 dark:text-white text-base sm:text-lg mb-1 leading-tight">{milestone.title}</h5>
                     <p className="text-[12px] sm:text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed font-medium">{milestone.description}</p>
                   </div>
                 </motion.div>
@@ -161,7 +161,7 @@ const AboutPrivateBank: React.FC = () => {
                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-400/20 text-amber-400 flex items-center justify-center shadow-lg">
                   <Award className="w-6 h-6 sm:w-7 sm:h-7" />
                 </div>
-                <h4 className="text-lg sm:text-xl font-black uppercase tracking-tight">Global Recognition</h4>
+                <h4 className="text-lg sm:text-xl font-semibold uppercase tracking-tight">Global Recognition</h4>
               </div>
 
               <div className="space-y-3 sm:space-y-4 mb-10 sm:mb-16">
@@ -174,10 +174,10 @@ const AboutPrivateBank: React.FC = () => {
                       <Award className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-[13px] sm:text-base leading-tight truncate uppercase tracking-tight">{award.award}</p>
-                      <p className="text-[10px] sm:text-xs text-amber-400/70 font-bold uppercase tracking-widest mt-0.5">{award.org}</p>
+                      <p className="font-medium text-[13px] sm:text-base leading-tight truncate uppercase tracking-tight">{award.award}</p>
+                      <p className="text-[10px] sm:text-xs text-amber-400/70 font-medium uppercase tracking-widest mt-0.5">{award.org}</p>
                     </div>
-                    <span className="text-[10px] sm:text-xs font-black bg-white/10 px-2 sm:px-3 py-1.5 rounded-lg border border-white/5 tabular-nums">{award.year}</span>
+                    <span className="text-[10px] sm:text-xs font-medium bg-white/10 px-2 sm:px-3 py-1.5 rounded-lg border border-white/5 tabular-nums">{award.year}</span>
                   </div>
                 ))}
               </div>
@@ -186,16 +186,16 @@ const AboutPrivateBank: React.FC = () => {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-3 sm:gap-6 pt-8 sm:pt-10 border-t border-white/10 relative z-10 w-full">
               <div className="text-center group">
-                <p className="text-xl sm:text-3xl font-black group-hover:text-amber-400 transition-colors leading-none tracking-tighter tabular-nums">25+</p>
-                <p className="text-[9px] sm:text-[11px] text-neutral-400 font-black uppercase tracking-[0.2em] mt-2 group-hover:text-white transition-colors">Years</p>
+                <p className="text-xl sm:text-3xl font-bold group-hover:text-amber-400 transition-colors leading-none tracking-tighter tabular-nums">25+</p>
+                <p className="text-[9px] sm:text-[11px] text-neutral-400 font-medium uppercase tracking-[0.2em] mt-2 group-hover:text-white transition-colors">Years</p>
               </div>
               <div className="text-center group border-x border-white/5">
-                <p className="text-xl sm:text-3xl font-black group-hover:text-amber-400 transition-colors leading-none tracking-tighter tabular-nums">2,500+</p>
-                <p className="text-[9px] sm:text-[11px] text-neutral-400 font-black uppercase tracking-[0.2em] mt-2 group-hover:text-white transition-colors">Clients</p>
+                <p className="text-xl sm:text-3xl font-bold group-hover:text-amber-400 transition-colors leading-none tracking-tighter tabular-nums">2,500+</p>
+                <p className="text-[9px] sm:text-[11px] text-neutral-400 font-medium uppercase tracking-[0.2em] mt-2 group-hover:text-white transition-colors">Clients</p>
               </div>
               <div className="text-center group">
-                <p className="text-xl sm:text-3xl font-black group-hover:text-amber-400 transition-colors leading-none tracking-tighter tabular-nums">$5B+</p>
-                <p className="text-[9px] sm:text-[11px] text-neutral-400 font-black uppercase tracking-[0.2em] mt-2 group-hover:text-white transition-colors">AUM</p>
+                <p className="text-xl sm:text-3xl font-bold group-hover:text-amber-400 transition-colors leading-none tracking-tighter tabular-nums">$5B+</p>
+                <p className="text-[9px] sm:text-[11px] text-neutral-400 font-medium uppercase tracking-[0.2em] mt-2 group-hover:text-white transition-colors">AUM</p>
               </div>
             </div>
           </motion.div>
