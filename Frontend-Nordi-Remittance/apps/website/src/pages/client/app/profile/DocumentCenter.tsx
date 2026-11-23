@@ -23,10 +23,15 @@ import PageHeader from "@components/shared/PageHeader";
 import { PageContainer, DashCard } from "@components/shared/DashboardPrimitives";
 import { dashboardItemVariants } from "@core/animation/Animation";
 import { useToastStore } from "@store/toast.store";
-import { useClientProfile } from "../../client-usecase/useprofile-client-usecase";
+import {
+  useClientProfile,
+  useKycDocuments,
+  useUploadKycDocument,
+  useStartVerification,
+} from "../../client-usecase/useprofile-client-usecase";
 
 const inputCls =
-  "w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors";
+  "w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors";
 
 const isImageUrl = (url: string): boolean => {
   const lower = url.toLowerCase();
@@ -66,7 +71,7 @@ const ProfileDocCard: React.FC<{
 
   return (
     <motion.div
-      className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white transition-colors hover:border-indigo-300 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-indigo-700"
+      className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white transition-colors hover:border-blue-300 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-blue-700"
       whileHover={{ y: -2 }}
     >
       <div className="relative h-44 overflow-hidden bg-gray-50 dark:bg-gray-800">
@@ -84,7 +89,7 @@ const ProfileDocCard: React.FC<{
         )}
 
         {likelyImage && !imgFailed && !imgLoaded && (
-          <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800" />
+          <div className="absolute inset-0 animate-pulse bg-blue-50/70 dark:bg-gray-900" />
         )}
 
         {(imgFailed || likelyPdf || (!likelyImage && !imgLoaded)) && (
@@ -104,7 +109,7 @@ const ProfileDocCard: React.FC<{
             href={url}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-lg transition-colors hover:bg-indigo-50 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-indigo-950/50"
+            className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-lg transition-colors hover:bg-blue-50 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-blue-950/50"
           >
             <Eye size={14} /> View
           </a>
@@ -113,7 +118,7 @@ const ProfileDocCard: React.FC<{
             download
             target="_blank"
             rel="noreferrer"
-            className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-medium text-white shadow-lg transition-colors hover:bg-indigo-700"
+            className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white shadow-lg transition-colors hover:bg-blue-700"
           >
             <Download size={14} /> Download
           </a>
@@ -132,7 +137,7 @@ const ProfileDocCard: React.FC<{
             href={url}
             target="_blank"
             rel="noreferrer"
-            className="flex-shrink-0 rounded-lg bg-gray-100 p-1.5 text-gray-500 transition-colors hover:bg-indigo-50 hover:text-indigo-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-indigo-950/50 dark:hover:text-indigo-400"
+            className="flex-shrink-0 rounded-lg bg-gray-100 p-1.5 text-gray-500 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-blue-950/50 dark:hover:text-blue-400"
             title="Open in new tab"
           >
             <ExternalLink size={14} />
@@ -146,6 +151,34 @@ const ProfileDocCard: React.FC<{
 const DocumentCenter: React.FC = () => {
   /* ── Hooks ── */
   const { user: profile, isLoading: profileLoading } = useClientProfile();
+  const { data: kycDocsRaw } = useKycDocuments();
+  const uploadMutation = useUploadKycDocument();
+  const startVerifyMutation = useStartVerification();
+  const { showToast } = useToastStore();
+
+  const [docType, setDocType] = useState<any>("passport");
+  const [docNumber, setDocNumber] = useState("");
+  const [frontFile, setFrontFile] = useState<File | null>(null);
+
+  const handleUploadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!frontFile) {
+      showToast("Please select a document file to upload", "error");
+      return;
+    }
+    try {
+      await uploadMutation.mutateAsync({
+        documentType: docType,
+        documentNumber: docNumber || undefined,
+        frontImage: frontFile,
+        issuingCountry: profile.country || "US",
+      });
+      setDocNumber("");
+      setFrontFile(null);
+    } catch {
+      // handled by mutation onError
+    }
+  };
 
   const kycStatus = (profile.kycStatus || "pending") as string;
 
@@ -179,7 +212,7 @@ const DocumentCenter: React.FC = () => {
       label: "Government ID",
       url: profile._raw?.governmentId,
       icon: <Shield size={18} />,
-      iconBg: "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400",
+      iconBg: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
       detail: profile._raw?.idType ? `${capitalize(profile._raw.idType)} • ${profile._raw.idNumber || ""}` : undefined,
       expiry: profile._raw?.idExpiryDate,
       fileType: "auto" as const,
@@ -198,7 +231,7 @@ const DocumentCenter: React.FC = () => {
       label: "Selfie with ID",
       url: profile._raw?.selfieWithId,
       icon: <ScanFace size={18} />,
-      iconBg: "bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400",
+      iconBg: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
       fileType: "image" as const,
     },
     {
@@ -209,6 +242,16 @@ const DocumentCenter: React.FC = () => {
       iconBg: "bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400",
       fileType: "auto" as const,
     },
+    ...(Array.isArray(kycDocsRaw) ? kycDocsRaw : []).map((kd: any, idx: number) => ({
+      key: kd._id || kd.id || `kyc-${idx}`,
+      label: capitalize(kd.type || kd.documentType || "KYC Document"),
+      url: kd.frontImageUrl || kd.fileUrl || kd.url,
+      icon: <Shield size={18} />,
+      iconBg: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
+      detail: kd.documentNumber ? `ID: ${kd.documentNumber}` : kd.status,
+      expiry: kd.expiryDate,
+      fileType: "auto" as const,
+    })),
   ].filter((d) => !!d.url);
 
   const statusColor = (s: string) => {
@@ -293,7 +336,7 @@ const DocumentCenter: React.FC = () => {
           <motion.div variants={dashboardItemVariants}>
             <DashCard>
               <div className="mb-4 flex items-center gap-2">
-                <div className="rounded-lg bg-indigo-50 p-2 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
+                <div className="rounded-lg bg-blue-50 p-2 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
                   <Image size={16} />
                 </div>
                 <div>
@@ -315,7 +358,7 @@ const DocumentCenter: React.FC = () => {
                     icon={doc.icon}
                     iconBg={doc.iconBg}
                     detail={doc.detail}
-                    expiry={doc.expiry ? fmtDate(doc.expiry) : undefined}
+                    expiry={"expiry" in doc && doc.expiry ? fmtDate(doc.expiry) : undefined}
                     fileType={doc.fileType}
                   />
                 ))}
@@ -323,6 +366,79 @@ const DocumentCenter: React.FC = () => {
             </DashCard>
           </motion.div>
         ) : null}
+
+        {/* ── Upload New KYC Document ── */}
+        <motion.div variants={dashboardItemVariants}>
+          <DashCard>
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
+                  Upload Verification Document
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Submit a government-issued ID or proof of address for KYC verification
+                </p>
+              </div>
+              {kycStatus !== "verified" && kycStatus !== "approved" && (
+                <button
+                  type="button"
+                  onClick={() => startVerifyMutation.mutate("standard")}
+                  disabled={startVerifyMutation.isPending}
+                  className="rounded-xl border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-400"
+                >
+                  {startVerifyMutation.isPending ? "Requesting…" : "Request Verification"}
+                </button>
+              )}
+            </div>
+            <form onSubmit={handleUploadSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                    Document Type
+                  </label>
+                  <select value={docType} onChange={(e) => setDocType(e.target.value)} className={inputCls}>
+                    <option value="passport">Passport</option>
+                    <option value="national_id">National ID Card</option>
+                    <option value="drivers_license">Driver&apos;s License</option>
+                    <option value="utility_bill">Utility Bill (Proof of Address)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                    Document Number (optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={docNumber}
+                    onChange={(e) => setDocNumber(e.target.value)}
+                    placeholder="e.g. A12345678"
+                    className={inputCls}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                  Document File (Image or PDF)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={(e) => setFrontFile(e.target.files?.[0] || null)}
+                  className={inputCls}
+                />
+              </div>
+              <motion.button
+                type="submit"
+                disabled={uploadMutation.isPending}
+                className="w-full rounded-xl bg-blue-600 py-2.5 text-xs font-medium text-white disabled:opacity-50 sm:text-sm"
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+              >
+                {uploadMutation.isPending ? "Uploading…" : "Upload Document"}
+              </motion.button>
+            </form>
+          </DashCard>
+        </motion.div>
       </div>
     </PageContainer>
   );
