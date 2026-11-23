@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { CreditCardDisplay } from '@/components/banking/CreditCardDisplay';
 import { QuerySection } from '@/components/shared/QuerySection';
+import { AdaptiveScreen } from '@/components/layout/AdaptiveScreen';
 import { useVirtualCardsDomain } from '@nordi/shared/client-usecase';
 
 export default function VirtualCardsScreen() {
@@ -35,18 +36,17 @@ export default function VirtualCardsScreen() {
   } = useVirtualCardsDomain();
 
   return (
-    <View style={s.container}>
-      <ScreenHeader
-        title="Virtual Cards"
-        subtitle="Generate single-use or recurring online debit cards"
-        showBack
-        onBackPress={() => router.back()}
-      />
-
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={s.scrollContent}
-      >
+    <AdaptiveScreen
+      withTabBar={false}
+      header={
+        <ScreenHeader
+          title="Virtual Cards"
+          subtitle="Generate single-use or recurring online debit cards"
+          showBack
+          onBackPress={() => router.back()}
+        />
+      }
+    >
         <QuerySection isLoading={isLoading}>
           <Card style={s.heroCard}>
             <CardContent style={s.heroContent}>
@@ -99,8 +99,7 @@ export default function VirtualCardsScreen() {
             </View>
           ))}
         </QuerySection>
-      </ScrollView>
-    </View>
+    </AdaptiveScreen>
   );
 }
 
