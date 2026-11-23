@@ -95,7 +95,7 @@ const Investments: React.FC = () => {
             label="Portfolio Value"
             value={showBalances ? formatCurrency(totalValue) : "••••••"}
             icon={<Briefcase size={20} />}
-            iconColor="from-indigo-500 to-purple-500"
+            iconColor="bg-blue-600"
             change={returnPercentage > 0 ? `+${returnPercentage.toFixed(1)}%` : `${returnPercentage.toFixed(1)}%`}
             positive={returnPercentage >= 0}
             index={0}
@@ -104,21 +104,21 @@ const Investments: React.FC = () => {
             label="Total Returns"
             value={showBalances ? formatCurrency(totalReturns) : "••••••"}
             icon={returnPercentage >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
-            iconColor={returnPercentage >= 0 ? "from-emerald-500 to-teal-500" : "from-rose-500 to-pink-500"}
+            iconColor={returnPercentage >= 0 ? "bg-emerald-600" : "bg-rose-600"}
             index={1}
           />
           <StatCard
             label="Active Investments"
             value={investments.length}
             icon={<PieChart size={20} />}
-            iconColor="from-amber-500 to-orange-500"
+            iconColor="bg-amber-600"
             index={2}
           />
           <StatCard
             label="Products Available"
             value={products.length || "12"}
             icon={<Target size={20} />}
-            iconColor="from-violet-500 to-purple-500"
+            iconColor="bg-blue-600"
             index={3}
           />
         </StatsGrid>
@@ -141,7 +141,7 @@ const Investments: React.FC = () => {
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white sm:text-base">Holdings</h3>
                 <motion.button
                   onClick={() => navigate("/customer/investments/overview")}
-                  className="flex items-center gap-1 text-[10px] font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 sm:text-xs"
+                  className="flex items-center gap-1 text-[10px] font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 sm:text-xs"
                   whileHover={{ x: 2 }}
                 >
                   View All <ChevronRight size={14} />
@@ -207,7 +207,7 @@ const Investments: React.FC = () => {
                   desc: "Diversified portfolios",
                   icon: <PieChart size={16} />,
                   route: "/customer/investments/mutual-funds",
-                  color: "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400",
+                  color: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
                 },
                 {
                   label: "Stocks & ETFs",
@@ -228,7 +228,7 @@ const Investments: React.FC = () => {
                   desc: "Analysis & research",
                   icon: <Lightbulb size={16} />,
                   route: "/customer/investments/insights",
-                  color: "bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400",
+                  color: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
                 },
               ].map((item) => (
                 <motion.button
@@ -249,14 +249,14 @@ const Investments: React.FC = () => {
           </DashCard>
 
           {/* CTA */}
-          <div className="rounded-xl border border-indigo-500/20 bg-gradient-to-br from-indigo-600 to-purple-700 p-4 text-white sm:p-5">
+          <div className="rounded-xl border border-blue-500/20 bg-blue-600 p-4 text-white sm:p-5">
             <h3 className="mb-1.5 text-sm font-semibold sm:mb-2 sm:text-base">Start Investing</h3>
-            <p className="mb-3 text-[10px] text-indigo-200 sm:mb-4 sm:text-sm">
+            <p className="mb-3 text-[10px] text-blue-200 sm:mb-4 sm:text-sm">
               Grow your wealth with as little as $10. Diversified portfolios managed by experts.
             </p>
             <motion.button
               onClick={() => navigate("/customer/investments/overview")}
-              className="w-full rounded-lg bg-white py-2 text-xs font-medium text-indigo-700 transition-colors hover:bg-indigo-50 sm:py-2.5 sm:text-sm"
+              className="w-full rounded-lg bg-white py-2 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-50 sm:py-2.5 sm:text-sm"
               whileTap={{ scale: 0.98 }}
             >
               Get Started
