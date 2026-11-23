@@ -34,7 +34,10 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ stats, isLoading }) => 
   if (isLoading) return <StatsGridSkeleton count={6} />;
 
   return (
-    <StatsGrid cols={3} className="!grid-cols-1 sm:!grid-cols-2 lg:!grid-cols-3 xl:!grid-cols-6">
+    <StatsGrid
+      cols={3}
+      className="!flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 touch-pan-x scrollbar-hide sm:!grid sm:!grid-cols-2 lg:!grid-cols-3 xl:!grid-cols-6 sm:overflow-visible sm:pb-0 [&>*]:min-w-[78%] [&>*]:shrink-0 [&>*]:snap-start sm:[&>*]:min-w-0 sm:[&>*]:shrink"
+    >
       <StatCard
         label="Total Users"
         value={(Number(stats.totalUsers) || 0).toLocaleString()}
