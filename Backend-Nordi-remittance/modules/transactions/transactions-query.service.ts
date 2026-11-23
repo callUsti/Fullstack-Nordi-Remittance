@@ -65,8 +65,9 @@ export class TransactionsQueryService {
     const [transactions, total] = await Promise.all([
       Transactions.find(filter)
         .select(
-          "type category amount currency status referenceNumber initiatedBy recipientName createdAt completedAt fee isInternational channel description",
+          "wallet type category amount currency status referenceNumber initiatedBy recipientName recipientBankName recipientAccountNumber routingNumber transferType sourceWalletType createdAt completedAt scheduledFor fee feeCurrency exchangeRate isInternational channel description meta",
         )
+        .populate("wallet", "walletNumber walletType")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -74,10 +75,25 @@ export class TransactionsQueryService {
       Transactions.countDocuments(filter),
     ]);
 
-    const transactionsWithDirection = transactions.map((tx) => ({
-      ...tx,
-      direction: tx.type === "deposit" ? "in" : tx.type === "withdrawal" ? "out" : "out",
-    }));
+    const transactionsWithDirection = transactions.map((tx: any) => {
+      const meta = (tx.meta && typeof tx.meta === "object" ? tx.meta : {}) as Record<string, any>;
+      const senderBank =
+        meta.senderBankName ||
+        meta.senderBank ||
+        (tx.type === "credit" || tx.type === "deposit" ? meta.bankName || tx.recipientBankName : undefined) ||
+        "Nordi Bank";
+      const bankName = tx.recipientBankName || meta.bankName || senderBank;
+      const purpose = meta.purpose || tx.description || meta.narration || tx.category || "Transfer";
+
+      return {
+        ...tx,
+        direction: tx.type === "deposit" || tx.type === "credit" || tx.type === "refund" ? "in" : "out",
+        senderBank,
+        bankName,
+        purpose,
+        reference: tx.referenceNumber,
+      };
+    });
 
     if (page === 1 && !hasFilters) {
       await cacheUserTransactions(userId, transactionsWithDirection);
