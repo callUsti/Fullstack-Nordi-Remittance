@@ -3,31 +3,36 @@
 // Dark mode + DashboardPrimitives + grey borders + responsive typography
 // ============================================================================
 
-import React, { useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import {
-  Gift, Star, Tag, Percent, Trophy, Zap,
-  ShoppingBag, Coffee, Plane, CreditCard, Crown,
+  Star, Tag, Zap, ShoppingBag, Coffee, Plane,
 } from "@constants/icons";
 import PageHeader from "@components/shared/PageHeader";
-import { EmptyState } from "@components/shared/EmptyState";
-import {
-  PageContainer, DashCard, StatCard, StatsGrid, ProgressBar,
-} from "@components/shared/DashboardPrimitives";
-import { StatsGridSkeleton } from "@components/skeletons";
+import { PageContainer, DashCard } from "@components/shared/DashboardPrimitives";
 import { dashboardItemVariants } from "@core/animation/Animation";
-import { useUIStore } from "@store/ui.store";
-
+import { useToastStore } from "@store/toast.store";
 
 const PartnerDiscounts: React.FC = () => {
+  const { showToast } = useToastStore();
+
   const partners = [
-    { name: "Amazon", discount: "15% off", category: "Shopping", icon: ShoppingBag },
-    { name: "Starbucks", discount: "Buy 1 Get 1", category: "Food & Drink", icon: Coffee },
-    { name: "Emirates", discount: "10% off flights", category: "Travel", icon: Plane },
-    { name: "Netflix", discount: "1 Month Free", category: "Entertainment", icon: Star },
-    { name: "Nike", discount: "20% off", category: "Fashion", icon: Tag },
-    { name: "Uber", discount: "$10 credit", category: "Transport", icon: Zap },
+    { name: "Amazon", discount: "15% off", code: "NORDI15", category: "Shopping", icon: ShoppingBag },
+    { name: "Starbucks", discount: "Buy 1 Get 1", code: "NORDIBOGO", category: "Food & Drink", icon: Coffee },
+    { name: "Emirates", discount: "10% off flights", code: "NORDIFLY10", category: "Travel", icon: Plane },
+    { name: "Netflix", discount: "1 Month Free", code: "NORDIFLIX", category: "Entertainment", icon: Star },
+    { name: "Nike", discount: "20% off", code: "NORDINIKE20", category: "Fashion", icon: Tag },
+    { name: "Uber", discount: "$10 credit", code: "NORDIUBER10", category: "Transport", icon: Zap },
   ];
+
+  const handleCopyCode = (name: string, code: string) => {
+    try {
+      navigator.clipboard?.writeText(code);
+    } catch {
+      // ignore clipboard errors
+    }
+    showToast(`${name} promo code ${code} copied to clipboard!`, "success");
+  };
 
   return (
     <PageContainer>
@@ -45,8 +50,8 @@ const PartnerDiscounts: React.FC = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {partners.map((p) => (
-          <motion.div key={p.name} variants={dashboardItemVariants}>
-            <DashCard className="cursor-pointer hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors">
+          <motion.div key={p.name} variants={dashboardItemVariants} onClick={() => handleCopyCode(p.name, p.code)}>
+            <DashCard className="cursor-pointer hover:border-blue-300 dark:hover:border-blue-700 transition-colors">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center text-gray-600 dark:text-gray-300">
                   <p.icon size={20} />
