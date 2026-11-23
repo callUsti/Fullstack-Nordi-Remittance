@@ -24,10 +24,15 @@ export interface WizardStep {
 export interface AccountOption {
   id: string;
   name?: string;
+  displayName?: string;
+  typeLabel?: string;
   walletType?: string;
+  walletNumber?: string;
   accountNumber?: string;
   balance?: number;
+  primaryCurrencyBalance?: number;
   currency?: string;
+  primaryCurrency?: string;
   [key: string]: unknown;
 }
 
@@ -38,11 +43,11 @@ export const TransferLayout: React.FC<{
 }> = ({ children, className }) => (
   <div
     className={cn(
-      "min-h-full w-full bg-gray-50 dark:bg-gray-950 p-3 sm:p-4 lg:p-6",
+      "min-h-full w-full bg-gray-50 dark:bg-gray-950 px-2.5 py-3 sm:px-4 sm:py-4 lg:px-5 lg:py-5",
       className,
     )}
   >
-    <div className="w-full max-w-5xl mx-auto space-y-6">{children}</div>
+    <div className="w-full max-w-full 2xl:max-w-[1800px] mx-auto space-y-5">{children}</div>
   </div>
 );
 
@@ -363,7 +368,18 @@ export const AccountSelector: React.FC<{
       </p>
     ) : (
       <div className="grid gap-3 sm:grid-cols-2">
-        {accounts.map((a) => (
+        {accounts.map((a) => {
+          const accountLabel = a.displayName || a.name || a.typeLabel || a.walletType || "Account";
+          const accountNum = a.walletNumber || a.accountNumber;
+          const accountCurr = a.primaryCurrency || a.currency || "USD";
+          const accountBal =
+            typeof a.primaryCurrencyBalance === "number"
+              ? a.primaryCurrencyBalance
+              : typeof a.balance === "number"
+                ? a.balance
+                : undefined;
+
+          return (
           <button
             key={a.id}
             type="button"
@@ -377,31 +393,31 @@ export const AccountSelector: React.FC<{
           >
             <div
               className={cn(
-                "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0",
+                "w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium flex-shrink-0",
                 selected === a.id
                   ? "bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400"
                   : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300",
               )}
             >
-              {(a.currency || "USD").charAt(0)}
+              {accountCurr.charAt(0)}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                {a.name || a.walletType || "Account"}
+                {accountLabel}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-neutral-500">
-                {a.accountNumber
-                  ? `••••${String(a.accountNumber).slice(-4)}`
-                  : `ID: ${a.id.slice(0, 8)}`}
+              <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-neutral-500 truncate">
+                {accountNum
+                  ? `${a.typeLabel ? `${a.typeLabel} · ` : ""}••••${String(accountNum).slice(-4)}`
+                  : a.typeLabel || "Active Account"}
               </p>
             </div>
             <div className="text-right flex-shrink-0">
               <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                {typeof a.balance === "number"
-                  ? `$${a.balance.toLocaleString()}`
+                {accountBal !== undefined
+                  ? formatCurrency(accountBal, accountCurr)
                   : "—"}
               </p>
-              <p className="text-[11px] text-gray-400 dark:text-neutral-500">{a.currency || "USD"}</p>
+              <p className="text-[11px] text-gray-400 dark:text-neutral-500">{accountCurr}</p>
             </div>
             {selected === a.id && (
               <Check
@@ -410,7 +426,8 @@ export const AccountSelector: React.FC<{
               />
             )}
           </button>
-        ))}
+          );
+        })}
       </div>
     )}
   </div>
