@@ -62,7 +62,7 @@ const AdminCards: React.FC = () => {
   } = useAdminCards();
 
   return (
-    <PageContainer>
+    <PageContainer className="px-2 sm:px-3 lg:px-4 [&>div]:max-w-full">
       {/* Page Header */}
       <motion.div variants={dashboardItemVariants}>
         <PageHeader
@@ -81,28 +81,28 @@ const AdminCards: React.FC = () => {
             label="Total Deployed Cards"
             value={cardsList.length}
             icon={<CreditCard size={20} />}
-            iconColor="from-indigo-500 to-purple-600"
+            iconColor="bg-indigo-600"
             index={0}
           />
           <StatCard
             label="Active Cards"
             value={activeCardsCount}
             icon={<CheckCircle size={20} />}
-            iconColor="from-emerald-500 to-teal-600"
+            iconColor="bg-emerald-600"
             index={1}
           />
           <StatCard
             label="Pending Applications"
             value={pendingAppsCount}
             icon={<AlertCircle size={20} />}
-            iconColor="from-amber-500 to-orange-600"
+            iconColor="bg-amber-600"
             index={2}
           />
           <StatCard
             label="Total Card Balances"
             value={formatCurrency(totalBalance)}
             icon={<DollarSign size={20} />}
-            iconColor="from-blue-500 to-indigo-600"
+            iconColor="bg-blue-600"
             index={3}
           />
         </StatsGrid>
@@ -183,10 +183,10 @@ const AdminCards: React.FC = () => {
                     {/* Card Top Row */}
                     <div className="mb-4 flex items-start justify-between">
                       <div>
-                        <span className="rounded-md bg-indigo-50 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
+                        <span className="rounded-md bg-indigo-50 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wider text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
                           {card.cardType || "DEBIT"} • {card.cardBrand?.toUpperCase() || "VISA"}
                         </span>
-                        <h4 className="mt-2 flex items-center gap-1.5 text-base font-bold text-gray-900 dark:text-white">
+                        <h4 className="mt-2 flex items-center gap-1.5 text-base font-semibold text-gray-900 dark:text-white">
                           <User size={15} className="text-gray-400" />
                           {card.cardholderName || "CARD HOLDER"}
                         </h4>
@@ -203,7 +203,7 @@ const AdminCards: React.FC = () => {
                         <span className="text-[10px] font-semibold uppercase text-gray-400 dark:text-gray-500">
                           Balance
                         </span>
-                        <p className="text-base font-extrabold text-gray-900 dark:text-white">
+                        <p className="text-base font-semibold text-gray-900 dark:text-white">
                           {formatCurrency(card.balance || 0, card.currency || "USD")}
                         </p>
                       </div>
@@ -211,7 +211,7 @@ const AdminCards: React.FC = () => {
                         <span className="text-[10px] font-semibold uppercase text-gray-400 dark:text-gray-500">
                           Credit Limit
                         </span>
-                        <p className="text-base font-bold text-indigo-600 dark:text-indigo-400">
+                        <p className="text-base font-medium text-indigo-600 dark:text-indigo-400">
                           {card.cardType === "credit"
                             ? formatCurrency(card.creditLimit || 5000, card.currency || "USD")
                             : "N/A (Debit)"}
@@ -225,13 +225,13 @@ const AdminCards: React.FC = () => {
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         onClick={() => handleOpenModal("fund", card)}
-                        className="shadow-2xs flex w-full items-center justify-center gap-1 rounded-xl bg-emerald-50 px-2.5 py-2 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-900/60"
+                        className="shadow-2xs flex w-full items-center justify-center gap-1 rounded-xl bg-emerald-50 px-2.5 py-2 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-900/60"
                       >
                         <PlusCircle size={14} /> Fund Card
                       </button>
                       <button
                         onClick={() => handleOpenModal("withdraw", card)}
-                        className="shadow-2xs flex w-full items-center justify-center gap-1 rounded-xl bg-amber-50 px-2.5 py-2 text-xs font-bold text-amber-700 transition hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-900/60"
+                        className="shadow-2xs flex w-full items-center justify-center gap-1 rounded-xl bg-amber-50 px-2.5 py-2 text-xs font-medium text-amber-700 transition hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-900/60"
                       >
                         <MinusCircle size={14} /> Withdraw
                       </button>
@@ -282,10 +282,10 @@ const AdminCards: React.FC = () => {
             />
           ) : (
             <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-md dark:border-gray-700/60 dark:bg-gray-800/90">
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto touch-pan-x scrollbar-hide">
                 <table className="w-full border-collapse text-left">
                   <thead>
-                    <tr className="dark:bg-gray-750 border-b border-gray-100 bg-gray-50/50 text-[11px] font-bold uppercase text-gray-400 dark:border-gray-700">
+                    <tr className="dark:bg-gray-750 border-b border-gray-100 bg-gray-50/50 text-[11px] font-medium uppercase text-gray-400 dark:border-gray-700">
                       <th className="px-5 py-3.5">Applicant</th>
                       <th className="px-4 py-3.5">Card Type</th>
                       <th className="px-4 py-3.5">Requested Limit</th>
@@ -298,17 +298,17 @@ const AdminCards: React.FC = () => {
                     {applicationsList.map((app: any) => (
                       <tr key={app._id || app.id} className="dark:hover:bg-gray-750/40 transition hover:bg-gray-50/60">
                         <td className="px-5 py-4">
-                          <div className="font-bold text-gray-900 dark:text-white">
+                          <div className="font-medium text-gray-900 dark:text-white">
                             {app.user?.firstName ? `${app.user.firstName} ${app.user.lastName}` : "User Applicant"}
                           </div>
                           <div className="text-xs text-gray-400">{app.user?.email || String(app.user || "N/A")}</div>
                         </td>
                         <td className="px-4 py-4 font-semibold capitalize">
-                          <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
+                          <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
                             {app.cardType || "debit"} ({app.isVirtual ? "Virtual" : "Physical"})
                           </span>
                         </td>
-                        <td className="px-4 py-4 font-bold text-emerald-600 dark:text-emerald-400">
+                        <td className="px-4 py-4 font-medium text-emerald-600 dark:text-emerald-400">
                           {app.cardType === "credit"
                             ? formatCurrency(app.requestedLimit || 5000, app.currency || "USD")
                             : "Standard Debit"}
@@ -365,7 +365,7 @@ const AdminCards: React.FC = () => {
               >
                 <X size={20} />
               </button>
-              <h3 className="mb-1 text-lg font-bold capitalize text-gray-900 dark:text-white">
+              <h3 className="mb-1 text-lg font-semibold capitalize text-gray-900 dark:text-white">
                 {modalAction === "fund" && `Add Funds to Card`}
                 {modalAction === "withdraw" && `Remove Funds from Card`}
                 {modalAction === "upgrade" && `Upgrade Credit Limit`}
