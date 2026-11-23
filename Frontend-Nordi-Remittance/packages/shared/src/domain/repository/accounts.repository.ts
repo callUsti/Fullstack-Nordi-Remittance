@@ -55,6 +55,11 @@ export const AccountsRepository = {
     return response.data;
   },
 
+  getClosedWallets: async (): Promise<ApiResponse<Wallet[]>> => {
+    const response = await apiClient.get<ApiResponse<Wallet[]>>(ApiEndpoints.accountWalletsClosed);
+    return response.data;
+  },
+
   // ==========================================================================
   // ACCOUNT INFO ROUTES
   // ==========================================================================
