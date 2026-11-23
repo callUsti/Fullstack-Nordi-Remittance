@@ -11,7 +11,7 @@ const AdminUsers: React.FC = () => {
   const { admins, pagination, search, isLoading, setPage, setSearch, refetch } = useAdminTeam();
 
   return (
-    <PageContainer className="[&>div]:max-w-full">
+    <PageContainer className="px-2 sm:px-3 lg:px-4 [&>div]:max-w-full">
       <PageHeader
         title="Admin Team"
         subtitle={`${pagination.total} admin accounts`}
@@ -45,7 +45,7 @@ const AdminUsers: React.FC = () => {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto touch-pan-x scrollbar-hide">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-200 dark:border-gray-800">
@@ -71,7 +71,7 @@ const AdminUsers: React.FC = () => {
                         >
                           <td className="whitespace-nowrap px-4 py-3">
                             <div className="flex items-center gap-2">
-                              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-[10px] font-bold text-white">
+                              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-[10px] font-medium text-white">
                                 {admin.firstName?.[0]}
                                 {admin.lastName?.[0]}
                               </div>
