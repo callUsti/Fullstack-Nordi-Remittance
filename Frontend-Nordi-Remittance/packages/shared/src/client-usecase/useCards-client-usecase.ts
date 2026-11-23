@@ -30,11 +30,12 @@ import {
   useFundCard,
   useWithdrawFromCard,
   useUpgradeCardLimit,
+  useLinkCardAccount,
 } from "../hooks/api-queries/useCards";
 import { maskSensitive } from "../core/algo";
 import { useUIStore } from "../store/ui.store";
 import { useToastStore } from "../store/toast.store";
-import { useWallets } from "../hooks/api-queries/useAccounts";
+import { useClientWallets } from "./useaccounts-client-usecase";
 import type { ActiveWallet, ClientCard } from "../domain/types/Card.types";
 import { MAX_CARDS_PER_USER, PHYSICAL_CARD_ISSUANCE_FEE } from "../domain/types/Card.types";
 
@@ -91,15 +92,30 @@ export function useClientCards(filters?: CardFilters) {
       id: c._id || c.cardId || c.id || "",
       cardId: c.cardId,
       cardNumber: maskSensitive(c.cardNumber || "", 4),
+      fullCardNumber: c.fullCardNumber || "",
+      fullCvv: c.fullCvv || "",
       last4: c.last4 || c.lastFour || c.cardNumber?.slice(-4) || "••••",
       cardholderName: c.cardholderName || c.cardName || c.name || "",
       cardType: c.cardType || c.type || "debit",
       cardBrand: c.cardBrand || c.brand || "visa",
       status: c.status || "active",
-      isPhysical: c.isPhysical ?? (c.cardType !== "virtual" && c.type !== "virtual"),
+      isPhysical: c.isPhysical ?? (c.cardType !== "virtual" && c.type !== "virtual" && c.cardType !== "credit"),
       balance: c.balance || 0,
       creditLimit: c.creditLimit || 0,
-      availableCredit: c.availableCredit || 0,
+      availableCredit: c.availableCredit ?? Math.max(0, (c.creditLimit || 0) - (c.creditUsed || 0)),
+      interestRate: Number(c.interestRate ?? 5.0),
+      creditUsed: Number(c.creditUsed || 0),
+      accruedInterest: Number(c.accruedInterest || 0),
+      totalDebt: Number(c.totalDebt || 0),
+      totalRepaid: Number(c.totalRepaid || 0),
+      autoDebitWhenEmpty: c.autoDebitWhenEmpty !== false,
+      linkedWalletId:
+        c.fundingSource?._id ||
+        (typeof c.fundingSource === "string" ? c.fundingSource : "") ||
+        c.wallet?._id ||
+        (typeof c.wallet === "string" ? c.wallet : ""),
+      linkedWalletNumber: c.fundingSource?.walletNumber || c.wallet?.walletNumber || "",
+      linkedWalletType: c.fundingSource?.walletType || c.wallet?.walletType || "",
       expiryMonth: c.expiryMonth,
       expiryYear: c.expiryYear,
       expiryDate:
@@ -203,23 +219,34 @@ export function useVirtualCardsDomain() {
   const showBalances = useUIStore((s) => s.preferences.showBalances);
   const { cards: allCards, isLoading, refetch } = useClientCards();
   const createMutation = useCreateVirtualCard();
-  const { data: walletsRaw } = useWallets();
+  const { wallets } = useClientWallets();
   const { showToast } = useToastStore();
   const [selectedBrand, setSelectedBrand] = useState<string>("visa");
+  const [selectedCardType, setSelectedCardType] = useState<"virtual" | "credit">("virtual");
+  const [creditLimit, setCreditLimit] = useState<number>(10000);
+  const [selectedWalletId, setSelectedWalletId] = useState<string>("");
   const [cardholderName, setCardholderName] = useState("");
 
   const virtualCards = useMemo(
-    () => allCards.filter((c: any) => (c.cardType || "").toLowerCase().includes("virtual") || c.isPhysical === false),
+    () =>
+      allCards.filter(
+        (c: any) =>
+          (c.cardType || "").toLowerCase().includes("virtual") ||
+          (c.cardType || "").toLowerCase() === "credit" ||
+          c.isPhysical === false,
+      ),
     [allCards],
   );
 
-  const activeWalletId = useMemo(() => {
-    if (Array.isArray(walletsRaw)) return walletsRaw[0]?.id || (walletsRaw[0] as any)?._id;
-    if ((walletsRaw as any)?.data && Array.isArray((walletsRaw as any).data))
-      return (walletsRaw as any).data[0]?.id || (walletsRaw as any).data[0]?._id;
-    return "";
-  }, [walletsRaw]);
+  const defaultWalletId = useMemo(() => {
+    const active =
+      wallets.find((w: any) => w.status === "active" && w.isPrimary) ||
+      wallets.find((w: any) => w.status === "active") ||
+      wallets[0];
+    return active?.id || (active as any)?._id || "";
+  }, [wallets]);
 
+  const activeWalletId = selectedWalletId || defaultWalletId;
   const cardLimitReached = allCards.length >= MAX_CARDS_PER_USER;
 
   const handleCreateVirtualCard = useCallback(() => {
@@ -231,29 +258,60 @@ export function useVirtualCardsDomain() {
       showToast(`Maximum of ${MAX_CARDS_PER_USER} cards reached`, "error");
       return;
     }
+    const chosenWallet: any = wallets.find((w: any) => (w.id || w._id) === activeWalletId);
     createMutation.mutate(
       {
         walletId: activeWalletId,
-        cardType: "virtual",
+        cardType: selectedCardType,
         cardBrand: selectedBrand,
         cardholderName: cardholderName.trim() || undefined,
-        currency: "USD",
+        currency: chosenWallet?.primaryCurrency || chosenWallet?.currency || "USD",
+        creditLimit: selectedCardType === "credit" ? Number(creditLimit) || 10000 : undefined,
+        interestRate: selectedCardType === "credit" ? 5.0 : undefined,
       },
       {
         onSuccess: () => {
           refetch();
           setCardholderName("");
-          showToast("Virtual card created successfully!", "success");
+          showToast(
+            selectedCardType === "credit"
+              ? "Virtual credit card created and linked to your selected account!"
+              : "Virtual debit card created successfully!",
+            "success",
+          );
         },
         onError: (err: any) => {
-          showToast(err.message || "Failed to create virtual card", "error");
+          const msg =
+            err?.response?.data?.error?.message ||
+            err?.response?.data?.message ||
+            err?.message ||
+            "Failed to create virtual card";
+          showToast(msg, "error");
         },
       },
     );
-  }, [createMutation, refetch, showToast, activeWalletId, selectedBrand, cardholderName, cardLimitReached]);
+  }, [
+    createMutation,
+    refetch,
+    showToast,
+    activeWalletId,
+    wallets,
+    selectedBrand,
+    selectedCardType,
+    creditLimit,
+    cardholderName,
+    cardLimitReached,
+  ]);
 
   return {
     virtualCards,
+    wallets,
+    selectedWalletId: activeWalletId,
+    setSelectedWalletId,
+    selectedCardType,
+    setSelectedCardType,
+    creditLimit,
+    setCreditLimit,
     isLoading,
     showBalances,
     cardholderName,
@@ -402,11 +460,13 @@ export function useCardSecurityDomain() {
 export function useApplyForCardDomain(options?: CardNavigationOptions) {
   const createVirtualMutation = useCreateVirtualCard();
   const requestPhysicalMutation = useRequestPhysicalCard();
-  const { data: walletsRaw } = useWallets();
+  const { wallets } = useClientWallets();
   const { cards, isLoading: cardsLoading } = useClientCards();
   const { showToast } = useToastStore();
 
   const [selectedBrand, setSelectedBrand] = useState<"visa" | "mastercard" | "amex" | "discover">("visa");
+  const [selectedWalletId, setSelectedWalletId] = useState<string>("");
+  const [creditLimit, setCreditLimit] = useState<number>(10000);
   const [cardholderName, setCardholderName] = useState("");
   const [shippingAddress, setShippingAddress] = useState({
     street: "",
@@ -417,19 +477,18 @@ export function useApplyForCardDomain(options?: CardNavigationOptions) {
   });
 
   const activeWallet: ActiveWallet | null = useMemo(() => {
-    const list = Array.isArray(walletsRaw)
-      ? walletsRaw
-      : Array.isArray((walletsRaw as any)?.data)
-        ? (walletsRaw as any).data
-        : [];
-    const w = list[0];
+    const w: any =
+      (selectedWalletId && wallets.find((item: any) => (item.id || item._id) === selectedWalletId)) ||
+      wallets.find((item: any) => item.status === "active" && item.isPrimary) ||
+      wallets.find((item: any) => item.status === "active") ||
+      wallets[0];
     if (!w) return null;
     return {
       id: w.id || w._id,
-      balance: w.balance ?? w.availableBalance ?? 0,
-      currency: w.currency || "USD",
+      balance: w.primaryCurrencyBalance ?? w.balance ?? w.availableBalance ?? 0,
+      currency: w.primaryCurrency || w.currency || "USD",
     };
-  }, [walletsRaw]);
+  }, [wallets, selectedWalletId]);
 
   const activeWalletId = activeWallet?.id || "";
 
@@ -441,27 +500,41 @@ export function useApplyForCardDomain(options?: CardNavigationOptions) {
   const hasSufficientFundsForPhysical = (activeWallet?.balance ?? 0) >= PHYSICAL_CARD_ISSUANCE_FEE;
 
   const handleApply = useCallback(
-    (cardType: "virtual" | "physical") => {
+    (cardType: "virtual" | "credit" | "physical") => {
       if (!activeWalletId) {
-        showToast("Active wallet required to request card.", "error");
+        showToast("Please select an active account to link this card.", "error");
         return;
       }
 
-      if (cardType === "virtual") {
+      if (cardType === "virtual" || cardType === "credit") {
         createVirtualMutation.mutate(
           {
             walletId: activeWalletId,
-            cardType: "virtual",
+            cardType,
             cardBrand: selectedBrand,
             cardholderName: cardholderName.trim() || undefined,
             currency: activeWallet?.currency || "USD",
+            creditLimit: cardType === "credit" ? Number(creditLimit) || 10000 : undefined,
+            interestRate: cardType === "credit" ? 5.0 : undefined,
           },
           {
             onSuccess: () => {
-              showToast("Virtual card created successfully", "success");
+              showToast(
+                cardType === "credit"
+                  ? "Virtual credit card created and linked to your selected account"
+                  : "Virtual debit card created successfully",
+                "success",
+              );
               options?.onNavigate?.("/customer/cards");
             },
-            onError: (err: any) => showToast(err.message, "error"),
+            onError: (err: any) =>
+              showToast(
+                err?.response?.data?.error?.message ||
+                  err?.response?.data?.message ||
+                  err?.message ||
+                  "Failed to create virtual card",
+                "error",
+              ),
           },
         );
       } else {
@@ -472,7 +545,14 @@ export function useApplyForCardDomain(options?: CardNavigationOptions) {
               showToast("Physical card requested successfully", "success");
               options?.onNavigate?.("/customer/cards");
             },
-            onError: (err: any) => showToast(err.message, "error"),
+            onError: (err: any) =>
+              showToast(
+                err?.response?.data?.error?.message ||
+                  err?.response?.data?.message ||
+                  err?.message ||
+                  "Failed to request physical card",
+                "error",
+              ),
           },
         );
       }
@@ -483,6 +563,7 @@ export function useApplyForCardDomain(options?: CardNavigationOptions) {
       activeWalletId,
       activeWallet,
       selectedBrand,
+      creditLimit,
       cardholderName,
       shippingAddress,
       options,
@@ -494,6 +575,11 @@ export function useApplyForCardDomain(options?: CardNavigationOptions) {
     handleApply,
     isApplying: createVirtualMutation.isPending || requestPhysicalMutation.isPending,
     isLoadingContext: cardsLoading,
+    wallets,
+    selectedWalletId: activeWalletId,
+    setSelectedWalletId,
+    creditLimit,
+    setCreditLimit,
     selectedBrand,
     setSelectedBrand,
     cardholderName,
@@ -512,31 +598,46 @@ export function useApplyForCardDomain(options?: CardNavigationOptions) {
 export function useMainCardManagerDomain() {
   const showBalances = useUIStore((s) => s.preferences.showBalances);
   const { cards, isLoading, refetch } = useClientCards();
+  const { wallets } = useClientWallets();
   const [selectedCard, setSelectedCard] = useState(0);
   const [activeTab, setActiveTab] = useState("overview");
 
   // Modal State
-  const [modalType, setModalType] = useState<"fund" | "withdraw" | null>(null);
+  const [modalType, setModalType] = useState<"fund" | "withdraw" | "repay" | null>(null);
   const [modalAmount, setModalAmount] = useState("");
   const [modalNotes, setModalNotes] = useState("");
+  const [selectedWalletId, setSelectedWalletId] = useState<string>("");
 
   const fundMutation = useFundCard();
   const withdrawMutation = useWithdrawFromCard();
   const freezeMutation = useToggleFreezeCard();
+  const linkAccountMutation = useLinkCardAccount();
   const { showToast } = useToastStore();
 
   const activeCard = (cards[selectedCard] || {}) as any;
   const activeCardId = activeCard.id || activeCard._id || activeCard.cardId;
   const isFrozen = activeCard.status === "blocked" || activeCard.status === "frozen";
 
+  const defaultWalletId = useMemo(() => {
+    if (activeCard.linkedWalletId) return activeCard.linkedWalletId;
+    const primary =
+      wallets.find((w: any) => w.status === "active" && w.isPrimary) ||
+      wallets.find((w: any) => w.status === "active") ||
+      wallets[0];
+    return primary?.id || (primary as any)?._id || "";
+  }, [activeCard.linkedWalletId, wallets]);
+
+  const effectiveWalletId = selectedWalletId || defaultWalletId;
+
   const handleOpenModal = useCallback(
-    (type: "fund" | "withdraw") => {
+    (type: "fund" | "withdraw" | "repay") => {
       if (!activeCardId) return;
       setModalType(type);
-      setModalAmount("");
+      setModalAmount(type === "repay" && activeCard.totalDebt ? String(activeCard.totalDebt) : "");
       setModalNotes("");
+      setSelectedWalletId(activeCard.linkedWalletId || defaultWalletId);
     },
-    [activeCardId],
+    [activeCardId, activeCard.totalDebt, activeCard.linkedWalletId, defaultWalletId],
   );
 
   const handleCloseModal = useCallback(() => {
@@ -550,6 +651,19 @@ export function useMainCardManagerDomain() {
     freezeMutation.mutate(activeCardId);
   }, [activeCardId, freezeMutation]);
 
+  const handleLinkAccount = useCallback(
+    (walletId: string) => {
+      if (!activeCardId || !walletId) return;
+      setSelectedWalletId(walletId);
+      linkAccountMutation.mutate({
+        cardId: activeCardId,
+        walletId,
+        autoDebitWhenEmpty: true,
+      });
+    },
+    [activeCardId, linkAccountMutation],
+  );
+
   const handleModalSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
@@ -561,19 +675,54 @@ export function useMainCardManagerDomain() {
         return;
       }
 
-      if (modalType === "fund") {
-        fundMutation.mutate({ cardId: activeCardId, amount, notes: modalNotes }, { onSuccess: handleCloseModal });
+      if (!effectiveWalletId) {
+        showToast("Please select an active account for this transaction", "error");
+        return;
+      }
+
+      if (modalType === "fund" || modalType === "repay") {
+        fundMutation.mutate(
+          {
+            cardId: activeCardId,
+            amount,
+            fromWalletId: effectiveWalletId,
+            notes: modalNotes,
+            mode: modalType === "repay" ? "repay" : "fund",
+          },
+          { onSuccess: handleCloseModal },
+        );
       } else {
-        withdrawMutation.mutate({ cardId: activeCardId, amount, notes: modalNotes }, { onSuccess: handleCloseModal });
+        withdrawMutation.mutate(
+          {
+            cardId: activeCardId,
+            amount,
+            toWalletId: effectiveWalletId,
+            notes: modalNotes,
+          },
+          { onSuccess: handleCloseModal },
+        );
       }
     },
-    [activeCardId, modalType, modalAmount, modalNotes, fundMutation, withdrawMutation, showToast, handleCloseModal],
+    [
+      activeCardId,
+      modalType,
+      modalAmount,
+      modalNotes,
+      effectiveWalletId,
+      fundMutation,
+      withdrawMutation,
+      showToast,
+      handleCloseModal,
+    ],
   );
 
   const isModalPending = fundMutation.isPending || withdrawMutation.isPending;
 
   return {
     cards,
+    wallets,
+    selectedWalletId: effectiveWalletId,
+    setSelectedWalletId,
     isLoading,
     showBalances,
     selectedCard,
@@ -590,10 +739,12 @@ export function useMainCardManagerDomain() {
     setModalNotes,
     isModalPending,
     isFreezePending: freezeMutation.isPending,
+    isLinkingAccount: linkAccountMutation.isPending,
     refetch,
     handleOpenModal,
     handleCloseModal,
     handleToggleFreeze,
+    handleLinkAccount,
     handleModalSubmit,
   };
 }
