@@ -139,7 +139,7 @@ const TransactionHistory = () => {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto touch-pan-x scrollbar-hide">
         <table className="min-w-full table-auto">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-800/50">
