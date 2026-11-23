@@ -28,18 +28,20 @@ import { PageContainer, DashCard, StatCard, StatsGrid, StatusBadge } from "@comp
 import { StatsGridSkeleton, TableSkeleton } from "@components/skeletons";
 import { dashboardItemVariants } from "@core/animation/Animation";
 import { useClientSecuritySettings, useUpdateSecuritySettings } from "../../client-usecase/usesecurity-client-usecase";
+import { useChangePassword } from "../../client-usecase/useauth-client-usecase";
 import { useToastStore } from "@store/toast.store";
 
 const SecuritySettings: React.FC = () => {
   const { settings: securityData, isLoading } = useClientSecuritySettings();
   const updateMutation = useUpdateSecuritySettings();
+  const changePasswordMutation = useChangePassword();
   const { showToast } = useToastStore();
 
   const [showPassword, setShowPassword] = useState(false);
   const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
 
   const inputCls =
-    "w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors";
+    "w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors";
   const labelCls = "block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5";
 
   const scoreVal = securityData.securityScore ?? 75;
@@ -47,17 +49,30 @@ const SecuritySettings: React.FC = () => {
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!passwords.current || !passwords.new) {
+      showToast("Please enter your current and new password", "error");
+      return;
+    }
     if (passwords.new !== passwords.confirm) {
       showToast("Passwords don't match", "error");
       return;
     }
     try {
-      await updateMutation.mutateAsync({});
-      showToast("Password updated successfully", "success");
+      await changePasswordMutation.mutateAsync({
+        currentPassword: passwords.current,
+        newPassword: passwords.new,
+        confirmPassword: passwords.confirm,
+      } as any);
       setPasswords({ current: "", new: "", confirm: "" });
     } catch {
-      showToast("Failed to update password", "error");
+      // handled by mutation onError
     }
+  };
+
+  const toggleSetting = (key: "loginNotifications" | "transactionNotifications" | "failedLoginNotifications" | "newDeviceNotifications") => {
+    updateMutation.mutate({
+      [key]: !securityData[key],
+    });
   };
 
   return (
@@ -100,7 +115,7 @@ const SecuritySettings: React.FC = () => {
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className={`text-sm font-bold ${scoreColor}`}>{scoreVal}</span>
+                  <span className={`text-sm font-medium ${scoreColor}`}>{scoreVal}</span>
                 </div>
               </div>
               <div>
@@ -160,14 +175,70 @@ const SecuritySettings: React.FC = () => {
               </div>
               <motion.button
                 type="submit"
-                disabled={updateMutation.isPending}
-                className="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 py-3 text-xs font-medium text-white disabled:opacity-50 sm:text-sm"
+                disabled={changePasswordMutation.isPending}
+                className="w-full rounded-xl bg-blue-600 py-3 text-xs font-medium text-white disabled:opacity-50 sm:text-sm"
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
               >
-                {updateMutation.isPending ? "Updating…" : "Update Password"}
+                {changePasswordMutation.isPending ? "Updating…" : "Update Password"}
               </motion.button>
             </form>
+          </DashCard>
+
+          <DashCard className="mt-6">
+            <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-white sm:text-lg">
+              Security Preferences
+            </h3>
+            <div className="space-y-3">
+              {(
+                [
+                  {
+                    key: "loginNotifications",
+                    label: "Login Alerts",
+                    desc: "Notify me whenever a new login occurs on my account",
+                  },
+                  {
+                    key: "transactionNotifications",
+                    label: "Transaction Security Alerts",
+                    desc: "Notify me on outgoing transfers and withdrawals",
+                  },
+                  {
+                    key: "failedLoginNotifications",
+                    label: "Failed Login Warnings",
+                    desc: "Alert me if multiple failed login attempts are detected",
+                  },
+                  {
+                    key: "newDeviceNotifications",
+                    label: "New Device Detection",
+                    desc: "Notify me when my account is accessed from an unrecognized device",
+                  },
+                ] as const
+              ).map((item) => (
+                <div
+                  key={item.key}
+                  className="flex items-center justify-between border-b border-gray-100 py-2.5 last:border-0 dark:border-gray-800"
+                >
+                  <div>
+                    <p className="text-xs font-medium text-gray-900 dark:text-white sm:text-sm">{item.label}</p>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400 sm:text-xs">{item.desc}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => toggleSetting(item.key)}
+                    disabled={updateMutation.isPending}
+                    className={`relative h-6 w-11 rounded-full transition-colors ${
+                      securityData[item.key] ? "bg-blue-600" : "bg-gray-300 dark:bg-gray-600"
+                    }`}
+                  >
+                    <span
+                      className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                        securityData[item.key] ? "translate-x-5" : ""
+                      }`}
+                    />
+                  </button>
+                </div>
+              ))}
+            </div>
           </DashCard>
         </>
       )}
