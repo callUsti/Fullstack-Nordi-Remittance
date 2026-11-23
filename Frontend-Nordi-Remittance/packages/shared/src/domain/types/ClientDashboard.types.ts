@@ -104,9 +104,16 @@ declare global {
 
   interface CardItem {
     id: string;
+    cardId?: string;
     name: string;
     lastFour: string;
     isVirtual: boolean;
+    isPhysical?: boolean;
+    cardBrand?: "visa" | "mastercard" | "amex" | "discover";
+    cardType?: "debit" | "credit" | "prepaid" | "virtual";
+    balance?: number;
+    creditLimit?: number;
+    currency?: string;
     status: string;
     expiryDate: string;
     spendLimit: number;
