@@ -29,18 +29,22 @@ export function useAdminCards() {
 
   const cardsList: any[] = useMemo(() => {
     const raw: any = cardsRes;
-    return Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : Array.isArray(raw?.cards) ? raw.cards : [];
+    if (Array.isArray(raw)) return raw;
+    if (Array.isArray(raw?.data?.data)) return raw.data.data;
+    if (Array.isArray(raw?.data?.cards)) return raw.data.cards;
+    if (Array.isArray(raw?.data)) return raw.data;
+    if (Array.isArray(raw?.cards)) return raw.cards;
+    return [];
   }, [cardsRes]);
 
   const applicationsList: any[] = useMemo(() => {
     const raw: any = appsRes;
-    return Array.isArray(raw)
-      ? raw
-      : Array.isArray(raw?.data)
-        ? raw.data
-        : Array.isArray(raw?.applications)
-          ? raw.applications
-          : [];
+    if (Array.isArray(raw)) return raw;
+    if (Array.isArray(raw?.data?.data)) return raw.data.data;
+    if (Array.isArray(raw?.data?.applications)) return raw.data.applications;
+    if (Array.isArray(raw?.data)) return raw.data;
+    if (Array.isArray(raw?.applications)) return raw.applications;
+    return [];
   }, [appsRes]);
 
   // Financial total computations
@@ -50,7 +54,7 @@ export function useAdminCards() {
   );
 
   const activeCardsCount = useMemo(
-    () => cardsList.filter((c: any) => c.status === "active").length || cardsList.length,
+    () => cardsList.filter((c: any) => c.status === "active").length,
     [cardsList],
   );
 
