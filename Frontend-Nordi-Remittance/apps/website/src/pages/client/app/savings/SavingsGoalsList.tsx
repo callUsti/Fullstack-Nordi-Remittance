@@ -31,9 +31,11 @@ import { StatsGridSkeleton, AccountListSkeleton, FormSkeleton } from "@component
 import { dashboardItemVariants } from "@core/animation/Animation";
 import {
   useClientSavingsGoals,
-  useCreateSavingsGoal,
-  useClientSavingsGoalProgress,
+  useAddToSavingsGoal,
+  useWithdrawFromSavingsGoal,
+  useDeleteSavingsGoal,
 } from "../../client-usecase/usesavinga-client-usecase";
+import { useClientWallets } from "../../client-usecase/useaccounts-client-usecase";
 import { useUIStore } from "@store/ui.store";
 import { useToastStore } from "@store/toast.store";
 
@@ -46,7 +48,7 @@ const fmt = (n: number) =>
 const pct = (saved: number, target: number) => (target > 0 ? Math.min(Math.round((saved / target) * 100), 100) : 0);
 
 const inputCls =
-  "w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 transition-colors";
+  "w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors";
 
 const labelCls = "block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5";
 
@@ -58,6 +60,52 @@ const GOAL_EMOJIS = ["🎯", "🏠", "✈️", "🚗", "💍", "🎓", "💰", "
 
 const SavingsGoalsList: React.FC = () => {
   const { goals, isLoading } = useClientSavingsGoals();
+  const { wallets } = useClientWallets();
+  const addMutation = useAddToSavingsGoal();
+  const withdrawMutation = useWithdrawFromSavingsGoal();
+  const deleteMutation = useDeleteSavingsGoal();
+  const { showToast } = useToastStore();
+
+  const [activeModal, setActiveModal] = useState<{
+    goal: any;
+    mode: "deposit" | "withdraw";
+  } | null>(null);
+  const [amount, setAmount] = useState("");
+  const [selectedWalletId, setSelectedWalletId] = useState("");
+
+  const defaultWalletId = wallets[0]?._id || wallets[0]?.id || "";
+  const walletIdToUse = selectedWalletId || defaultWalletId;
+
+  const handleActionSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeModal || !amount || Number(amount) <= 0) {
+      showToast("Enter a valid amount", "error");
+      return;
+    }
+    const goalId = activeModal.goal._id || activeModal.goal.id;
+    try {
+      if (activeModal.mode === "deposit") {
+        await addMutation.mutateAsync({
+          goalId,
+          data: { amount: Number(amount), accountId: walletIdToUse },
+        });
+      } else {
+        await withdrawMutation.mutateAsync({
+          goalId,
+          data: { amount: Number(amount), accountId: walletIdToUse },
+        });
+      }
+      setActiveModal(null);
+      setAmount("");
+    } catch {
+      // handled by mutation onError
+    }
+  };
+
+  const handleDeleteGoal = (goal: any) => {
+    const goalId = goal._id || goal.id;
+    deleteMutation.mutate({ goalId, transferAccountId: walletIdToUse });
+  };
 
   const totalSaved = useMemo(
     () => goals.reduce((s: number, g: any) => s + (g.currentAmount ?? g.savedAmount ?? 0), 0),
@@ -93,7 +141,7 @@ const SavingsGoalsList: React.FC = () => {
             label="Total Saved"
             value={fmt(totalSaved)}
             icon={<PiggyBank size={18} />}
-            iconColor="from-emerald-500 to-teal-500"
+            iconColor="bg-emerald-600"
             change={totalTarget > 0 ? `${pct(totalSaved, totalTarget)}% of target` : undefined}
             positive
             index={0}
@@ -102,14 +150,14 @@ const SavingsGoalsList: React.FC = () => {
             label="Active Goals"
             value={activeGoals}
             icon={<Target size={18} />}
-            iconColor="from-indigo-500 to-purple-500"
+            iconColor="bg-blue-600"
             index={1}
           />
           <StatCard
             label="Monthly Saving"
             value={fmt(monthlySaving)}
             icon={<Repeat size={18} />}
-            iconColor="from-amber-500 to-orange-500"
+            iconColor="bg-amber-600"
             index={2}
           />
         </StatsGrid>
@@ -130,7 +178,7 @@ const SavingsGoalsList: React.FC = () => {
 
             return (
               <motion.div key={g._id || g.id || i} variants={dashboardItemVariants}>
-                <DashCard className="transition-colors hover:border-indigo-300 dark:hover:border-indigo-700">
+                <DashCard className="transition-colors hover:border-blue-300 dark:hover:border-blue-700">
                   <div className="mb-3 flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">{emoji}</span>
@@ -145,7 +193,7 @@ const SavingsGoalsList: React.FC = () => {
                       className={`rounded-full px-2 py-0.5 text-[10px] font-medium sm:text-xs ${
                         percentage >= 100
                           ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400"
-                          : "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400"
+                          : "bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400"
                       }`}
                     >
                       {percentage}%
@@ -157,8 +205,8 @@ const SavingsGoalsList: React.FC = () => {
                     height="md"
                     color={
                       percentage >= 100
-                        ? "bg-gradient-to-r from-emerald-500 to-teal-500"
-                        : "bg-gradient-to-r from-indigo-500 to-purple-500"
+                        ? "bg-emerald-600"
+                        : "bg-blue-600"
                     }
                   />
 
@@ -180,10 +228,115 @@ const SavingsGoalsList: React.FC = () => {
                       </span>
                     </div>
                   )}
+
+                  {/* Actions */}
+                  <div className="mt-4 flex items-center gap-2 border-t border-gray-100 pt-3 dark:border-gray-800">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveModal({ goal: g, mode: "deposit" });
+                        setAmount("");
+                      }}
+                      className="flex-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700"
+                    >
+                      + Deposit
+                    </button>
+                    {saved > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveModal({ goal: g, mode: "withdraw" });
+                          setAmount("");
+                        }}
+                        className="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                      >
+                        Withdraw
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteGoal(g)}
+                      disabled={deleteMutation.isPending}
+                      className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400"
+                      title="Delete goal"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </DashCard>
               </motion.div>
             );
           })}
+        </div>
+      )}
+
+      {/* Deposit / Withdraw Modal */}
+      {activeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <DashCard className="w-full max-w-md">
+            <h3 className="mb-1 text-base font-semibold text-gray-900 dark:text-white">
+              {activeModal.mode === "deposit" ? "Add Funds to" : "Withdraw from"} {activeModal.goal.name}
+            </h3>
+            <p className="mb-4 text-xs text-gray-500 dark:text-gray-400">
+              Current balance: {fmt(activeModal.goal.currentAmount ?? activeModal.goal.savedAmount ?? 0)}
+            </p>
+            <form onSubmit={handleActionSubmit} className="space-y-4">
+              <div>
+                <label className={labelCls}>Amount (USD)</label>
+                <input
+                  type="number"
+                  min={1}
+                  step="any"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="Enter amount"
+                  className={inputCls}
+                  required
+                />
+              </div>
+              {wallets.length > 0 && (
+                <div>
+                  <label className={labelCls}>
+                    {activeModal.mode === "deposit" ? "Source Wallet" : "Destination Wallet"}
+                  </label>
+                  <select
+                    value={walletIdToUse}
+                    onChange={(e) => setSelectedWalletId(e.target.value)}
+                    className={inputCls}
+                  >
+                    {wallets.map((w: any) => {
+                      const wid = w._id || w.id;
+                      return (
+                        <option key={wid} value={wid}>
+                          {w.name || `${w.currency || "USD"} Wallet`} ({fmt(w.balance ?? w.availableBalance ?? 0)})
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              )}
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveModal(null)}
+                  className="rounded-xl border border-gray-200 px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={addMutation.isPending || withdrawMutation.isPending}
+                  className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {addMutation.isPending || withdrawMutation.isPending
+                    ? "Processing…"
+                    : activeModal.mode === "deposit"
+                      ? "Confirm Deposit"
+                      : "Confirm Withdrawal"}
+                </button>
+              </div>
+            </form>
+          </DashCard>
         </div>
       )}
     </PageContainer>
