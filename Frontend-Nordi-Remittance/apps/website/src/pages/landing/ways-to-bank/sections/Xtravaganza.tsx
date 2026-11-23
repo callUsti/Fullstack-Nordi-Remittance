@@ -152,8 +152,8 @@ const Xtravaganza: React.FC = () => {
             { value: "10K+", label: "Winners" },
           ].map((stat) => (
             <div key={stat.label} className="text-center p-4 sm:p-6 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 shadow-2xl">
-              <p className="text-xl sm:text-3xl font-black text-white tabular-nums tracking-tighter">{stat.value}</p>
-              <p className="text-[10px] sm:text-xs text-purple-200 font-bold uppercase tracking-widest mt-1">{stat.label}</p>
+              <p className="text-xl sm:text-3xl font-bold text-white tabular-nums tracking-tighter">{stat.value}</p>
+              <p className="text-[10px] sm:text-xs text-purple-200 font-medium uppercase tracking-widest mt-1">{stat.label}</p>
             </div>
           ))}
         </motion.div>
@@ -176,7 +176,7 @@ const Xtravaganza: React.FC = () => {
             >
               {/* Tier Badge */}
               <div className={cn(
-                "inline-flex items-center gap-3 px-5 py-2 rounded-2xl text-white text-sm font-black mb-6 shadow-xl uppercase tracking-widest",
+                "inline-flex items-center gap-3 px-5 py-2 rounded-2xl text-white text-sm font-medium mb-6 shadow-xl uppercase tracking-widest",
                 `bg-gradient-to-r ${tier.color}`
               )}>
                 {tier.icon && React.isValidElement(tier.icon) 
@@ -186,17 +186,17 @@ const Xtravaganza: React.FC = () => {
               </div>
 
               <div className="flex items-baseline gap-2 mb-6">
-                <span className="text-3xl font-black text-white tracking-tighter">
+                <span className="text-3xl font-bold text-white tracking-tighter">
                   {tier.pointsRequired === "0" ? "FREE" : tier.pointsRequired}
                 </span>
-                <span className="text-[10px] text-white/50 font-bold uppercase tracking-widest">Points Threshold</span>
+                <span className="text-[10px] text-white/50 font-medium uppercase tracking-widest">Points Threshold</span>
               </div>
 
               <ul className="space-y-4">
                 {tier.benefits.map((benefit) => (
                   <li key={benefit} className="flex items-start gap-3 text-[13px] sm:text-sm text-white/90 font-medium group-hover:translate-x-1 transition-transform">
                     <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                      <Check className="w-3 h-3 text-emerald-300 font-black" />
+                      <Check className="w-3 h-3 text-emerald-300 font-medium" />
                     </div>
                     {benefit}
                   </li>
@@ -217,7 +217,7 @@ const Xtravaganza: React.FC = () => {
           >
             <div className="flex items-center gap-2 mb-4">
               <Zap className="w-5 h-5 text-amber-400" />
-              <h3 className="text-xl font-bold text-white">How to Earn Points</h3>
+              <h3 className="text-xl font-semibold text-white">How to Earn Points</h3>
             </div>
             <div className="space-y-3">
               {earnMethods.map((method) => (
@@ -243,7 +243,7 @@ const Xtravaganza: React.FC = () => {
           >
             <div className="flex items-center gap-2 mb-4">
               <Gift className="w-5 h-5 text-pink-400" />
-              <h3 className="text-xl font-bold text-white">Redeem Your Points</h3>
+              <h3 className="text-xl font-semibold text-white">Redeem Your Points</h3>
             </div>
             <div className="grid grid-cols-2 gap-3">
               {redemptionOptions.map((option) => (
@@ -281,17 +281,17 @@ const Xtravaganza: React.FC = () => {
               {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
-                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-amber-300 via-pink-400 to-violet-600 border-4 border-white/10 flex items-center justify-center text-white text-xs sm:text-sm font-black shadow-xl"
+                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-amber-300 via-pink-400 to-violet-600 border-4 border-white/10 flex items-center justify-center text-white text-xs sm:text-sm font-medium shadow-xl"
                 >
                   {String.fromCharCode(64 + i)}
                 </div>
               ))}
             </div>
             <div className="text-center sm:text-left">
-              <p className="text-lg sm:text-xl font-black text-white uppercase tracking-tighter">Join 2M+ Legacy Earners</p>
-              <p className="text-xs sm:text-sm text-purple-200 font-bold uppercase tracking-widest">Your first 1,000 points await your command!</p>
+              <p className="text-lg sm:text-xl font-semibold text-white uppercase tracking-tighter">Join 2M+ Legacy Earners</p>
+              <p className="text-xs sm:text-sm text-purple-200 font-medium uppercase tracking-widest">Your first 1,000 points await your command!</p>
             </div>
-            <Button variant="secondary" size="lg" className="w-full sm:w-auto bg-white text-purple-900 font-black py-4 px-10 rounded-2xl shadow-2xl hover:scale-105 transition-transform uppercase tracking-widest text-xs">
+            <Button variant="secondary" size="lg" className="w-full sm:w-auto bg-white text-purple-900 font-medium py-4 px-10 rounded-2xl shadow-2xl hover:scale-105 transition-transform uppercase tracking-widest text-xs">
               <Users className="w-5 h-5 mr-3" />
               Claim My Legacy
             </Button>
