@@ -1,5 +1,5 @@
 // ============================================================================
-// useAuthDomain — Domain use-case hook for Auth (logout, etc.)
+// useAuthDomain — Domain use-case hook for Auth (logout, change password, etc.)
 // ============================================================================
 
-export { useLogout } from "../hooks/api-queries/useAuth";
+export { useLogout, useChangePassword } from "../hooks/api-queries/useAuth";
