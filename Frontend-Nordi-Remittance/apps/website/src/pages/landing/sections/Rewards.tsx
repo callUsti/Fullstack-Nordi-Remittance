@@ -96,8 +96,8 @@ const RewardCard: React.FC<RewardCardProps> = ({ reward, index }) => (
         ? React.cloneElement(reward.icon as React.ReactElement, { className: "w-6 h-6" })
         : reward.icon}
     </div>
-    <span className="text-2xl sm:text-4xl font-black text-indigo-600 tabular-nums tracking-tighter">{reward.cashback}</span>
-    <span className="text-[10px] sm:text-xs text-neutral-400 font-black uppercase tracking-widest text-center mt-2 opacity-80">
+    <span className="text-2xl sm:text-4xl font-bold text-indigo-600 tabular-nums tracking-tighter">{reward.cashback}</span>
+    <span className="text-[10px] sm:text-xs text-neutral-400 font-medium uppercase tracking-widest text-center mt-2 opacity-80">
       {reward.category}
     </span>
   </motion.div>
@@ -179,17 +179,17 @@ const Rewards: React.FC = () => {
             {/* Stats */}
             <div className="mt-8 flex items-center gap-6 p-4 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700">
               <div>
-                <div className="text-2xl font-bold text-indigo-600">$125M+</div>
+                <div className="text-2xl font-semibold text-indigo-600">$125M+</div>
                 <div className="text-xs text-neutral-500 dark:text-neutral-400">Cashback paid</div>
               </div>
               <div className="w-px h-10 bg-neutral-200" />
               <div>
-                <div className="text-2xl font-bold text-indigo-600">2.5M</div>
+                <div className="text-2xl font-semibold text-indigo-600">2.5M</div>
                 <div className="text-xs text-neutral-500 dark:text-neutral-400">Members</div>
               </div>
               <div className="w-px h-10 bg-neutral-200" />
               <div>
-                <div className="text-2xl font-bold text-indigo-600">4.8★</div>
+                <div className="text-2xl font-semibold text-indigo-600">4.8★</div>
                 <div className="text-xs text-neutral-500 dark:text-neutral-400">Avg rating</div>
               </div>
             </div>
