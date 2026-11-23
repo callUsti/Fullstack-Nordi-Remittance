@@ -20,6 +20,11 @@ import {
   useCloseInvestment,
   useSetupRecurringInvestment,
   useCancelRecurringInvestment,
+  useCryptoMarket,
+  useStockMarket,
+  useForexRates,
+  useSwapAsset,
+  useExchangeForex,
 } from "../hooks/api-queries/useInvestments";
 import { multiKeySort, topK, formatCurrency } from "../core/algo";
 
@@ -73,7 +78,7 @@ export function useClientInvestments(filters?: {
   const { data: raw, isLoading, error, refetch } = useInvestments(filters);
 
   const result = useMemo(() => {
-    const investments = extractArray(raw, "investments", "accounts");
+    const investments = extractArray(raw, "investments", "portfolios", "accounts");
     const pagination = extractPagination(raw);
     return { investments, pagination };
   }, [raw]);
@@ -84,7 +89,7 @@ export function useClientInvestments(filters?: {
 /** Single investment detail */
 export function useClientInvestment(investmentId: UUID) {
   const { data: raw, isLoading, error } = useInvestment(investmentId);
-  const investment = useMemo(() => extractObject(raw, "investment", "account"), [raw]);
+  const investment = useMemo(() => extractObject(raw, "investment", "asset", "account"), [raw]);
   return { investment, isLoading, error };
 }
 
@@ -93,28 +98,32 @@ export function useClientPortfolio() {
   const { data: raw, isLoading, error, refetch } = useInvestmentPortfolio();
 
   const portfolio = useMemo(() => {
-    const p = extractObject(raw, "portfolio");
+    const p = extractObject(raw, "portfolio", "summary");
     const holdings = extractArray(raw, "portfolios", "holdings", "assets");
 
     const topHoldings = topK(
       holdings.map((h: any) => ({
         id: h._id || h.portfolioId || h.id || h.symbol || "",
-        name: h.name || h.symbol || "Asset",
-        symbol: h.symbol || "",
+        name: h.assetName || h.name || h.symbol || "Asset",
+        symbol: h.assetSymbol || h.symbol || "",
+        type: h.assetType || h.type || "mutual_fund",
         quantity: h.quantity || 0,
-        currentValue: h.currentValue || 0,
-        unrealizedGain: h.unrealizedGain || h.change || 0,
-        unrealizedGainPct: h.unrealizedGainPercentage || 0,
+        currentValue: h.currentValue || h.totalInvested || 0,
+        unrealizedGain: h.unrealizedGainLoss || h.unrealizedGain || h.change || 0,
+        unrealizedGainPct: h.unrealizedGainLossPercentage || h.unrealizedGainPercentage || 0,
         _raw: h,
       })),
       10,
       (a, b) => b.currentValue - a.currentValue,
     );
 
+    const computedValue = topHoldings.reduce((s, h) => s + Number(h.currentValue || 0), 0);
+    const computedGain = topHoldings.reduce((s, h) => s + Number(h.unrealizedGain || 0), 0);
+
     return {
-      totalValue: p.totalValue || p.currentValue || 0,
-      totalInvested: p.totalInvested || 0,
-      totalReturns: p.totalReturns || 0,
+      totalValue: p.totalValue || p.portfolioValue || p.currentValue || computedValue || 0,
+      totalInvested: p.totalInvested || Math.max(0, computedValue - computedGain) || 0,
+      totalReturns: p.totalReturns || p.totalGainLoss || computedGain || 0,
       returnPercentage: p.returnPercentage || p.returnPct || 0,
       holdings: topHoldings,
       _raw: p,
@@ -131,7 +140,10 @@ export function useClientInvestmentProducts(filters?: {
   riskLevel?: "low" | "medium" | "high";
 }) {
   const { data: raw, isLoading, error } = useInvestmentProducts(filters);
-  const products = useMemo(() => extractArray(raw, "products", "investmentProducts"), [raw]);
+  const products = useMemo(
+    () => extractArray(raw, "products", "assets", "plans", "investmentProducts"),
+    [raw],
+  );
   return { products, isLoading, error };
 }
 
@@ -177,6 +189,58 @@ export function formatInvestmentValue(amount: number, currency = "USD") {
 }
 
 // ============================================================================
+// LIVE CRYPTO (COINMARKETCAP), STOCKS & FOREX MARKET QUERIES
+// ============================================================================
+
+export function useClientCryptoMarket(refresh = false) {
+  const { data: raw, isLoading, error, refetch } = useCryptoMarket(refresh);
+  const market = useMemo(() => {
+    const obj = extractObject(raw);
+    const assets = extractArray(raw, "assets", "crypto", "coins");
+    return {
+      provider: obj.provider || "CoinMarketCap Live Feed",
+      usingLiveKey: Boolean(obj.usingLiveKey),
+      assets,
+    };
+  }, [raw]);
+  return { ...market, isLoading, error, refetch };
+}
+
+export function useClientStockMarket(refresh = false) {
+  const { data: raw, isLoading, error, refetch } = useStockMarket(refresh);
+  const market = useMemo(() => {
+    const obj = extractObject(raw);
+    const stocks = extractArray(raw, "stocks");
+    const etfs = extractArray(raw, "etfs");
+    const assets = extractArray(raw, "assets");
+    return {
+      provider: obj.provider || "NASDAQ / NYSE Live Feed",
+      usingLiveKey: Boolean(obj.usingLiveKey),
+      stocks,
+      etfs,
+      assets: assets.length > 0 ? assets : [...stocks, ...etfs],
+    };
+  }, [raw]);
+  return { ...market, isLoading, error, refetch };
+}
+
+export function useClientForexMarket(refresh = false) {
+  const { data: raw, isLoading, error, refetch } = useForexRates(refresh);
+  const market = useMemo(() => {
+    const obj = extractObject(raw);
+    const pairs = extractArray(raw, "pairs", "assets");
+    const rates = (obj.rates || (raw as any)?.rates || {}) as Record<string, number>;
+    return {
+      provider: obj.provider || "Open ExchangeRate / ECB Interbank",
+      baseCurrency: obj.baseCurrency || "USD",
+      rates,
+      pairs,
+    };
+  }, [raw]);
+  return { ...market, isLoading, error, refetch };
+}
+
+// ============================================================================
 // MUTATIONS (pass-through)
 // ============================================================================
 
@@ -187,4 +251,6 @@ export {
   useCloseInvestment,
   useSetupRecurringInvestment,
   useCancelRecurringInvestment,
+  useSwapAsset,
+  useExchangeForex,
 };
