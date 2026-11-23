@@ -42,31 +42,69 @@ export function useLoansManagement() {
           ? outer.data
           : outer?.applications || [];
 
-    return raw.map((a: any) => ({
-      id: a._id || a.applicationId || a.id || "",
-      applicationId: a.applicationId || a._id || "",
-      loanId: a.loan?._id || a.loan || "",
-      applicant:
-        a.user?.firstName && a.user?.lastName
-          ? `${a.user.firstName} ${a.user.lastName}`
-          : a.borrowerName || a.userName || "Applicant",
-      email: a.user?.email || a.email || "",
-      type: a.loanType || a.type || "personal",
-      amount: a.requestedAmount || a.approvedAmount || a.principalAmount || a.amount || 0,
-      approvedAmount: a.approvedAmount || 0,
-      interestRate: a.interestRate ?? 0,
-      term: a.term ?? 0,
-      monthlyPayment: a.monthlyPayment ?? 0,
-      outstanding: a.outstandingBalance ?? a.approvedAmount ?? a.requestedAmount ?? 0,
-      status: a.status || "submitted",
-      appliedDate: a.createdAt || a.submittedAt || "",
-      reviewedAt: a.reviewedAt || "",
-      purpose: a.purpose || "",
-      rejectionReason: a.rejectionReason || a.reviewNotes || "",
-      currency: a.currency || "USD",
-      // disbursed loan sub-object if present
-      disbursed: a.loan ? true : false,
-    }));
+    return raw.map((a: any) => {
+      const loanObj = a.loan && typeof a.loan === "object" ? a.loan : null;
+      const loanId = loanObj?._id || loanObj?.loanId || (typeof a.loan === "string" ? a.loan : "");
+      const loanStatus = loanObj?.status || "";
+      const isDisbursed = loanStatus === "active" || loanStatus === "paid" || loanStatus === "defaulted";
+      const loanConfig = a.loanConfig || a.user?.loanConfig || {
+        loanSuspended: false,
+        defaultFeePercentPerDefault: 2.5,
+        customMaxLoanAmount: null,
+      };
+      return {
+        id: a._id || a.applicationId || a.id || "",
+        applicationId: a.applicationId || a._id || "",
+        loanId,
+        loanStatus,
+        applicant:
+          a.user?.firstName && a.user?.lastName
+            ? `${a.user.firstName} ${a.user.lastName}`
+            : a.borrowerName || a.userName || "Applicant",
+        email: a.user?.email || a.email || "",
+        userId: a.user?._id || a.user?.userId || a.user || "",
+        kycStatus: a.user?.kycStatus || "approved",
+        type: a.loanType || a.type || "personal",
+        amount: a.requestedAmount || a.approvedAmount || a.principalAmount || a.amount || 0,
+        approvedAmount: a.approvedAmount || loanObj?.principalAmount || 0,
+        interestRate: loanObj?.interestRate ?? a.interestRate ?? 10,
+        term: loanObj?.term ?? a.term ?? 12,
+        monthlyPayment:
+          loanObj?.monthlyPayment ??
+          a.monthlyPayment ??
+          Math.round(((a.approvedAmount || a.requestedAmount || 0) / Math.max(1, a.term || 12)) * 100) / 100,
+        outstanding:
+          loanObj?.outstandingBalance ??
+          a.outstandingBalance ??
+          a.approvedAmount ??
+          a.requestedAmount ??
+          0,
+        defaultCount:
+          (Number(loanObj?.defaultCount || 0) + Number(loanObj?.missedPayments || 0)) ||
+          Number(a.defaultCount || 0),
+        defaultFeePercentage:
+          loanObj?.defaultFeePercentage ??
+          loanConfig?.defaultFeePercentPerDefault ??
+          a.defaultFeePercentage ??
+          2.5,
+        loanConfig,
+        userWallets: Array.isArray(a.userWallets) ? a.userWallets : [],
+        volumeMetrics: a.volumeMetrics || null,
+        isThirdParty: Boolean(a.isThirdParty),
+        applicantType: a.applicantType || (a.isThirdParty ? "third_party" : "self"),
+        thirdPartyApplicant: a.thirdPartyApplicant || null,
+        documents: Array.isArray(a.documents) ? a.documents : [],
+        otpVerified: Boolean(a.otpVerified),
+        status: a.status || "submitted",
+        appliedDate: a.createdAt || a.submittedAt || "",
+        reviewedAt: a.reviewedAt || "",
+        purpose: a.purpose || "",
+        rejectionReason: a.rejectionReason || a.reviewNotes || "",
+        currency: a.currency || "USD",
+        disbursed: isDisbursed,
+        canDisburse: Boolean(loanId) && !isDisbursed,
+      };
+    });
   }, [applicationsRaw]);
 
   // --- Filter Pipeline ---
