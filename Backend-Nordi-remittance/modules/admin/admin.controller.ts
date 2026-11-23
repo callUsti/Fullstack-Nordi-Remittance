@@ -10,6 +10,7 @@ import { SystemSettingsService } from "./system-settings.service.js";
 import { CustomerManagementService } from "./customer-management.service.js";
 import { AuditTasksService } from "./audit-tasks.service.js";
 import { AdminPermissionsService } from "./admin-permissions.service.js";
+import { LimitsService } from "../accounts/limits.service.js";
 
 // ============================================================================
 // ADMIN AUTHENTICATION
@@ -117,7 +118,8 @@ export async function createAdminUser(req: AuthenticatedRequest, res: Response, 
 export async function updateAdminUser(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     if (!req.user) throw new UnauthorizedError("Authentication required");
-    const result = await AdminUsersService.updateAdminUser(req.user.userId, req.params.id as string, req.body, req.ip || "", req.headers["user-agent"] || "");
+    const targetAdminId = (req.params.adminId || req.params.id) as string;
+    const result = await AdminUsersService.updateAdminUser(req.user.userId, targetAdminId, req.body, req.ip || "", req.headers["user-agent"] || "");
     sendSuccess(res, result, "Admin updated successfully");
   } catch (error) {
     next(error);
@@ -127,7 +129,8 @@ export async function updateAdminUser(req: AuthenticatedRequest, res: Response, 
 export async function deactivateAdminUser(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     if (!req.user) throw new UnauthorizedError("Authentication required");
-    await AdminUsersService.deactivateAdminUser(req.user.userId, req.params.id as string, req.ip || "", req.headers["user-agent"] || "");
+    const targetAdminId = (req.params.adminId || req.params.id) as string;
+    await AdminUsersService.deactivateAdminUser(req.user.userId, targetAdminId, req.ip || "", req.headers["user-agent"] || "");
     sendSuccess(res, null, "Admin deactivated successfully");
   } catch (error) {
     next(error);
@@ -175,7 +178,8 @@ export async function getSystemSettings(req: AuthenticatedRequest, res: Response
 export async function updateSystemSetting(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     if (!req.user) throw new UnauthorizedError("Authentication required");
-    const result = await SystemSettingsService.updateSystemSetting(req.user.userId, req.body.key, req.body.value, req.ip || "", req.headers["user-agent"] || "");
+    const settingKey = (req.params.key || req.body.key) as string;
+    const result = await SystemSettingsService.updateSystemSetting(req.user.userId, settingKey, req.body.value, req.ip || "", req.headers["user-agent"] || "");
     sendSuccess(res, result, "Setting updated successfully");
   } catch (error) {
     next(error);
@@ -324,7 +328,8 @@ export async function createOperationalTask(req: AuthenticatedRequest, res: Resp
 export async function updateOperationalTask(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     if (!req.user) throw new UnauthorizedError("Authentication required");
-    const result = await AuditTasksService.updateOperationalTask(req.params.id as string, req.body);
+    const taskId = (req.params.taskId || req.params.id) as string;
+    const result = await AuditTasksService.updateOperationalTask(taskId, req.body);
     sendSuccess(res, result, "Task updated successfully");
   } catch (error) {
     next(error);
@@ -380,6 +385,43 @@ export async function revokeAllPermissions(req: AuthenticatedRequest, res: Respo
     if (!req.user) throw new UnauthorizedError("Authentication required");
     await AdminPermissionsService.revokeAllPermissions(req.user.userId, req.params.adminId as string, req.ip || "", req.headers["user-agent"] || "");
     sendSuccess(res, null, "All permissions revoked");
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ============================================================================
+// USER TRANSFER LIMITS & LIMIT REQUESTS
+// ============================================================================
+
+export async function getUserLimits(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    if (!req.user) throw new UnauthorizedError("Authentication required");
+    const result = await LimitsService.getEffectiveLimits(req.params.userId as string);
+    sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updateUserLimits(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    if (!req.user) throw new UnauthorizedError("Authentication required");
+    const result = await LimitsService.updateUserLimits(req.user.userId, req.params.userId as string, req.body);
+    sendSuccess(res, result, "User transfer limits updated successfully");
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getLimitRequests(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    if (!req.user) throw new UnauthorizedError("Authentication required");
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = Math.min(parseInt(req.query.limit as string) || 25, 100);
+    const status = req.query.status as string | undefined;
+    const result = await LimitsService.getAdminLimitRequests(status, page, limit);
+    sendPaginated(res, result.requests, { page: result.page, limit: result.limit, total: result.total });
   } catch (error) {
     next(error);
   }
