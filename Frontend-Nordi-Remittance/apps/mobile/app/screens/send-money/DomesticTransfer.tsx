@@ -16,8 +16,8 @@ import { useMobileTheme } from '@/core/theme/useMobileTheme';
 import { ScreenHeader } from '@/components/shared/ScreenHeader';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
 import { useTransfer } from '@nordi/shared/client-usecase';
+import { AdaptiveScreen } from '@/components/layout/AdaptiveScreen';
 import { useSendMoneyStore } from '@/stores';
 
 export default function DomesticTransferScreen() {
@@ -70,19 +70,18 @@ export default function DomesticTransferScreen() {
   };
 
   return (
-    <View style={s.container}>
-      <ScreenHeader
-        title="Domestic Bank Transfer"
-        subtitle="Zero fee instant local clearing"
-        showBack
-        onBackPress={() => router.back()}
-      />
-
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={s.scrollContent}
-      >
-        <Card style={s.formCard}>
+    <AdaptiveScreen
+      withTabBar={false}
+      header={
+        <ScreenHeader
+          title="Domestic Bank Transfer"
+          subtitle="Zero fee instant local clearing"
+          showBack
+          onBackPress={() => router.back()}
+        />
+      }
+    >
+      <Card style={s.formCard}>
           <CardContent style={s.formContent}>
             <Text style={s.label}>Recipient Full Name</Text>
             <TextInput
@@ -141,8 +140,7 @@ export default function DomesticTransferScreen() {
             />
           </CardContent>
         </Card>
-      </ScrollView>
-    </View>
+    </AdaptiveScreen>
   );
 }
 
