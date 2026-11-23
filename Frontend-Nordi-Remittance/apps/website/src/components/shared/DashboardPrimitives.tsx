@@ -27,7 +27,7 @@ export const PageContainer: React.FC<PageContainerProps> = ({
 }) => (
   <motion.div
     className={cn(
-      "p-3 sm:p-4 lg:p-6 min-h-full",
+      "px-2.5 py-3 sm:px-4 sm:py-4 lg:px-5 lg:py-5 2xl:px-6 min-h-full w-full overflow-x-hidden",
       "bg-gray-50 dark:bg-gray-950",
       "transition-colors duration-200",
       className
@@ -36,7 +36,7 @@ export const PageContainer: React.FC<PageContainerProps> = ({
     initial="hidden"
     animate="visible"
   >
-    <div className="max-w-7xl mx-auto">{children}</div>
+    <div className="w-full max-w-full 2xl:max-w-[1920px] mx-auto min-w-0">{children}</div>
   </motion.div>
 );
 
@@ -78,6 +78,8 @@ export const DashCard: React.FC<DashCardProps> = ({
       className
     )}
     variants={dashboardItemVariants}
+    initial="hidden"
+    animate="visible"
     whileHover={hover || onClick ? { y: -2 } : undefined}
     whileTap={onClick ? { scale: 0.99 } : undefined}
     onClick={onClick}
@@ -112,9 +114,9 @@ export const StatCard: React.FC<StatCardProps> = ({
 }) => (
   <motion.div
     className={cn(
-      "bg-white dark:bg-gray-900",
+      "min-w-0 bg-white dark:bg-gray-900",
       "border border-gray-200 dark:border-gray-800",
-      "rounded-xl p-3 sm:p-4 lg:p-5",
+      "rounded-2xl sm:rounded-xl p-3.5 sm:p-4 lg:p-5",
       onClick &&
         "cursor-pointer hover:border-gray-300 dark:hover:border-gray-700",
       "transition-colors duration-200"
@@ -131,8 +133,8 @@ export const StatCard: React.FC<StatCardProps> = ({
     <div className="flex items-center justify-between mb-2 sm:mb-3">
       <div
         className={cn(
-          "p-2 sm:p-2.5 rounded-xl bg-gradient-to-br text-white",
-          iconColor
+          "p-2 sm:p-2.5 rounded-xl bg-blue-600 text-white",
+          iconColor && !iconColor.includes("from-") ? iconColor : "bg-blue-600"
         )}
       >
         {icon}
@@ -150,10 +152,10 @@ export const StatCard: React.FC<StatCardProps> = ({
         </span>
       )}
     </div>
-    <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
+    <p className="text-lg sm:text-2xl font-semibold text-gray-900 dark:text-white truncate">
       {value}
     </p>
-    <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 dark:text-neutral-500 mt-0.5 sm:mt-1">
+    <p className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 dark:text-neutral-500 mt-0.5 sm:mt-1 truncate">
       {label}
     </p>
   </motion.div>
@@ -316,6 +318,8 @@ interface FilterBarProps {
   searchValue: string;
   onSearchChange: (value: string) => void;
   searchPlaceholder?: string;
+  searchId?: string;
+  searchName?: string;
   children?: React.ReactNode;
   className?: string;
 }
@@ -324,39 +328,48 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   searchValue,
   onSearchChange,
   searchPlaceholder = "Search...",
+  searchId,
+  searchName,
   children,
   className,
-}) => (
-  <DashCard
-    className={cn(
-      "!flex flex-wrap gap-2 sm:gap-3 items-center mb-4 sm:mb-6",
-      className
-    )}
-  >
-    <div className="relative flex-1 min-w-[160px] sm:min-w-[200px]">
-      <Search
-        size={14}
-        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 dark:text-neutral-400"
-      />
-      <input
-        type="text"
-        placeholder={searchPlaceholder}
-        value={searchValue}
-        onChange={(e) => onSearchChange(e.target.value)}
-        className={cn(
-          "w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2",
-          "rounded-lg border border-gray-200 dark:border-gray-700",
-          "bg-gray-50 dark:bg-gray-800",
-          "text-xs sm:text-sm text-gray-900 dark:text-white",
-          "placeholder:text-gray-400 dark:text-neutral-500 dark:placeholder:text-gray-500 dark:text-neutral-400",
-          "focus:outline-none focus:ring-2 focus:ring-indigo-500/40 dark:focus:ring-indigo-400/40 focus:border-indigo-500 dark:focus:border-indigo-400",
-          "transition-colors duration-200"
-        )}
-      />
-    </div>
-    {children}
-  </DashCard>
-);
+}) => {
+  const autoId = React.useId();
+  const inputId = searchId || `filter-search-${autoId}`;
+  const inputName = searchName || inputId;
+  return (
+    <DashCard
+      className={cn(
+        "!flex flex-wrap gap-2 sm:gap-3 items-center mb-4 sm:mb-6",
+        className
+      )}
+    >
+      <div className="relative flex-1 min-w-[160px] sm:min-w-[200px]">
+        <Search
+          size={14}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 dark:text-neutral-400"
+        />
+        <input
+          id={inputId}
+          name={inputName}
+          type="text"
+          placeholder={searchPlaceholder}
+          value={searchValue}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className={cn(
+            "w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2",
+            "rounded-lg border border-gray-200 dark:border-gray-700",
+            "bg-gray-50 dark:bg-gray-800",
+            "text-xs sm:text-sm text-gray-900 dark:text-white",
+            "placeholder:text-gray-400 dark:text-neutral-500 dark:placeholder:text-gray-500 dark:text-neutral-400",
+            "focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:focus:ring-blue-400/40 focus:border-blue-500 dark:focus:border-blue-400",
+            "transition-colors duration-200"
+          )}
+        />
+      </div>
+      {children}
+    </DashCard>
+  );
+};
 
 /* ═══════════════════════════════════════════════════════════════════════════
    FILTER SELECT — Dark-mode-ready select dropdown
@@ -382,7 +395,7 @@ export const FilterSelect: React.FC<FilterSelectProps> = ({
       "rounded-lg border border-gray-200 dark:border-gray-700",
       "bg-gray-50 dark:bg-gray-800",
       "text-xs sm:text-sm text-gray-900 dark:text-white",
-      "focus:outline-none focus:ring-2 focus:ring-indigo-500/40 dark:focus:ring-indigo-400/40",
+      "focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:focus:ring-blue-400/40",
       "transition-colors duration-200",
       className
     )}
@@ -415,8 +428,8 @@ export const FilterPill: React.FC<FilterPillProps> = ({
       "px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-xs font-medium whitespace-nowrap",
       "transition-all duration-200",
       active
-        ? "bg-indigo-600 dark:bg-indigo-50 dark:bg-indigo-900/300 text-white"
-        : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 dark:text-neutral-500 hover:bg-gray-200 dark:hover:bg-gray-700"
+        ? "bg-blue-600 text-white shadow-sm"
+        : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
     )}
     whileHover={{ scale: 1.02 }}
     whileTap={{ scale: 0.98 }}
@@ -449,7 +462,7 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
       "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium",
       "transition-colors duration-200",
       variant === "primary"
-        ? "bg-indigo-600 dark:bg-indigo-50 dark:bg-indigo-900/300 text-white hover:bg-indigo-700 dark:hover:bg-indigo-600"
+        ? "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
         : "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800",
       className
     )}
@@ -526,7 +539,7 @@ interface ProgressBarProps {
 
 export const ProgressBar: React.FC<ProgressBarProps> = ({
   value,
-  color = "bg-gradient-to-r from-indigo-500 to-purple-500",
+  color = "bg-blue-600",
   height = "sm",
   animated = true,
   delay = 0,
