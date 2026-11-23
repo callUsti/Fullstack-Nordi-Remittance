@@ -21,31 +21,31 @@ const BeneficiaryCategories: React.FC = () => {
     {
       name: "Family",
       icon: Users,
-      color: "from-pink-500 to-rose-500",
+      color: "bg-blue-600",
       count: beneficiaries.filter((b: any) => (b.category || "").toLowerCase() === "family").length,
     },
     {
       name: "Friends",
       icon: User,
-      color: "from-indigo-500 to-purple-500",
+      color: "bg-blue-600",
       count: beneficiaries.filter((b: any) => (b.category || "").toLowerCase() === "friends").length,
     },
     {
       name: "Business",
       icon: Building2,
-      color: "from-emerald-500 to-teal-500",
+      color: "bg-emerald-600",
       count: beneficiaries.filter((b: any) => (b.category || "").toLowerCase() === "business").length,
     },
     {
       name: "International",
       icon: Globe,
-      color: "from-amber-500 to-orange-500",
+      color: "bg-amber-600",
       count: beneficiaries.filter((b: any) => (b.category || "").toLowerCase() === "international").length,
     },
     {
       name: "Utilities",
       icon: Phone,
-      color: "from-cyan-500 to-blue-500",
+      color: "bg-blue-600",
       count: beneficiaries.filter((b: any) => (b.category || "").toLowerCase() === "utilities").length,
     },
     {
@@ -80,10 +80,10 @@ const BeneficiaryCategories: React.FC = () => {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {categories.map((cat) => (
             <motion.div key={cat.name} variants={dashboardItemVariants}>
-              <DashCard className="cursor-pointer transition-colors hover:border-indigo-300 dark:hover:border-indigo-700">
+              <DashCard className="cursor-pointer transition-colors hover:border-blue-300 dark:hover:border-blue-700">
                 <div className="flex items-center gap-4">
                   <div
-                    className={`h-12 w-12 bg-gradient-to-br ${cat.color} flex items-center justify-center rounded-2xl text-white`}
+                    className={`h-12 w-12 ${cat.color} flex items-center justify-center rounded-2xl text-white`}
                   >
                     <cat.icon size={20} />
                   </div>
