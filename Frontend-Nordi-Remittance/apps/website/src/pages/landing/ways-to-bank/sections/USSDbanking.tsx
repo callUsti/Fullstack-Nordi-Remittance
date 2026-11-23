@@ -93,8 +93,8 @@ const USSDbanking: React.FC = () => {
                 <benefit.icon className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <div>
-                <p className="font-black text-[13px] sm:text-sm text-neutral-900 dark:text-white uppercase tracking-tight leading-tight mb-1">{benefit.title}</p>
-                <p className="text-[10px] sm:text-xs text-neutral-500 dark:text-neutral-400 font-bold leading-relaxed">{benefit.description}</p>
+                <p className="font-medium text-[13px] sm:text-sm text-neutral-900 dark:text-white uppercase tracking-tight leading-tight mb-1">{benefit.title}</p>
+                <p className="text-[10px] sm:text-xs text-neutral-500 dark:text-neutral-400 font-medium leading-relaxed">{benefit.description}</p>
               </div>
             </div>
           ))}
@@ -109,7 +109,7 @@ const USSDbanking: React.FC = () => {
             viewport={{ once: true }}
             className="p-6 sm:p-10 rounded-3xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-xl"
           >
-            <h4 className="text-sm font-black text-neutral-400 uppercase tracking-[0.2em] mb-8">Quick Access Codes</h4>
+            <h4 className="text-sm font-semibold text-neutral-400 uppercase tracking-[0.2em] mb-8">Quick Access Codes</h4>
             <div className="space-y-3 sm:space-y-4">
               {ussdServices.map((service) => (
                 <div
@@ -119,12 +119,12 @@ const USSDbanking: React.FC = () => {
                     "hover:bg-orange-500/5 hover:border-orange-500/20 hover:-translate-x-1"
                   )}
                 >
-                  <div className="w-24 sm:w-28 font-mono text-xs sm:text-sm font-black text-orange-600 dark:text-orange-400 bg-orange-500/10 px-3 py-2 rounded-xl text-center shadow-inner group-hover:scale-105 transition-transform uppercase">
+                  <div className="w-24 sm:w-28 font-mono text-xs sm:text-sm font-medium text-orange-600 dark:text-orange-400 bg-orange-500/10 px-3 py-2 rounded-xl text-center shadow-inner group-hover:scale-105 transition-transform uppercase">
                     {service.code.replace('*', '').replace('#', '')}#
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-black text-neutral-900 dark:text-white text-[13px] sm:text-base tracking-tight truncate group-hover:text-orange-600 transition-colors">{service.name}</p>
-                    <p className="text-[10px] sm:text-xs text-neutral-400 font-bold uppercase tracking-widest truncate">{service.description}</p>
+                    <p className="font-medium text-neutral-900 dark:text-white text-[13px] sm:text-base tracking-tight truncate group-hover:text-orange-600 transition-colors">{service.name}</p>
+                    <p className="text-[10px] sm:text-xs text-neutral-400 font-medium uppercase tracking-widest truncate">{service.description}</p>
                   </div>
                 </div>
               ))}
