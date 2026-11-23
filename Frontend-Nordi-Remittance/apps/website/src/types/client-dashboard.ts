@@ -7,17 +7,56 @@ declare global {
 
   interface WalletItem {
     id: string;
+    walletId?: string;
+    applicationId?: string;
     name: string;
+    nickname?: string;
     accountNumber: string;
-    type: string;
+    type: "personal" | "business" | "savings" | "current" | "fixed_deposit" | string;
+    typeLabel?: string;
     balance: number;
     currency: string;
+    balancesByCurrency?: Array<{ currency: string; amount: number }>;
+    status?: string;
+    isPrimary?: boolean;
+    isApplicationOnly?: boolean;
+
+    // Savings specific fields from AccountApplication
+    initialDeposit?: number;
+    goal?: string;
+    autoSave?: boolean;
+    autoSaveAmount?: number;
+
+    // Current specific fields from AccountApplication
+    purpose?: "personal" | "business";
+    businessName?: string;
+    expectedMonthlyVolume?: number;
+    overdraftRequested?: boolean;
+    overdraftLimit?: number;
+
+    // Fixed Deposit specific fields from AccountApplication
+    principal?: number;
+    termMonths?: number;
+    interestRate?: number;
+    maturityDate?: string;
+    autoRenew?: boolean;
+
+    recentTransactionsCount?: number;
+    createdAt?: string;
   }
 
   interface AccountSummaryData {
     totalBalance: number;
     monthlyIncome: number;
     monthlyExpenses: number;
+    savingsBalance?: number;
+    savingsCount?: number;
+    currentBalance?: number;
+    currentCount?: number;
+    fixedDepositBalance?: number;
+    fixedDepositCount?: number;
+    personalBalance?: number;
+    personalCount?: number;
     wallets: WalletItem[];
   }
 
@@ -102,9 +141,16 @@ declare global {
 
   interface CardItem {
     id: string;
+    cardId?: string;
     name: string;
     lastFour: string;
     isVirtual: boolean;
+    isPhysical?: boolean;
+    cardBrand?: "visa" | "mastercard" | "amex" | "discover";
+    cardType?: "debit" | "credit" | "prepaid" | "virtual";
+    balance?: number;
+    creditLimit?: number;
+    currency?: string;
     status: string;
     expiryDate: string;
     spendLimit: number;
