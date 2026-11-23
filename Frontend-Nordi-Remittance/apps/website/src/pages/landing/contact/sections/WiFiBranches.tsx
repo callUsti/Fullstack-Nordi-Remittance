@@ -114,8 +114,8 @@ const WiFiBranches: React.FC = () => {
                   ? React.cloneElement(amenity.icon as React.ReactElement, { className: "w-6 h-6" })
                   : amenity.icon}
               </div>
-              <h4 className="font-black text-white text-[13px] sm:text-sm uppercase tracking-tight leading-tight mb-2">{amenity.name}</h4>
-              <p className="text-[10px] sm:text-xs text-cyan-200 font-bold opacity-80">{amenity.description}</p>
+              <h4 className="font-semibold text-white text-[13px] sm:text-sm uppercase tracking-tight leading-tight mb-2">{amenity.name}</h4>
+              <p className="text-[10px] sm:text-xs text-cyan-200 font-medium opacity-80">{amenity.description}</p>
             </div>
           ))}
         </motion.div>
