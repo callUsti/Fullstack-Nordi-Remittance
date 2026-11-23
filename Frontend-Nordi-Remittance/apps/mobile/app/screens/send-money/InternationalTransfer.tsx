@@ -20,6 +20,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { StepIndicator, WizardStep } from '@/components/shared/TransferPrimitives';
+import { AdaptiveScreen } from '@/components/layout/AdaptiveScreen';
 import { useWallets, useBeneficiaries } from '@nordi/shared/hooks/api-queries/useAccounts';
 import { useSendMoneyStore } from '@/stores';
 
@@ -70,6 +71,11 @@ export default function AccessInternational() {
 
   // Resolve the full currency object from the stored code
   const targetCurrency = DESTINATION_CURRENCIES.find(c => c.code === targetCurrencyCode) || DESTINATION_CURRENCIES[0];
+  const setTargetCurrency = (curr: typeof DESTINATION_CURRENCIES[0]) => setIntlTargetCurrency(curr.code);
+  const setSelectedWalletId = setIntlWallet;
+  const setRecipientName = setIntlRecipient;
+  const setIbanSwift = setIntlIbanSwift;
+  const setBankName = setIntlBankName;
   const setSendAmount = setIntlSendAmount;
   const setDeliveryMethod = setIntlDeliveryMethod as (m: 'swift' | 'local') => void;
 
@@ -160,18 +166,21 @@ export default function AccessInternational() {
   }
 
   return (
-    <View style={s.container}>
-      <ScreenHeader
-        title="International Wire"
-        subtitle="Global remittance & SWIFT transfer"
-        onBack={handleBack}
-      />
-
-      <View style={s.stepWrapper}>
-        <StepIndicator steps={WIZARD_STEPS} current={currentStep} />
-      </View>
-
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
+    <AdaptiveScreen
+      withTabBar={false}
+      header={
+        <View>
+          <ScreenHeader
+            title="International Wire"
+            subtitle="Global remittance & SWIFT transfer"
+            onBack={handleBack}
+          />
+          <View style={s.stepWrapper}>
+            <StepIndicator steps={WIZARD_STEPS} current={currentStep} />
+          </View>
+        </View>
+      }
+    >
         {/* STEP 0: SOURCE ACCOUNT */}
         {currentStep === 0 && (
           <View style={s.stepContent}>
@@ -376,20 +385,19 @@ export default function AccessInternational() {
             </Card>
           </View>
         )}
-      </ScrollView>
 
-      {/* Floating Action Controls */}
-      <View style={s.footerNav}>
-        <Button
-          variant="primary"
-          size="lg"
-          fullWidth
-          onPress={handleNext}
-        >
-          {currentStep === WIZARD_STEPS.length - 1 ? 'Authorize Wire Transfer' : 'Next Step'}
-        </Button>
-      </View>
-    </View>
+        {/* Action Controls */}
+        <View style={[s.footerNav, { marginTop: 16, marginBottom: 24 }]}>
+          <Button
+            variant="primary"
+            size="lg"
+            fullWidth
+            onPress={handleNext}
+          >
+            {currentStep === WIZARD_STEPS.length - 1 ? 'Authorize Wire Transfer' : 'Next Step'}
+          </Button>
+        </View>
+    </AdaptiveScreen>
   );
 }
 
