@@ -50,7 +50,7 @@ const RecentRecipients: React.FC = () => {
                 className="flex items-center justify-between p-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50 sm:p-4"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-sm font-bold text-white">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-sm font-medium text-white">
                     {(b.name || "?")[0].toUpperCase()}
                   </div>
                   <div>
@@ -67,7 +67,7 @@ const RecentRecipients: React.FC = () => {
                       : "—"}
                   </p>
                   <motion.button
-                    className="text-xs font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+                    className="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
                     whileHover={{ scale: 1.05 }}
                   >
                     Send Again
