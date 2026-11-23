@@ -76,7 +76,7 @@ export default function ReportsAnalytics() {
   } = useReportsAnalytics();
 
   return (
-    <PageContainer>
+    <PageContainer className="px-2 sm:px-3 lg:px-4 [&>div]:max-w-full">
       <PageHeader
         title="Reports & Analytics"
         subtitle="Comprehensive reports, financial analytics, and compliance dashboards"
@@ -123,7 +123,7 @@ export default function ReportsAnalytics() {
       </StatsGrid>
 
       {/* Section Tabs */}
-      <div className="mb-6 flex gap-3 overflow-x-auto pb-1">
+      <div className="mb-6 flex gap-3 overflow-x-auto pb-1 touch-pan-x scrollbar-hide">
         {reportSections.map((section) => (
           <motion.button
             key={section.id}
@@ -332,7 +332,7 @@ export default function ReportsAnalytics() {
                   className="rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-700/50 dark:bg-gray-800/50"
                 >
                   <p className="text-[10px] uppercase tracking-wider text-gray-400">{metric.label}</p>
-                  <p className="mt-1 text-xl font-bold text-gray-900 dark:text-white">{metric.value}</p>
+                  <p className="mt-1 text-xl font-semibold text-gray-900 dark:text-white">{metric.value}</p>
                   <div
                     className={`mt-1 flex items-center gap-1 text-[10px] font-medium ${metric.positive ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}
                   >
