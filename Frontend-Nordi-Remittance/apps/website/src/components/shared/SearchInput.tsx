@@ -77,7 +77,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   const [internalValue, setInternalValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const debounceTimer = useRef<NodeJS.Timeout>();
+  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
 
   const value = controlledValue !== undefined ? controlledValue : internalValue;
   const styles = sizeStyles[size];
