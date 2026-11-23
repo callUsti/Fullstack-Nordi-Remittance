@@ -164,16 +164,16 @@ const SolutionCard: React.FC<SolutionCardProps> = ({ solution, index }) => (
           : solution.icon}
       </div>
       <div className="flex-1">
-        <h3 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-white leading-tight">{solution.name}</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-neutral-900 dark:text-white leading-tight">{solution.name}</h3>
         <p className="text-[11px] sm:text-xs text-neutral-500 dark:text-neutral-400 leading-tight mt-1">{solution.description}</p>
       </div>
     </div>
 
     {/* Transaction Fee */}
     <div className="py-3 sm:py-4 border-y border-neutral-100 dark:border-neutral-700 mb-3 sm:mb-4">
-      <p className="text-[10px] sm:text-[11px] text-neutral-400 uppercase tracking-widest font-bold mb-0.5">Transaction Fee</p>
+      <p className="text-[10px] sm:text-[11px] text-neutral-400 uppercase tracking-widest font-medium mb-0.5">Transaction Fee</p>
       <div className="flex items-baseline gap-1">
-        <p className="text-xl sm:text-2xl font-black text-neutral-900 dark:text-white">{solution.transactionFee}</p>
+        <p className="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-white">{solution.transactionFee}</p>
         <p className="text-[10px] sm:text-xs text-neutral-500 font-medium">per transaction</p>
       </div>
     </div>
@@ -189,7 +189,7 @@ const SolutionCard: React.FC<SolutionCardProps> = ({ solution, index }) => (
     </ul>
 
     {/* CTA */}
-    <Button variant="outline" size="lg" className="w-full text-sm py-2.5 sm:py-3 font-bold group">
+    <Button variant="outline" size="lg" className="w-full text-sm py-2.5 sm:py-3 font-medium group">
       Learn More
       <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-1.5 sm:ml-2 group-hover:translate-x-1 transition-transform" />
     </Button>
@@ -239,7 +239,7 @@ const ESolutions: React.FC = () => {
                 <benefit.icon className="w-6 h-6 sm:w-8 sm:h-8" />
               </div>
               <div>
-                <p className="font-bold text-neutral-900 dark:text-white text-base sm:text-lg leading-tight mb-1">{benefit.title}</p>
+                <p className="font-semibold text-neutral-900 dark:text-white text-base sm:text-lg leading-tight mb-1">{benefit.title}</p>
                 <p className="text-[13px] sm:text-sm text-neutral-500 dark:text-neutral-400 leading-tight">{benefit.description}</p>
               </div>
             </div>
@@ -272,11 +272,11 @@ const ESolutions: React.FC = () => {
               for your business in as little as 24 hours. No hidden fees, no stress.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
-              <Button variant="primary" size="lg" className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-base py-4 px-10 font-bold shadow-lg">
+              <Button variant="primary" size="lg" className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-base py-4 px-10 font-medium shadow-lg">
                 Get Started Now
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
-              <Button variant="outline" size="lg" className="w-full sm:w-auto text-base py-4 px-10 font-bold border-2">
+              <Button variant="outline" size="lg" className="w-full sm:w-auto text-base py-4 px-10 font-medium border-2">
                 View API Docs
               </Button>
             </div>
