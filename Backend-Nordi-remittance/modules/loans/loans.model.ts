@@ -53,6 +53,12 @@ const LoanSchema = new Schema({
   nextPaymentAmount: { type: Number },
   missedPayments: { type: Number, default: 0 },
   latePayments: { type: Number, default: 0 },
+  defaultCount: { type: Number, default: 0 },
+  defaultFeePercentage: { type: Number, default: 2.5 },
+  autoDebitEnabled: { type: Boolean, default: false },
+  isThirdParty: { type: Boolean, default: false },
+  thirdPartyApplicant: { type: Schema.Types.Mixed },
+  application: { type: Schema.Types.ObjectId, ref: "LoanApplications" },
   gracePeriodDays: { type: Number, default: 5 },
   lateFeePercentage: { type: Number, default: 5 },
   earlyRepaymentAllowed: { type: Boolean, default: true },
@@ -71,15 +77,14 @@ const LoanSchema = new Schema({
 });
 
 // Immutability guard: once a loan is bound to a wallet, it cannot be moved
-LoanSchema.pre('save', function (this: any, next: any) {
+LoanSchema.pre('save', function (this: any) {
   if (this.walletLocked && this.isModified('wallet')) {
-    return next(new Error('Cannot change wallet on a locked loan. Loan-wallet binding is immutable.'));
+    throw new Error('Cannot change wallet on a locked loan. Loan-wallet binding is immutable.');
   }
   // Lock the wallet on first save if wallet is set
   if (this.wallet && !this.walletLocked) {
     this.walletLocked = true;
   }
-  next();
 });
 
 const LoanApplicationSchema = new Schema({
@@ -139,6 +144,68 @@ const LoanApplicationSchema = new Schema({
   approvedAmount: { type: Number },
   approvedRate: { type: Number },
   approvedTerm: { type: Number },
+  interestRate: { type: Number },
+  monthlyPayment: { type: Number },
+  defaultFeePercentage: { type: Number, default: 2.5 },
+  defaultCount: { type: Number, default: 0 },
+  volumeMetrics: { type: Schema.Types.Mixed },
+  isThirdParty: { type: Boolean, default: false },
+  applicantType: {
+    type: String,
+    enum: ["self", "third_party"],
+    default: "self",
+  },
+  otpVerified: { type: Boolean, default: false },
+  otpVerifiedAt: { type: Date },
+  thirdPartyApplicant: {
+    fullName: { type: String },
+    firstName: { type: String },
+    middleName: { type: String },
+    lastName: { type: String },
+    relationshipToSponsor: { type: String },
+    email: { type: String },
+    phoneNumber: { type: String },
+    alternatePhone: { type: String },
+    dateOfBirth: { type: String },
+    gender: { type: String },
+    maritalStatus: { type: String },
+    occupation: { type: String },
+    employerName: { type: String },
+    employmentStatus: { type: String },
+    monthlyIncome: { type: Number },
+    country: { type: String },
+    state: { type: String },
+    city: { type: String },
+    address: { type: String },
+    postalCode: { type: String },
+    idDocumentType: { type: String },
+    nationalIdOrPassportNumber: { type: String },
+    ssn: { type: String },
+    taxId: { type: String },
+    driversLicenseFrontUrl: { type: String },
+    driversLicenseBackUrl: { type: String },
+    bankStatementUrl: { type: String },
+    bankDetails: {
+      bankName: { type: String },
+      accountName: { type: String },
+      accountNumber: { type: String },
+      routingNumber: { type: String },
+      sortCode: { type: String },
+      iban: { type: String },
+      swiftBic: { type: String },
+      currency: { type: String, default: "USD" },
+    },
+    nextOfKin: {
+      fullName: { type: String },
+      relationship: { type: String },
+      phoneNumber: { type: String },
+      email: { type: String },
+      address: { type: String },
+    },
+    sponsorCreditScoreUsed: { type: Number },
+    sponsorMaxCapacityUsed: { type: Number },
+  },
+  disbursementWallet: { type: Schema.Types.ObjectId, ref: "Wallets" },
   rejectionReason: { type: String },
   loan: { type: Schema.Types.ObjectId, ref: "Loans" },
   submittedAt: { type: Date },
@@ -151,41 +218,42 @@ const CreditAssessmentSchema = new Schema({
   loanApplication: {
     type: Schema.Types.ObjectId,
     ref: "LoanApplications",
-    required: true,
   },
   creditScore: { type: Number, required: true },
-  creditReportProvider: { type: String, required: true },
-  creditReportDate: { type: Date, required: true },
-  debtToIncomeRatio: { type: Number, required: true },
+  creditReportProvider: { type: String, default: "Nordi Internal Bureau" },
+  creditReportDate: { type: Date, default: Date.now },
+  debtToIncomeRatio: { type: Number, default: 0 },
   employmentStability: {
     type: String,
     enum: ["excellent", "good", "fair", "poor"],
-    required: true,
+    default: "good",
   },
   paymentHistory: {
     type: String,
     enum: ["excellent", "good", "fair", "poor"],
-    required: true,
+    default: "good",
   },
-  existingDebts: { type: Number, required: true },
-  monthlyIncome: { type: Number, required: true },
-  riskScore: { type: Number, required: true, min: 0, max: 100 },
+  existingDebts: { type: Number, default: 0 },
+  monthlyIncome: { type: Number, default: 0 },
+  riskScore: { type: Number, default: 25, min: 0, max: 100 },
   riskCategory: {
     type: String,
     enum: ["low", "medium", "high", "very_high"],
-    required: true,
+    default: "low",
   },
   recommendation: {
     type: String,
-    enum: ["approve", "approve_with_conditions", "reject"],
-    required: true,
+    enum: ["approve", "approve_with_conditions", "reject", "deny"],
+    default: "approve",
   },
   recommendedAmount: { type: Number },
+  maxRecommendedAmount: { type: Number },
   recommendedRate: { type: Number },
   recommendedTerm: { type: Number },
   conditions: [{ type: String }],
-  assessedBy: { type: String, required: true },
+  assessedBy: { type: String, default: "system" },
   assessmentNotes: { type: String },
+  assessmentDate: { type: Date, default: Date.now },
   createdAt: { type: Date, default: Date.now, immutable: true },
 });
 
@@ -211,7 +279,7 @@ const RepaymentScheduleSchema = new Schema({
       paidAmount: { type: Number },
       paidDate: { type: Date },
       lateFee: { type: Number, default: 0 },
-      remainingBalance: { type: Number, required: true },
+      remainingBalance: { type: Number, default: 0 },
     },
   ],
   totalPrincipal: { type: Number, required: true },
