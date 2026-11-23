@@ -91,12 +91,18 @@ const Logger = winston.createLogger({
   transports,
   // Exceptions and rejections go to a separate file AND are re-emitted to ELK
   exceptionHandlers: [
+    new winston.transports.Console({
+      format: isProduction ? prodConsoleFormat : devConsoleFormat,
+    }),
     new winston.transports.File({
       filename: path.join(__dirname, "../logs/exceptions.log"),
       format: jsonFormat,
     }),
   ],
   rejectionHandlers: [
+    new winston.transports.Console({
+      format: isProduction ? prodConsoleFormat : devConsoleFormat,
+    }),
     new winston.transports.File({
       filename: path.join(__dirname, "../logs/rejections.log"),
       format: jsonFormat,
