@@ -331,3 +331,114 @@ export const useCancelApplication = () => {
     },
   });
 };
+
+// ============================================================================
+// EXTENDED WALLET & PRODUCT QUERIES
+// ============================================================================
+
+export const useClosedWallets = () => {
+  return useQuery({
+    queryKey: ["accounts", "wallets", "closed"],
+    queryFn: async () => {
+      const response = await AccountsRepository.getClosedWallets();
+      return response.data;
+    },
+  });
+};
+
+export const useConsolidatedLimits = () => {
+  return useQuery({
+    queryKey: ["accounts", "consolidated-limits"],
+    queryFn: async () => {
+      const response = await AccountsRepository.getConsolidatedLimits();
+      return response.data;
+    },
+  });
+};
+
+export const useCreditScore = () => {
+  return useQuery({
+    queryKey: ["accounts", "credit-score"],
+    queryFn: async () => {
+      const response = await AccountsRepository.getCreditScore();
+      return response.data;
+    },
+  });
+};
+
+export const useWalletProducts = (walletId?: UUID) => {
+  return useQuery({
+    queryKey: ["accounts", "wallets", walletId, "products"],
+    queryFn: async () => {
+      if (!walletId) return null;
+      const response = await AccountsRepository.getWalletProducts(walletId);
+      return response.data;
+    },
+    enabled: !!walletId,
+  });
+};
+
+// ============================================================================
+// CARD-WALLET LINKING MUTATIONS
+// ============================================================================
+
+export const useLinkCardToWallet = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = typeof useToastStore === "function" ? useToastStore() : { showToast: (m: string) => alert(m) };
+
+  return useMutation({
+    mutationFn: async ({ walletId, cardId }: { walletId: UUID; cardId: UUID }) => {
+      const response = await AccountsRepository.linkCardToWallet(walletId, cardId);
+      return response.data;
+    },
+    onSuccess: (_, { walletId }) => {
+      queryClient.invalidateQueries({ queryKey: ["accounts", "wallets", walletId, "products"] });
+      queryClient.invalidateQueries({ queryKey: ["cards"] });
+      showToast("Card linked to wallet successfully", "success");
+    },
+    onError: (error: any) => {
+      showToast(error?.response?.data?.message || "Failed to link card", "error");
+    },
+  });
+};
+
+export const useUnlinkCardFromWallet = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = typeof useToastStore === "function" ? useToastStore() : { showToast: (m: string) => alert(m) };
+
+  return useMutation({
+    mutationFn: async ({ walletId, cardId }: { walletId: UUID; cardId: UUID }) => {
+      const response = await AccountsRepository.unlinkCardFromWallet(walletId, cardId);
+      return response.data;
+    },
+    onSuccess: (_, { walletId }) => {
+      queryClient.invalidateQueries({ queryKey: ["accounts", "wallets", walletId, "products"] });
+      queryClient.invalidateQueries({ queryKey: ["cards"] });
+      showToast("Card unlinked from wallet", "success");
+    },
+    onError: (error: any) => {
+      showToast(error?.response?.data?.message || "Failed to unlink card", "error");
+    },
+  });
+};
+
+export const useSetCardFundingSource = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = typeof useToastStore === "function" ? useToastStore() : { showToast: (m: string) => alert(m) };
+
+  return useMutation({
+    mutationFn: async ({ cardId, walletId }: { cardId: UUID; walletId: UUID }) => {
+      const response = await AccountsRepository.setCardFundingSource(cardId, { walletId });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["accounts", "wallets"] });
+      queryClient.invalidateQueries({ queryKey: ["cards"] });
+      showToast("Card funding source updated", "success");
+    },
+    onError: (error: any) => {
+      showToast(error?.response?.data?.message || "Failed to set funding source", "error");
+    },
+  });
+};
+
