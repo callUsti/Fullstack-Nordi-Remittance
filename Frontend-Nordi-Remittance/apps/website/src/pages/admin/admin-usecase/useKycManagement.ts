@@ -10,7 +10,15 @@ import { paginate, getPageNumbers } from "@core/algo/pagination";
 // useKycManagement — Full KYC verification workflow for admin
 // ============================================================================
 
-export type KycStatusFilter = "all" | "pending" | "approved" | "rejected" | "expired";
+export type KycStatusFilter =
+  | "all"
+  | "pending"
+  | "in_review"
+  | "under_review"
+  | "approved"
+  | "verified"
+  | "rejected"
+  | "expired";
 
 const PAGE_SIZE = 20;
 
@@ -24,17 +32,24 @@ export function useKycManagement() {
     action: "approve" | "reject";
   } | null>(null);
 
+  const backendKycStatus = useMemo(() => {
+    if (statusFilter === "all") return undefined;
+    if (statusFilter === "under_review") return "in_review";
+    if (statusFilter === "verified") return "approved";
+    return statusFilter;
+  }, [statusFilter]);
+
   const queryParams = useMemo(() => {
     const params: Record<string, any> = { page: 1, limit: 500 };
-    if (statusFilter !== "all") params.status = statusFilter;
+    if (backendKycStatus) params.status = backendKycStatus;
     return params;
-  }, [statusFilter]);
+  }, [backendKycStatus]);
 
   const { data: pendingRaw, isLoading, refetch } = useAdminPendingReviews(queryParams);
   const { data: statsRaw, isLoading: statsLoading } = useAdminKycStats();
   const { data: usersRaw } = useSearchUsers({
     limit: 500,
-    kycStatus: statusFilter !== "all" ? statusFilter : undefined,
+    kycStatus: backendKycStatus,
   });
   const reviewMutation = useAdminReviewKyc();
 
@@ -82,7 +97,13 @@ export function useKycManagement() {
       );
     }
     if (statusFilter !== "all") {
-      predicates.push(enumFilter((u) => u.kycStatus ?? "", [statusFilter]));
+      const normalizedTargets =
+        statusFilter === "under_review" || statusFilter === "in_review"
+          ? ["in_review", "under_review"]
+          : statusFilter === "verified" || statusFilter === "approved"
+            ? ["approved", "verified"]
+            : [statusFilter];
+      predicates.push(enumFilter((u) => u.kycStatus ?? "", normalizedTargets));
     }
     const result = applyFilterPipeline(rawApplications, predicates);
     return multiKeySort(result, [{ getter: (u: any) => new Date(u.submittedAt || 0), direction: "desc" }]);
@@ -97,9 +118,12 @@ export function useKycManagement() {
 
   // --- Stats ---
   const stats = useMemo(() => {
-    const s: any = statsRaw?.data || statsRaw || {};
+    const s: any = statsRaw?.data?.stats || statsRaw?.data || statsRaw || {};
+    const pendingCount = rawApplications.filter(
+      (u: any) => u.kycStatus === "pending" || u.kycStatus === "in_review" || u.kycStatus === "under_review",
+    ).length;
     return {
-      totalPending: s.totalPending ?? s.pending ?? rawApplications.filter((u: any) => u.kycStatus === "pending").length,
+      totalPending: s.totalPending ?? s.pending ?? (pendingCount || 0),
       totalApproved:
         s.totalApproved ?? s.approved ?? rawApplications.filter((u: any) => u.kycStatus === "approved").length,
       totalRejected:
