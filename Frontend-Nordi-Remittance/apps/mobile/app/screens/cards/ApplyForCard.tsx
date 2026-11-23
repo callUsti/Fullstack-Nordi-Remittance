@@ -19,6 +19,7 @@ import { ScreenHeader } from '@/components/shared/ScreenHeader';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { AdaptiveScreen } from '@/components/layout/AdaptiveScreen';
 import { useApplyForCardDomain } from '@nordi/shared/client-usecase';
 
 export default function ApplyForCardScreen() {
@@ -50,18 +51,17 @@ export default function ApplyForCardScreen() {
   };
 
   return (
-    <View style={s.container}>
-      <ScreenHeader
-        title="Apply for Nordi Card"
-        subtitle="Virtual cards issued in seconds • Worldwide physical delivery"
-        showBack
-        onBackPress={() => router.back()}
-      />
-
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={s.scrollContent}
-      >
+    <AdaptiveScreen
+      withTabBar={false}
+      header={
+        <ScreenHeader
+          title="Apply for Nordi Card"
+          subtitle="Virtual cards issued in seconds • Worldwide physical delivery"
+          showBack
+          onBackPress={() => router.back()}
+        />
+      }
+    >
         <Text style={s.sectionTitle}>Select Card Format</Text>
         <View style={s.typeToggleRow}>
           <TouchableOpacity
@@ -138,8 +138,7 @@ export default function ApplyForCardScreen() {
           disabled={isApplying}
           style={{ marginTop: 24 }}
         />
-      </ScrollView>
-    </View>
+    </AdaptiveScreen>
   );
 }
 
