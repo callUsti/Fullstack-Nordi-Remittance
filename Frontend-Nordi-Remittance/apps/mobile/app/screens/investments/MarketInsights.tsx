@@ -6,14 +6,14 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMobileTheme } from '@/core/theme/useMobileTheme';
 import { ScreenHeader } from '@/components/shared/ScreenHeader';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { AdaptiveScreen } from '@/components/layout/AdaptiveScreen';
+import { SPACING, FONT_SIZES, RADIUS } from '@/constants/sizings';
 
 export default function MarketInsightsScreen() {
   const router = useRouter();
@@ -42,73 +42,62 @@ export default function MarketInsightsScreen() {
   ];
 
   return (
-    <View style={s.container}>
-      <ScreenHeader
-        title="Market Insights & Reports"
-        subtitle="Institutional macroeconomic research & trends"
-        showBack
-        onBackPress={() => router.back()}
-      />
-
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={s.scrollContent}
-      >
-        {insights.map((item, idx) => (
-          <Card key={idx} style={s.card}>
-            <CardContent style={s.content}>
-              <View style={s.headerRow}>
-                <Badge variant="primary" size="sm">{item.category}</Badge>
-                <Text style={s.dateText}>{item.date}</Text>
-              </View>
-              <Text style={s.title}>{item.title}</Text>
-              <Text style={s.desc}>{item.desc}</Text>
-            </CardContent>
-          </Card>
-        ))}
-      </ScrollView>
-    </View>
+    <AdaptiveScreen
+      header={
+        <ScreenHeader
+          title="Market Insights & Reports"
+          subtitle="Institutional macroeconomic research & trends"
+          showBack
+          onBackPress={() => router.back()}
+        />
+      }
+    >
+      {insights.map((item, idx) => (
+        <Card key={idx} style={s.card}>
+          <CardContent style={s.content}>
+            <View style={s.headerRow}>
+              <Badge variant="primary" size="sm">{item.category}</Badge>
+              <Text style={s.dateText}>{item.date}</Text>
+            </View>
+            <Text style={s.title}>{item.title}</Text>
+            <Text style={s.desc}>{item.desc}</Text>
+          </CardContent>
+        </Card>
+      ))}
+    </AdaptiveScreen>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useMobileTheme>) {
   return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-    },
-    scrollContent: {
-      padding: 16,
-      paddingBottom: 40,
-    },
     card: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 14,
+      borderRadius: RADIUS.xl,
       borderWidth: 1,
       borderColor: theme.colors.border,
-      marginBottom: 12,
+      marginBottom: SPACING.md,
     },
     content: {
-      padding: 16,
+      padding: SPACING.lg,
     },
     headerRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 8,
+      marginBottom: SPACING.sm,
     },
     dateText: {
-      fontSize: 11,
+      fontSize: FONT_SIZES.caption,
       color: theme.colors.textSecondary,
     },
     title: {
-      fontSize: 15,
+      fontSize: FONT_SIZES.titleSm,
       fontWeight: '700',
       color: theme.colors.textPrimary,
-      marginBottom: 6,
+      marginBottom: SPACING.xs,
     },
     desc: {
-      fontSize: 12,
+      fontSize: FONT_SIZES.bodySm,
       color: theme.colors.textSecondary,
       lineHeight: 18,
     },
