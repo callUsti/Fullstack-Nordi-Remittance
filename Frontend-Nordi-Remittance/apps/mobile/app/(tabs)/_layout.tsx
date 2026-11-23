@@ -46,14 +46,14 @@ export default function TabLayout() {
           height: Platform.OS === "ios" ? 90 : 70,
           paddingBottom: Platform.OS === "ios" ? 30 : 15,
           paddingTop: 10,
-          paddingHorizontal: 20,
+          paddingHorizontal: 4,
         },
         tabBarActiveTintColor: activeColor,
         tabBarInactiveTintColor: inactiveColor,
         tabBarItemStyle: {
-          borderRadius: 16,
-          marginHorizontal: 4,
-          paddingVertical: 8,
+          borderRadius: 14,
+          marginHorizontal: 1,
+          paddingVertical: 6,
         },
       }}
     >
@@ -132,6 +132,40 @@ export default function TabLayout() {
           tabBarIcon: ({ focused }) => (
             <TabIcon
               iconName="User"
+              focused={focused}
+              activeIconBg={activeIconBg}
+              activeColor={activeColor}
+              inactiveColor={inactiveColor}
+              backgroundColor={backgroundColor}
+              focusedIconColor={focusedIconColor}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="markets"
+        options={{
+          title: "Markets",
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              iconName="TrendingUp"
+              focused={focused}
+              activeIconBg={activeIconBg}
+              activeColor={activeColor}
+              inactiveColor={inactiveColor}
+              backgroundColor={backgroundColor}
+              focusedIconColor={focusedIconColor}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="send"
+        options={{
+          title: "Send",
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              iconName="Send"
               focused={focused}
               activeIconBg={activeIconBg}
               activeColor={activeColor}
