@@ -99,8 +99,8 @@ const CustomerFeedback: React.FC = () => {
         >
           {feedbackStats.map((stat) => (
             <div key={stat.label} className="text-center p-4 sm:p-6 rounded-2xl bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800/30 shadow-sm hover:shadow-xl transition-all">
-              <p className="text-xl sm:text-3xl font-black text-indigo-600 dark:text-indigo-400 tabular-nums tracking-tighter">{stat.value}</p>
-              <p className="text-[10px] sm:text-xs text-neutral-400 font-bold uppercase tracking-widest mt-1">{stat.label}</p>
+              <p className="text-xl sm:text-3xl font-bold text-indigo-600 dark:text-indigo-400 tabular-nums tracking-tighter">{stat.value}</p>
+              <p className="text-[10px] sm:text-xs text-neutral-400 font-medium uppercase tracking-widest mt-1">{stat.label}</p>
             </div>
           ))}
         </motion.div>
@@ -115,7 +115,7 @@ const CustomerFeedback: React.FC = () => {
           <form onSubmit={handleSubmit} className="p-6 rounded-2xl bg-slate-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700">
             {/* Category Selection */}
             <div className="mb-8">
-              <label className="block text-[10px] sm:text-xs font-black text-neutral-400 uppercase tracking-widest mb-4">
+              <label className="block text-[10px] sm:text-xs font-medium text-neutral-400 uppercase tracking-widest mb-4">
                 Transmission Source
               </label>
               <div className="flex flex-wrap gap-2 sm:gap-3">
@@ -125,7 +125,7 @@ const CustomerFeedback: React.FC = () => {
                     type="button"
                     onClick={() => setSelectedCategory(category)}
                     className={cn(
-                      "px-5 py-2.5 rounded-2xl text-[11px] sm:text-xs font-black uppercase tracking-tight transition-all duration-300",
+                      "px-5 py-2.5 rounded-2xl text-[11px] sm:text-xs font-medium uppercase tracking-tight transition-all duration-300",
                       selectedCategory === category
                         ? "bg-indigo-600 text-white shadow-xl scale-105"
                         : "bg-white dark:bg-neutral-800 border-2 border-neutral-100 dark:border-neutral-700 text-neutral-500 dark:text-neutral-400 hover:border-indigo-500/30"
@@ -224,7 +224,7 @@ const CustomerFeedback: React.FC = () => {
           viewport={{ once: true }}
           className="mt-12 max-w-2xl mx-auto"
         >
-          <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-4 text-center">
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4 text-center">
             Recent Improvements Based on Your Feedback
           </h3>
           <div className="space-y-3">
