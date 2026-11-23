@@ -37,7 +37,7 @@ const UserDashboardOverview: React.FC = () => {
         </motion.div>
 
         {/* Main Dashboard + Sidebar */}
-        <motion.div variants={dashboardItemVariants} className="flex flex-col items-start gap-5 lg:flex-row">
+        <motion.div variants={dashboardItemVariants} className="flex w-full min-w-0 flex-col items-start gap-5 lg:flex-row">
           <DashboardMain
             transactions={dashboard.recentTransactions}
             spending={spending}
