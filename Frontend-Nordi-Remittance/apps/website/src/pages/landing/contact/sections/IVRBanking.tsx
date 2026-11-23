@@ -85,7 +85,7 @@ const IVRBanking: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-sm text-rose-600 font-medium">Call Our IVR Line</p>
-                  <p className="text-2xl font-bold text-neutral-900 dark:text-white">0700-REMIT-00</p>
+                  <p className="text-2xl font-semibold text-neutral-900 dark:text-white">0700-REMIT-00</p>
                   <p className="text-sm text-neutral-500 dark:text-neutral-400">Or dial 0700-736-4800</p>
                 </div>
               </div>
@@ -99,8 +99,8 @@ const IVRBanking: React.FC = () => {
                     <feature.icon className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="font-black text-[13px] sm:text-sm text-neutral-900 dark:text-white uppercase tracking-tight leading-tight mb-1">{feature.label}</p>
-                    <p className="text-[10px] sm:text-xs text-neutral-500 dark:text-neutral-400 font-bold leading-relaxed">{feature.desc}</p>
+                    <p className="font-medium text-[13px] sm:text-sm text-neutral-900 dark:text-white uppercase tracking-tight leading-tight mb-1">{feature.label}</p>
+                    <p className="text-[10px] sm:text-xs text-neutral-500 dark:text-neutral-400 font-medium leading-relaxed">{feature.desc}</p>
                   </div>
                 </div>
               ))}
@@ -125,7 +125,7 @@ const IVRBanking: React.FC = () => {
                   {/* Phone Header */}
                   <div className="text-center mb-4">
                     <p className="text-neutral-400 text-xs">Incoming Call</p>
-                    <p className="text-white font-bold">0700-REMIT-00</p>
+                    <p className="text-white font-medium">0700-REMIT-00</p>
                     <p className="text-emerald-400 text-xs">Connected</p>
                   </div>
 
@@ -150,7 +150,7 @@ const IVRBanking: React.FC = () => {
                           "bg-neutral-700/30 hover:bg-neutral-700/50 transition-colors"
                         )}
                       >
-                        <div className="w-7 h-7 rounded-lg bg-rose-600/30 text-rose-400 flex items-center justify-center text-xs font-bold">
+                        <div className="w-7 h-7 rounded-lg bg-rose-600/30 text-rose-400 flex items-center justify-center text-xs font-medium">
                           {service.code}
                         </div>
                         <div className="flex-1">
