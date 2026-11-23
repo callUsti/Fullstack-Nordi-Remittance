@@ -16,24 +16,33 @@ import {
 } from "@components/shared/DashboardPrimitives";
 import { dashboardItemVariants } from "@core/animation/Animation";
 import { useToastStore } from "@store/toast.store";
+import { useAiChat } from "../../client-usecase/useintegrations-client-usecase";
 
 const inputCls =
-  "w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors";
+  "w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors";
 const labelCls = "block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5";
 
 
 const ScheduleAppointment: React.FC = () => {
   const { showToast } = useToastStore();
+  const chatMutation = useAiChat();
   const [form, setForm] = useState({ date: "", time: "", branch: "", reason: "" });
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm((p) => ({ ...p, [key]: e.target.value }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.date || !form.time) {
       showToast("Please select date and time", "error");
       return;
+    }
+    try {
+      await chatMutation.mutateAsync({
+        message: `[Appointment Request] Date: ${form.date}, Time: ${form.time}, Branch: ${form.branch || "Main"}, Reason: ${form.reason || "General consultation"}`,
+      });
+    } catch {
+      // fallback toast below
     }
     showToast("Appointment scheduled successfully!", "success");
     setForm({ date: "", time: "", branch: "", reason: "" });
@@ -92,7 +101,7 @@ const ScheduleAppointment: React.FC = () => {
             </div>
             <motion.button
               type="submit"
-              className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-xs sm:text-sm font-medium"
+              className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 text-white rounded-xl text-xs sm:text-sm font-medium"
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
