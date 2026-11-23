@@ -4,6 +4,7 @@
 
 export { AccountsRepository } from "./accounts.repository";
 export { AdminRepository } from "./admin.repository";
+export { AiRepository } from "./ai.repository";
 export { AttachmentsRepository } from "./attachments.repository";
 export { AuthRepository, getErrorMessage } from "./auth.repository";
 export { CardsRepository } from "./cards.repository";
