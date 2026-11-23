@@ -25,6 +25,8 @@ export interface ClientCard {
   id: string;
   cardId?: string;
   cardNumber: string; // already masked server-side + client-side
+  fullCardNumber?: string;
+  fullCvv?: string;
   last4: string;
   cardholderName: string;
   cardType: CardType;
@@ -34,6 +36,15 @@ export interface ClientCard {
   balance: number;
   creditLimit: number;
   availableCredit: number;
+  interestRate?: number;
+  creditUsed?: number;
+  accruedInterest?: number;
+  totalDebt?: number;
+  totalRepaid?: number;
+  autoDebitWhenEmpty?: boolean;
+  linkedWalletId?: string;
+  linkedWalletNumber?: string;
+  linkedWalletType?: string;
   expiryMonth?: number;
   expiryYear?: number;
   expiryDate: string; // "MM/YYYY" formatted
