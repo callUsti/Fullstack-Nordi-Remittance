@@ -11,7 +11,7 @@ import { lightTheme, darkTheme, gradients } from "@constants/colors";
 interface FormContainerProps {
   children: ReactNode;
   step: number;
-  totalSteps: number;
+  totalSteps?: number;
 }
 
 const FormContainer: React.FC<FormContainerProps> = ({ children, step, totalSteps = 7 }) => {
