@@ -70,41 +70,16 @@ export const StatisticsRepository = {
   },
 
   /**
-   * Get transaction volume chart data
+   * Get transaction volume chart data (maps to /statistics/transactions)
    */
   getTransactionVolumeChart: async (params?: {
     period?: "week" | "month" | "3months" | "6months" | "year";
     currency?: Currency;
-  }): Promise<
-    ApiResponse<{
-      labels: string[];
-      datasets: Array<{
-        label: string;
-        data: number[];
-        type: "income" | "expense";
-      }>;
-      summary: {
-        totalIncome: number;
-        totalExpense: number;
-        netFlow: number;
-      };
-    }>
-  > => {
-    const response = await apiClient.get<
-      ApiResponse<{
-        labels: string[];
-        datasets: Array<{
-          label: string;
-          data: number[];
-          type: "income" | "expense";
-        }>;
-        summary: {
-          totalIncome: number;
-          totalExpense: number;
-          netFlow: number;
-        };
-      }>
-    >(`/statistics/transactions/chart`, { params });
+  }): Promise<ApiResponse<any>> => {
+    const response = await apiClient.get<ApiResponse<any>>(
+      ApiEndpoints.statisticsTransactions,
+      { params },
+    );
     return response.data;
   },
 
@@ -173,7 +148,7 @@ export const StatisticsRepository = {
         lowestBalance: number;
         averageBalance: number;
       }>
-    >(`/statistics/balance/history`, { params });
+    >(`/statistics/user`, { params });
     return response.data;
   },
 
@@ -203,7 +178,7 @@ export const StatisticsRepository = {
         }>;
         totalBalanceUSD: number;
       }>
-    >(`/statistics/balance/distribution`);
+    >(`/statistics/user`);
     return response.data;
   },
 
@@ -263,7 +238,7 @@ export const StatisticsRepository = {
           count: number;
         }>;
       }>
-    >(`/statistics/remittance`, { params });
+    >(`/statistics/transactions`, { params });
     return response.data;
   },
 
@@ -315,7 +290,7 @@ export const StatisticsRepository = {
           percentage: number;
         }>;
       }>
-    >(`/statistics/investments`, { params });
+    >(`/investments/summary`, { params });
     return response.data;
   },
 
@@ -361,7 +336,7 @@ export const StatisticsRepository = {
           };
         }>;
       }>
-    >(`/statistics/insights`);
+    >(`/statistics/spending`);
     return response.data;
   },
 
@@ -391,7 +366,7 @@ export const StatisticsRepository = {
         }>;
         totalPotentialSavings: number;
       }>
-    >(`/statistics/recommendations`);
+    >(`/statistics/spending`);
     return response.data;
   },
 
@@ -469,17 +444,17 @@ export const StatisticsRepository = {
     return response.data;
   },
 
-  /** Remittance by country — proxies to /statistics/remittance */
+  /** Remittance by country — proxies to /statistics/transactions */
   getRemittanceByCountry: async (params?: any): Promise<ApiResponse<any>> => {
-    const response = await apiClient.get<ApiResponse<any>>(`/statistics/remittance`, {
+    const response = await apiClient.get<ApiResponse<any>>(ApiEndpoints.statisticsTransactions, {
       params: { ...params, groupBy: "country" },
     });
     return response.data;
   },
 
-  /** Remittance by recipient — proxies to /statistics/remittance */
+  /** Remittance by recipient — proxies to /statistics/transactions */
   getRemittanceByRecipient: async (params?: any): Promise<ApiResponse<any>> => {
-    const response = await apiClient.get<ApiResponse<any>>(`/statistics/remittance`, {
+    const response = await apiClient.get<ApiResponse<any>>(ApiEndpoints.statisticsTransactions, {
       params: { ...params, groupBy: "recipient" },
     });
     return response.data;
@@ -501,9 +476,9 @@ export const StatisticsRepository = {
     return response.data;
   },
 
-  /** Portfolio allocation — proxies to /statistics/investments */
+  /** Portfolio allocation — proxies to /investments/summary */
   getPortfolioAllocation: async (): Promise<ApiResponse<any>> => {
-    const response = await apiClient.get<ApiResponse<any>>(`/statistics/investments`, {
+    const response = await apiClient.get<ApiResponse<any>>(ApiEndpoints.investmentsSummary, {
       params: { view: "allocation" },
     });
     return response.data;
@@ -525,7 +500,7 @@ export const StatisticsRepository = {
 
   /** Financial insights — alias for getInsights */
   getFinancialInsights: async (): Promise<ApiResponse<any>> => {
-    const response = await apiClient.get<ApiResponse<any>>(`/statistics/insights`);
+    const response = await apiClient.get<ApiResponse<any>>(ApiEndpoints.statisticsSpending);
     return response.data;
   },
 
@@ -564,6 +539,24 @@ export const StatisticsRepository = {
   /** Available export formats */
   getAvailableExports: async (): Promise<ApiResponse<any>> => {
     const response = await apiClient.get<ApiResponse<any>>(ApiEndpoints.statisticsUser, { params: { view: "exports" } });
+    return response.data;
+  },
+
+  /** Admin: Get platform statistics (/statistics/platform) */
+  getPlatformStats: async (params?: any): Promise<ApiResponse<any>> => {
+    const response = await apiClient.get<ApiResponse<any>>(ApiEndpoints.statisticsPlatform, { params });
+    return response.data;
+  },
+
+  /** Admin: Get platform growth analytics (/statistics/growth) */
+  getGrowthStats: async (params?: any): Promise<ApiResponse<any>> => {
+    const response = await apiClient.get<ApiResponse<any>>(ApiEndpoints.statisticsGrowth, { params });
+    return response.data;
+  },
+
+  /** Admin: Generate daily report (/statistics/reports/daily) */
+  generateDailyReport: async (data?: any): Promise<ApiResponse<any>> => {
+    const response = await apiClient.post<ApiResponse<any>>(ApiEndpoints.statisticsReportDaily, data);
     return response.data;
   },
 };
