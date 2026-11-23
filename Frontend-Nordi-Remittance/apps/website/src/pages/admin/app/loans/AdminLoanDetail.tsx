@@ -119,7 +119,7 @@ export default function AdminLoanDetail() {
 
   if (isLoading) {
     return (
-      <PageContainer>
+      <PageContainer className="px-2 sm:px-3 lg:px-4 [&>div]:max-w-full">
         <PageHeader title="Application Detail" breadcrumbs={[{ label: "Admin", href: "/admin/dashboard" }, { label: "Loans", href: "/admin/loans" }, { label: "Detail" }]} />
         <StatsGridSkeleton count={4} />
       </PageContainer>
@@ -128,7 +128,7 @@ export default function AdminLoanDetail() {
 
   if (!app) {
     return (
-      <PageContainer>
+      <PageContainer className="px-2 sm:px-3 lg:px-4 [&>div]:max-w-full">
         <PageHeader title="Application Detail" breadcrumbs={[{ label: "Loans", href: "/admin/loans" }, { label: "Detail" }]} />
         <DashCard>
           <EmptyState icon={<Banknote size={40} />} title="Application not found" description="This loan application could not be found." />
@@ -207,7 +207,7 @@ export default function AdminLoanDetail() {
         )}
       </AnimatePresence>
 
-      <PageContainer>
+      <PageContainer className="px-2 sm:px-3 lg:px-4 [&>div]:max-w-full">
         <PageHeader
           title={`Application ${app.applicationId?.slice(-10) || app._id?.slice(-10)}`}
           subtitle={`${user.firstName ?? ""} ${user.lastName ?? ""} · ${app.loanType ?? "Personal"} loan`}
@@ -247,10 +247,10 @@ export default function AdminLoanDetail() {
         <motion.div variants={dashboardItemVariants} initial="hidden" animate="visible" className="space-y-6">
           {/* Stats */}
           <StatsGrid cols={4}>
-            <StatCard label="Requested Amount" value={fmt(app.requestedAmount ?? 0)} icon={<DollarSign size={18} />} iconColor="from-blue-500 to-blue-600" index={0} />
-            <StatCard label="Approved Amount" value={app.approvedAmount ? fmt(app.approvedAmount) : "—"} icon={<CheckCircle size={18} />} iconColor="from-emerald-500 to-emerald-600" index={1} />
-            <StatCard label="Term" value={`${app.term ?? 0} months`} icon={<CalendarClock size={18} />} iconColor="from-amber-500 to-amber-600" index={2} />
-            <StatCard label="Interest Rate" value={app.interestRate ? `${app.interestRate}%` : "TBD"} icon={<Percent size={18} />} iconColor="from-purple-500 to-purple-600" index={3} />
+            <StatCard label="Requested Amount" value={fmt(app.requestedAmount ?? 0)} icon={<DollarSign size={18} />} iconColor="bg-blue-600" index={0} />
+            <StatCard label="Approved Amount" value={app.approvedAmount ? fmt(app.approvedAmount) : "—"} icon={<CheckCircle size={18} />} iconColor="bg-emerald-600" index={1} />
+            <StatCard label="Term" value={`${app.term ?? 0} months`} icon={<CalendarClock size={18} />} iconColor="bg-amber-600" index={2} />
+            <StatCard label="Interest Rate" value={app.interestRate ? `${app.interestRate}%` : "TBD"} icon={<Percent size={18} />} iconColor="bg-purple-600" index={3} />
           </StatsGrid>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
