@@ -348,41 +348,41 @@ const UserTransfer = () => {
 
   return (
     <motion.div
-      className="container mx-auto max-w-6xl px-4 py-6"
+      className="w-full min-w-0 max-w-full overflow-x-hidden px-2 py-2 sm:px-4 sm:py-4"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       {/* Header */}
-      <motion.div className="mb-6 flex items-center justify-between" variants={itemVariants}>
-        <div className="flex items-center">
-          <button className={`rounded-full p-2 ${hoverBg} mr-4`} onClick={() => navigate(`/admin/users/${id}`)}>
-            <ArrowLeft size={20} className={textPrimary} />
+      <motion.div className="mb-4 flex flex-col gap-2.5 sm:mb-6 sm:flex-row sm:items-center sm:justify-between" variants={itemVariants}>
+        <div className="flex min-w-0 items-center gap-2.5">
+          <button className={`shrink-0 rounded-full p-1.5 ${hoverBg} sm:p-2`} onClick={() => navigate(`/admin/users/${id}`)}>
+            <ArrowLeft size={18} className={textPrimary} />
           </button>
-          <div>
-            <h1 className={`text-2xl font-bold ${textPrimary}`}>User Financial Management</h1>
-            <p className={textSecondary}>
+          <div className="min-w-0">
+            <h2 className={`truncate text-base font-semibold sm:text-xl ${textPrimary}`}>User Financial Management</h2>
+            <p className={`truncate text-xs sm:text-sm ${textSecondary}`}>
               Manage funds and financial products for {userData.firstName} {userData.lastName}
             </p>
           </div>
         </div>
-        <div className="flex items-center space-x-3">
-          <div className={`h-10 w-10 overflow-hidden rounded-full border-2 ${borderColor}`}>
+        <div className="flex min-w-0 items-center gap-2.5">
+          <div className={`h-8 w-8 shrink-0 overflow-hidden rounded-full border ${borderColor} sm:h-10 sm:w-10`}>
             {userData.profilePicture ? (
               <img src={userData.profilePicture} alt="Profile" className="h-full w-full object-cover" />
             ) : (
               <div
                 className={`h-full w-full ${isDarkMode ? "bg-neutral-700" : "bg-slate-200"} flex items-center justify-center`}
               >
-                <User size={20} className={textMuted} />
+                <User size={16} className={textMuted} />
               </div>
             )}
           </div>
-          <div>
-            <p className={`text-sm font-medium ${textPrimary}`}>
+          <div className="min-w-0">
+            <p className={`truncate text-xs font-medium sm:text-sm ${textPrimary}`}>
               {userData.firstName} {userData.lastName}
             </p>
-            <p className={`${textSecondary} text-xs`}>{userData.email}</p>
+            <p className={`truncate text-[11px] sm:text-xs ${textSecondary}`}>{userData.email}</p>
           </div>
         </div>
       </motion.div>
@@ -500,7 +500,7 @@ const UserTransfer = () => {
                   <div className={`text-2xl font-semibold ${textPrimary}`}>{formatCurrency(card.balance)}</div>
                 </div>
 
-                <div className="mb-6 grid grid-cols-3 gap-4 text-sm">
+                <div className="mb-6 grid grid-cols-1 gap-3 text-sm sm:grid-cols-3 sm:gap-4">
                   <div>
                     <div className={textSecondary}>Type</div>
                     <div className={`font-medium capitalize ${textPrimary}`}>{card.cardType}</div>
@@ -570,7 +570,7 @@ const UserTransfer = () => {
 
           <UICard size="md">
             <h3 className={`mb-4 text-lg font-medium ${textPrimary}`}>Recent Card Transactions</h3>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto touch-pan-x scrollbar-hide">
               <table className={`min-w-full divide-y ${dividerColor}`}>
                 <thead className={tableBg}>
                   <tr>
@@ -743,7 +743,7 @@ const UserTransfer = () => {
 
           <UICard size="md">
             <h3 className={`mb-4 text-lg font-medium ${textPrimary}`}>Recent Bank Transactions</h3>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto touch-pan-x scrollbar-hide">
               <table className={`min-w-full divide-y ${dividerColor}`}>
                 <thead className={tableBg}>
                   <tr>
@@ -848,7 +848,7 @@ const UserTransfer = () => {
                   <div className={`text-xs ${textSecondary} mt-1`}>Original Amount: {formatCurrency(loan.amount)}</div>
                 </div>
 
-                <div className="mb-6 grid grid-cols-3 gap-4 text-sm">
+                <div className="mb-6 grid grid-cols-1 gap-3 text-sm sm:grid-cols-3 sm:gap-4">
                   <div>
                     <div className={textSecondary}>Monthly Payment</div>
                     <div className={`font-medium ${textPrimary}`}>{formatCurrency(loan.monthlyPayment)}</div>
