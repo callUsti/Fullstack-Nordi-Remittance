@@ -86,7 +86,7 @@ const AccessMoney: React.FC = () => {
             <Banknote className="w-4 h-4" />
             Access Money
           </span>
-          <h2 className="text-3xl sm:text-5xl font-black text-neutral-900 dark:text-white uppercase tracking-tighter mb-6 leading-tight">
+          <h2 className="text-3xl sm:text-5xl font-bold text-neutral-900 dark:text-white uppercase tracking-tighter mb-6 leading-tight">
             Access <span className="text-blue-600 dark:text-blue-400">Money</span>.
           </h2>
           <p className="text-lg text-neutral-600 dark:text-neutral-300">
@@ -110,8 +110,8 @@ const AccessMoney: React.FC = () => {
               <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-inner">
                 <benefit.icon className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <p className="font-black text-[13px] sm:text-sm text-neutral-900 dark:text-white uppercase tracking-tight leading-tight mb-1">{benefit.title}</p>
-              <p className="text-[10px] sm:text-[13px] text-neutral-500 dark:text-neutral-400 font-bold leading-relaxed">{benefit.description}</p>
+              <p className="font-medium text-[13px] sm:text-sm text-neutral-900 dark:text-white uppercase tracking-tight leading-tight mb-1">{benefit.title}</p>
+              <p className="text-[10px] sm:text-[13px] text-neutral-500 dark:text-neutral-400 font-medium leading-relaxed">{benefit.description}</p>
             </div>
           ))}
         </motion.div>
@@ -149,12 +149,12 @@ const AccessMoney: React.FC = () => {
                         ? React.cloneElement(step.icon as React.ReactElement, { className: "w-8 h-8 sm:w-10 sm:h-10 text-white" })
                         : step.icon}
                     </div>
-                    <span className="absolute -top-2 -right-2 w-8 h-8 rounded-2xl bg-emerald-400 text-emerald-950 text-xs font-black flex items-center justify-center shadow-lg border-2 border-emerald-600">
+                    <span className="absolute -top-2 -right-2 w-8 h-8 rounded-2xl bg-emerald-400 text-emerald-950 text-xs font-medium flex items-center justify-center shadow-lg border-2 border-emerald-600">
                       {step.step}
                     </span>
                   </div>
-                  <h4 className="text-lg sm:text-xl font-black mb-3 uppercase tracking-tight">{step.title}</h4>
-                  <p className="text-[13px] sm:text-sm text-emerald-50 font-bold leading-relaxed opacity-80">{step.description}</p>
+                  <h4 className="text-lg sm:text-xl font-semibold mb-3 uppercase tracking-tight">{step.title}</h4>
+                  <p className="text-[13px] sm:text-sm text-emerald-50 font-semibold leading-relaxed opacity-80">{step.description}</p>
                 </div>
               </motion.div>
             ))}
