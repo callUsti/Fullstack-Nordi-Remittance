@@ -1,0 +1,113 @@
+{
+  "daily": {
+    "debits": [
+      { "purpose": "Fuel & Gas Refill - Shell Station", "type": "payment", "category": "cards", "min": 28, "max": 110, "feeRate": 0.005 },
+      { "purpose": "Fuel & Diesel Top-Up - Circle K", "type": "payment", "category": "cards", "min": 32, "max": 125, "feeRate": 0.005 },
+      { "purpose": "Daily Groceries & Produce", "type": "payment", "category": "cards", "min": 22, "max": 185, "feeRate": 0 },
+      { "purpose": "Coffee & Bakery Breakfast", "type": "payment", "category": "cards", "min": 5, "max": 28, "feeRate": 0 },
+      { "purpose": "City Transit & Ride-Share Fare", "type": "payment", "category": "cards", "min": 9, "max": 58, "feeRate": 0 },
+      { "purpose": "Pharmacy & Wellness Essentials", "type": "payment", "category": "cards", "min": 14, "max": 95, "feeRate": 0 },
+      { "purpose": "Dinner & Restaurant Dining", "type": "payment", "category": "cards", "min": 26, "max": 160, "feeRate": 0.01 },
+      { "purpose": "Online Retail & Household Order", "type": "payment", "category": "cards", "min": 18, "max": 320, "feeRate": 0.01 },
+      { "purpose": "ATM Cash Withdrawal", "type": "withdrawal", "category": "cards", "min": 40, "max": 300, "feeRate": 0.015 },
+      { "purpose": "Peer-to-Peer Dinner Split Transfer", "type": "transfer", "category": "bankAccounts", "min": 15, "max": 120, "feeRate": 0 }
+    ],
+    "credits": [
+      { "purpose": "Client Reimbursement & Expense Settlement", "type": "credit", "category": "bankAccounts", "min": 45, "max": 480, "feeRate": 0 },
+      { "purpose": "Peer-to-Peer Incoming Transfer", "type": "deposit", "category": "bankAccounts", "min": 25, "max": 350, "feeRate": 0 },
+      { "purpose": "Merchant Refund / Cashback Credit", "type": "refund", "category": "cards", "min": 12, "max": 140, "feeRate": 0 },
+      { "purpose": "Daily Freelance Micro-Milestone Payout", "type": "deposit", "category": "bankAccounts", "min": 120, "max": 950, "feeRate": 0.005 }
+    ]
+  },
+  "weekly": {
+    "debits": [
+      { "purpose": "Weekly Supermarket Family Restock", "type": "payment", "category": "cards", "min": 95, "max": 340, "feeRate": 0 },
+      { "purpose": "Weekly Fuel & Highway Commute Toll", "type": "payment", "category": "cards", "min": 45, "max": 140, "feeRate": 0.005 },
+      { "purpose": "Weekly Auto-Save Transfer to Savings Vault", "type": "transfer", "category": "bankAccounts", "min": 75, "max": 450, "feeRate": 0, "isInternal": true },
+      { "purpose": "Weekly Contractor / Vendor Settlement", "type": "transfer", "category": "bankAccounts", "min": 250, "max": 1800, "feeRate": 0.008 }
+    ],
+    "credits": [
+      { "purpose": "Weekly Consulting Retainer Deposit", "type": "deposit", "category": "bankAccounts", "min": 650, "max": 3200, "feeRate": 0.005 },
+      { "purpose": "Weekly E-Commerce Store Settlement", "type": "credit", "category": "bankAccounts", "min": 420, "max": 4500, "feeRate": 0.01 },
+      { "purpose": "Weekly Dividend & Yield Distribution", "type": "credit", "category": "investments", "min": 35, "max": 680, "feeRate": 0 }
+    ]
+  },
+  "biweekly": {
+    "debits": [
+      { "purpose": "Biweekly Childcare & Tuition Installment", "type": "payment", "category": "bankAccounts", "min": 280, "max": 950, "feeRate": 0 },
+      { "purpose": "Biweekly Savings Goal Contribution", "type": "transfer", "category": "bankAccounts", "min": 150, "max": 800, "feeRate": 0, "isInternal": true },
+      { "purpose": "Biweekly Supplier Inventory Restock", "type": "payment", "category": "bankAccounts", "min": 600, "max": 4200, "feeRate": 0.005 }
+    ],
+    "credits": [
+      { "purpose": "Biweekly Payroll Salary Direct Deposit", "type": "deposit", "category": "bankAccounts", "min": 1850, "max": 6800, "feeRate": 0 },
+      { "purpose": "Biweekly Engineering & Advisory Retainer", "type": "deposit", "category": "bankAccounts", "min": 2200, "max": 8500, "feeRate": 0.003 }
+    ]
+  },
+  "monthly": {
+    "debits": [
+      { "purpose": "Monthly Home Mortgage Principal & Interest", "type": "payment", "category": "bankAccounts", "min": 1200, "max": 4200, "feeRate": 0 },
+      { "purpose": "Monthly Apartment Rent & HOA Dues", "type": "payment", "category": "bankAccounts", "min": 950, "max": 3500, "feeRate": 0 },
+      { "purpose": "Monthly Auto Lease / Vehicle Financing Payment", "type": "payment", "category": "bankAccounts", "min": 320, "max": 980, "feeRate": 0 },
+      { "purpose": "Monthly Electricity, Water & Municipal Utilities", "type": "payment", "category": "bankAccounts", "min": 85, "max": 340, "feeRate": 0 },
+      { "purpose": "Monthly Fiber Internet & Mobile Plan", "type": "payment", "category": "cards", "min": 45, "max": 140, "feeRate": 0 },
+      { "purpose": "Monthly App Subscription - Netflix Ultra HD", "type": "payment", "category": "cards", "min": 15.99, "max": 22.99, "feeRate": 0 },
+      { "purpose": "Monthly App Subscription - Spotify & Apple iCloud+", "type": "payment", "category": "cards", "min": 12.99, "max": 29.99, "feeRate": 0 },
+      { "purpose": "Monthly App Subscription - Adobe Creative Cloud", "type": "payment", "category": "cards", "min": 22.99, "max": 59.99, "feeRate": 0 },
+      { "purpose": "Monthly Cloud Infrastructure - AWS / Azure Billing", "type": "payment", "category": "cards", "min": 45, "max": 420, "feeRate": 0.01 },
+      { "purpose": "Monthly Health & Auto Insurance Premium", "type": "payment", "category": "bankAccounts", "min": 140, "max": 680, "feeRate": 0 },
+      { "purpose": "Monthly Payroll Tax & Social Security Withholding", "type": "fee", "category": "bankAccounts", "min": 380, "max": 2400, "feeRate": 0 },
+      { "purpose": "Monthly Loan Installment Repayment", "type": "loan_repayment", "category": "loans", "min": 220, "max": 1850, "feeRate": 0 },
+      { "purpose": "Monthly Portfolio Auto-Invest Allocation", "type": "investment", "category": "investments", "min": 200, "max": 2500, "feeRate": 0.002 }
+    ],
+    "credits": [
+      { "purpose": "Monthly Executive Salary & Housing Allowance", "type": "deposit", "category": "bankAccounts", "min": 3800, "max": 14500, "feeRate": 0 },
+      { "purpose": "Monthly Enterprise SaaS / B2B Retainer Invoice", "type": "deposit", "category": "bankAccounts", "min": 4500, "max": 28000, "feeRate": 0.005 },
+      { "purpose": "Monthly Savings Account Interest Credit", "type": "bonus", "category": "bankAccounts", "min": 18, "max": 420, "feeRate": 0 },
+      { "purpose": "Monthly Fixed Deposit Yield Payout", "type": "bonus", "category": "bankAccounts", "min": 65, "max": 950, "feeRate": 0 },
+      { "purpose": "Monthly Rental Property Income Deposit", "type": "deposit", "category": "bankAccounts", "min": 1100, "max": 4800, "feeRate": 0 },
+      { "purpose": "Monthly Equity Dividend & Bond Coupon Cashout", "type": "credit", "category": "investments", "min": 120, "max": 2400, "feeRate": 0 }
+    ]
+  },
+  "yearly": {
+    "debits": [
+      { "purpose": "Vehicle Purchase - Dealership Downpayment & Title Settlement", "type": "payment", "category": "bankAccounts", "min": 8500, "max": 48000, "feeRate": 0.002 },
+      { "purpose": "Annual Income & Corporate Tax Assessment Settlement", "type": "fee", "category": "bankAccounts", "min": 2800, "max": 32000, "feeRate": 0 },
+      { "purpose": "Annual Comprehensive Property & Fleet Insurance Renewal", "type": "payment", "category": "bankAccounts", "min": 1400, "max": 6800, "feeRate": 0 },
+      { "purpose": "Annual Software Enterprise License & Cloud Commit", "type": "payment", "category": "cards", "min": 1200, "max": 9500, "feeRate": 0.01 },
+      { "purpose": "Realized Market Drawdown / Investment Portfolio Loss Settlement", "type": "investment", "category": "investments", "min": 450, "max": 8500, "feeRate": 0.002 }
+    ],
+    "credits": [
+      { "purpose": "Major Infrastructure & EPC Contract Milestone Settlement", "type": "deposit", "category": "bankAccounts", "min": 25000, "max": 185000, "feeRate": 0.005, "isInternational": true },
+      { "purpose": "Enterprise Multi-Year Supply & Licensing Contract Payout", "type": "deposit", "category": "bankAccounts", "min": 18000, "max": 120000, "feeRate": 0.004, "isInternational": true },
+      { "purpose": "Annual Performance Bonus & Equity Vesting Cashout", "type": "bonus", "category": "bankAccounts", "min": 5500, "max": 42000, "feeRate": 0 },
+      { "purpose": "Annual Tax Refund & Overpayment Rebate", "type": "refund", "category": "bankAccounts", "min": 650, "max": 6400, "feeRate": 0 },
+      { "purpose": "Annual Investment Capital Gain Cashout", "type": "credit", "category": "investments", "min": 2400, "max": 28000, "feeRate": 0.005 }
+    ]
+  },
+  "special": {
+    "loanGrant": [
+      "Approved Personal / Working Capital Loan Disbursement",
+      "Vehicle Financing Loan Principal Grant",
+      "Commercial Line of Credit Drawdown"
+    ],
+    "fxConversion": [
+      "Cross-Border Multi-Currency FX Treasury Conversion",
+      "International Supplier FX Spot Settlement",
+      "Wallet Currency Rebalance & FX Conversion"
+    ],
+    "internalMove": [
+      "Internal Transfer: Checking to High-Yield Savings",
+      "Internal Wallet-to-Card Funding Top-Up",
+      "Internal Multi-Account Liquidity Rebalance",
+      "Internal Card-to-Wallet Balance Sweep"
+    ],
+    "failureReasons": [
+      "Insufficient available balance for requested amount and fees",
+      "Daily transaction velocity limit temporarily reached",
+      "Card issuer authorization timeout — retry recommended",
+      "International FX compliance verification hold",
+      "Recipient bank clearing window unavailable"
+    ]
+  }
+}
+
