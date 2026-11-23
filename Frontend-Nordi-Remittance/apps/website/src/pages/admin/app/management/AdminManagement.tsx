@@ -84,7 +84,7 @@ export default function AdminManagement() {
   } = useAdminManagement();
 
   return (
-    <PageContainer>
+    <PageContainer className="px-2 sm:px-3 lg:px-4 [&>div]:max-w-full">
       <PageHeader
         title="Admin Management"
         subtitle="Manage admin users, roles, permissions, and monitor admin activity"
@@ -138,7 +138,7 @@ export default function AdminManagement() {
       </StatsGrid>
 
       {/* Section Tabs */}
-      <div className="mb-6 flex gap-2 overflow-x-auto pb-1">
+      <div className="mb-6 flex gap-2 overflow-x-auto pb-1 touch-pan-x scrollbar-hide">
         {sectionTabs.map((tab) => (
           <motion.button
             key={tab.id}
@@ -178,7 +178,7 @@ export default function AdminManagement() {
             />
           </FilterBar>
           <DashCard>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto touch-pan-x scrollbar-hide">
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-gray-100 dark:border-gray-800">
@@ -204,7 +204,7 @@ export default function AdminManagement() {
                       >
                         <td className="px-2 py-3">
                           <div className="flex items-center gap-2.5">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 text-[10px] font-bold text-white">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 text-[10px] font-medium text-white">
                               {`${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase() || "A"}
                             </div>
                             <div>
