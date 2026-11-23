@@ -97,8 +97,8 @@ const FacePay: React.FC = () => {
               <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-2xl bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-inner">
                 <benefit.icon className="w-6 h-6 sm:w-8 sm:h-8" />
               </div>
-              <h4 className="font-black text-[13px] sm:text-base text-neutral-900 dark:text-white uppercase tracking-tight leading-tight mb-1">{benefit.title}</h4>
-              <p className="text-[10px] sm:text-[13px] text-neutral-500 dark:text-neutral-400 font-bold leading-relaxed">{benefit.description}</p>
+              <h4 className="font-semibold text-[13px] sm:text-base text-neutral-900 dark:text-white uppercase tracking-tight leading-tight mb-1">{benefit.title}</h4>
+              <p className="text-[10px] sm:text-[13px] text-neutral-500 dark:text-neutral-400 font-semibold leading-relaxed">{benefit.description}</p>
             </div>
           ))}
         </motion.div>
@@ -123,7 +123,7 @@ const FacePay: React.FC = () => {
                   transition={{ duration: 0.3, delay: index * 0.1 }}
                   className="flex items-start gap-4"
                 >
-                  <div className="w-10 h-10 rounded-full bg-violet-600 text-white flex items-center justify-center font-bold flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-violet-600 text-white flex items-center justify-center font-medium flex-shrink-0">
                     {step.step}
                   </div>
                   <div>
@@ -210,8 +210,8 @@ const FacePay: React.FC = () => {
             <Shield className="w-8 h-8 sm:w-9 sm:h-9 text-violet-600 group-hover:scale-110 transition-transform" />
           </div>
           <div className="text-center sm:text-left">
-            <h5 className="text-lg sm:text-xl font-black text-neutral-900 dark:text-white mb-3 uppercase tracking-tight">Privacy Protocol X-10</h5>
-            <p className="text-[13px] sm:text-sm text-neutral-500 dark:text-neutral-400 font-bold leading-relaxed max-w-2xl">
+            <h5 className="text-lg sm:text-xl font-semibold text-neutral-900 dark:text-white mb-3 uppercase tracking-tight">Privacy Protocol X-10</h5>
+            <p className="text-[13px] sm:text-sm text-neutral-500 dark:text-neutral-400 font-medium leading-relaxed max-w-2xl">
               Your facial data is encrypted via military-grade RSA-4096 and remains strictly localized on your secure element. 
               FacePay uses advanced liveness detection to neutralize spoofing threats. Your biometric hash is <span className="text-violet-600">never transmitted</span> to external servers.
             </p>
