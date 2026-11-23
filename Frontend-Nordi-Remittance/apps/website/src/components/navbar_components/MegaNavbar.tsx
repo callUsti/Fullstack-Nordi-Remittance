@@ -217,11 +217,16 @@ const contentVariants = {
 // ========================
 // MEGA NAVBAR COMPONENT
 // ========================
-const MegaNavbar: React.FC = () => {
+export interface MegaNavbarProps {
+  activeItem?: string;
+}
+
+const MegaNavbar: React.FC<MegaNavbarProps> = ({ activeItem }) => {
   const { activeMegaMenuItem } = useNavbar();
+  const currentItem = activeItem || activeMegaMenuItem;
   
   // Find active content based on hovered item
-  const activeContent = content.find((item) => item.label === activeMegaMenuItem)?.megaContent;
+  const activeContent = content.find((item) => item.label === currentItem)?.megaContent;
 
   if (!activeContent) return null;
 
@@ -250,7 +255,7 @@ const MegaNavbar: React.FC = () => {
           >
             {/* Left - Navigation Links */}
             <div className="col-span-12 lg:col-span-3 border-r border-neutral-100 dark:border-neutral-800 p-6 lg:p-8">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400 dark:text-neutral-500 mb-6">
+              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400 dark:text-neutral-500 mb-6">
                 {activeContent.leftHeader}
               </p>
               <ul className="space-y-1">
@@ -259,7 +264,7 @@ const MegaNavbar: React.FC = () => {
                     <a
                       href={link.url}
                       className={cn(
-                        "flex items-center gap-3 px-4 py-2.5 rounded-xl text-[13px] font-bold",
+                        "flex items-center gap-3 px-4 py-2.5 rounded-xl text-[13px] font-medium",
                         "text-neutral-600 dark:text-neutral-300",
                         "hover:text-blue-600 dark:hover:text-blue-400",
                         "hover:bg-blue-50/50 dark:hover:bg-blue-900/20",
@@ -279,22 +284,22 @@ const MegaNavbar: React.FC = () => {
 
             {/* Center - Title & Description */}
             <div className="col-span-12 lg:col-span-5 flex flex-col justify-center p-8 lg:px-12 lg:py-10">
-              <h2 className="text-3xl lg:text-4xl font-black text-neutral-900 dark:text-white leading-tight uppercase tracking-tighter">
+              <h2 className="text-3xl lg:text-4xl font-bold text-neutral-900 dark:text-white leading-tight uppercase tracking-tighter">
                 {activeContent.rightHeader}
               </h2>
-              <p className="mt-4 text-neutral-500 dark:text-neutral-400 text-sm font-bold leading-relaxed max-w-md opacity-80">
+              <p className="mt-4 text-neutral-500 dark:text-neutral-400 text-sm font-medium leading-relaxed max-w-md opacity-80">
                 {activeContent.rightDescription}
               </p>
               <div className="mt-8">
                 <Button
                   variant="primary"
-                  className="bg-blue-600 hover:bg-blue-700 text-white rounded-2xl px-8 py-4 text-xs font-black uppercase tracking-widest w-fit shadow-xl hover:scale-105 transition-all"
+                  className="bg-blue-600 hover:bg-blue-700 text-white rounded-2xl px-8 py-4 text-xs font-medium uppercase tracking-widest w-fit shadow-xl hover:scale-105 transition-all"
                 >
                   {activeContent.buttonText}
                   <ArrowRight size={14} className="ml-3" />
                 </Button>
               </div>
-              <p className="mt-8 text-[10px] font-black text-neutral-400 dark:text-neutral-500 uppercase tracking-widest opacity-60">
+              <p className="mt-8 text-[10px] font-medium text-neutral-400 dark:text-neutral-500 uppercase tracking-widest opacity-60">
                 {activeContent.imageCaption}
               </p>
             </div>
