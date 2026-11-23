@@ -117,7 +117,7 @@ const ContactHero: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             <div className="p-6 sm:p-10 rounded-[2.5rem] bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl">
-              <h3 className="text-xl sm:text-2xl font-black text-white mb-6 uppercase tracking-tight">Relay Command Center</h3>
+              <h3 className="text-xl sm:text-2xl font-semibold text-white mb-6 uppercase tracking-tight">Relay Command Center</h3>
               <div className="space-y-4 sm:space-y-6">
                 {quickContacts.map((contact) => (
                   <div
@@ -130,10 +130,10 @@ const ContactHero: React.FC = () => {
                         : contact.icon}
                     </div>
                     <div>
-                      <p className="text-[10px] sm:text-xs text-teal-300 font-bold uppercase tracking-widest mb-1">{contact.label}</p>
-                      <p className="text-sm sm:text-base font-black text-white tracking-tight">{contact.value}</p>
+                      <p className="text-[10px] sm:text-xs text-teal-300 font-medium uppercase tracking-widest mb-1">{contact.label}</p>
+                      <p className="text-sm sm:text-base font-medium text-white tracking-tight">{contact.value}</p>
                       {contact.subtext && (
-                        <p className="text-[10px] sm:text-xs text-teal-400 font-bold opacity-80">{contact.subtext}</p>
+                        <p className="text-[10px] sm:text-xs text-teal-400 font-medium opacity-80">{contact.subtext}</p>
                       )}
                     </div>
                   </div>
@@ -142,7 +142,7 @@ const ContactHero: React.FC = () => {
 
               {/* Hours */}
               <div className="mt-6 pt-6 border-t border-white/10">
-                <div className="flex items-center gap-3 text-teal-200 text-[13px] sm:text-sm font-bold">
+                <div className="flex items-center gap-3 text-teal-200 text-[13px] sm:text-sm font-medium">
                   <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   <span>Tactical Support: Always Active (24/7)</span>
                 </div>
