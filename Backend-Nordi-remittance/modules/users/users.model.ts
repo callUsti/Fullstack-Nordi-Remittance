@@ -102,6 +102,28 @@ const UserSchema: Schema = new Schema({
   isActive: { type: Boolean, default: false },
   kycStatus: { type: String, default: 'pending' },
   kycNotes: { type: String },
+  customLimits: {
+    domestic: {
+      perTransaction: { type: Number },
+      daily: { type: Number },
+      monthly: { type: Number },
+    },
+    international: {
+      perTransaction: { type: Number },
+      daily: { type: Number },
+      monthly: { type: Number },
+    },
+  },
+  loanConfig: {
+    loanSuspended: { type: Boolean, default: false },
+    suspensionReason: { type: String },
+    customMaxLoanAmount: { type: Number },
+    defaultFeePercentPerDefault: { type: Number, default: 2.5 },
+    defaultCountOverride: { type: Number },
+    baseInterestRateOverride: { type: Number },
+    updatedBy: { type: String },
+    updatedAt: { type: Date },
+  },
   lastLogin: { type: Date },
   resetPasswordToken: { type: String },
   resetPasswordExpires: { type: Date },
@@ -164,6 +186,43 @@ const UserSchema: Schema = new Schema({
     transactionNotifications: { type: Boolean, default: true },
     marketingEmails: { type: Boolean, default: false },
   },
+
+  // Saved Beneficiaries (used by BeneficiaryService)
+  beneficiaries: [
+    {
+      id: { type: Schema.Types.Mixed },
+      accountNumber: { type: String },
+      email: { type: String },
+      name: { type: String },
+      nickname: { type: String },
+      bankName: { type: String },
+      bankCode: { type: String },
+      currency: { type: String, default: 'USD' },
+      country: { type: String },
+      type: { type: String, enum: ['internal', 'external'], default: 'internal' },
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
+
+  // Linked External Bank Accounts
+  bankAccounts: [
+    {
+      id: { type: Schema.Types.Mixed },
+      accountName: { type: String },
+      accountNumber: { type: String },
+      bankName: { type: String },
+      bankCode: { type: String },
+      routingNumber: { type: String },
+      ibanNumber: { type: String },
+      swiftBic: { type: String },
+      currency: { type: String, default: 'USD' },
+      country: { type: String },
+      accountType: { type: String, default: 'checking' },
+      isPrimary: { type: Boolean, default: false },
+      isVerified: { type: Boolean, default: true },
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
 
   // Account status
   accountStatus: {
