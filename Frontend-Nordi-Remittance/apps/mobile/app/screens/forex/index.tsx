@@ -6,18 +6,19 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   TextInput,
   Alert,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMobileTheme } from '@/core/theme/useMobileTheme';
 import { ScreenHeader } from '@/components/shared/ScreenHeader';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { AdaptiveScreen } from '@/components/layout/AdaptiveScreen';
+import { Icon } from '@/components/ui/Icon';
+import { ICON_SIZES, SPACING, FONT_SIZES, RADIUS } from '@/constants/sizings';
 import { useForexStore } from '@/stores';
 
 const FX_RATES: Record<string, number> = {
@@ -70,175 +71,164 @@ export default function CurrencyExchangeScreen() {
   };
 
   return (
-    <View style={s.container}>
-      <ScreenHeader
-        title="Currency Exchange (FX)"
-        subtitle="Interbank institutional exchange rates with 0.1% spread"
-        showBack
-        onBackPress={() => router.back()}
-        rightElement={
-          <TouchableOpacity
-            style={s.headerIconBtn}
-            onPress={() => router.push('/screens/forex/LiveRates' as any)}
-          >
-            <Ionicons name="stats-chart" size={18} color={theme.colors.primary} />
-          </TouchableOpacity>
-        }
-      />
-
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={s.scrollContent}
-      >
-        {/* Converter Card */}
-        <Card style={s.converterCard}>
-          <CardContent style={s.converterContent}>
-            {/* You Sell / From */}
-            <View style={s.inputBox}>
-              <Text style={s.boxLabel}>You Send / Exchange</Text>
-              <View style={s.inputRow}>
-                <TextInput
-                  value={fromAmount}
-                  onChangeText={setFromAmount}
-                  style={s.amountInput}
-                  keyboardType="decimal-pad"
-                  placeholderTextColor={theme.colors.textSecondary}
-                />
-                <TouchableOpacity style={s.currBadge}>
-                  <Text style={s.currText}>{fromCurr}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Invert Button */}
-            <View style={s.swapBtnRow}>
-              <View style={s.line} />
-              <TouchableOpacity
-                style={s.swapCircle}
-                onPress={handleSwapCurrencies}
-              >
-                <Ionicons name="swap-vertical" size={20} color={theme.colors.primary} />
+    <AdaptiveScreen
+      header={
+        <ScreenHeader
+          title="Currency Exchange (FX)"
+          subtitle="Interbank institutional exchange rates with 0.1% spread"
+          showBack
+          onBackPress={() => router.back()}
+          rightElement={
+            <TouchableOpacity
+              style={s.headerIconBtn}
+              onPress={() => router.push('/screens/forex/LiveRates' as any)}
+            >
+              <Icon name="BarChart3" size={ICON_SIZES.md} color={theme.colors.primary} />
+            </TouchableOpacity>
+          }
+        />
+      }
+    >
+      {/* Converter Card */}
+      <Card style={s.converterCard}>
+        <CardContent style={s.converterContent}>
+          {/* You Sell / From */}
+          <View style={s.inputBox}>
+            <Text style={s.boxLabel}>You Send / Exchange</Text>
+            <View style={s.inputRow}>
+              <TextInput
+                value={fromAmount}
+                onChangeText={setFromAmount}
+                style={s.amountInput}
+                keyboardType="decimal-pad"
+                placeholderTextColor={theme.colors.textSecondary}
+              />
+              <TouchableOpacity style={s.currBadge}>
+                <Text style={s.currText}>{fromCurr}</Text>
               </TouchableOpacity>
-              <View style={s.line} />
             </View>
+          </View>
 
-            {/* You Receive / To */}
-            <View style={s.inputBox}>
-              <Text style={s.boxLabel}>You Receive (Estimated)</Text>
-              <View style={s.inputRow}>
-                <Text style={s.amountOutput}>{toAmount}</Text>
-                <TouchableOpacity style={s.currBadge}>
-                  <Text style={s.currText}>{toCurr}</Text>
-                </TouchableOpacity>
-              </View>
+          {/* Invert Button */}
+          <View style={s.swapBtnRow}>
+            <View style={s.line} />
+            <TouchableOpacity
+              style={s.swapCircle}
+              onPress={handleSwapCurrencies}
+            >
+              <Icon name="ArrowUpDown" size={ICON_SIZES.base} color={theme.colors.primary} />
+            </TouchableOpacity>
+            <View style={s.line} />
+          </View>
+
+          {/* You Receive / To */}
+          <View style={s.inputBox}>
+            <Text style={s.boxLabel}>You Receive (Estimated)</Text>
+            <View style={s.inputRow}>
+              <Text style={s.amountOutput}>{toAmount}</Text>
+              <TouchableOpacity style={s.currBadge}>
+                <Text style={s.currText}>{toCurr}</Text>
+              </TouchableOpacity>
             </View>
+          </View>
 
-            {/* Rate summary banner */}
-            <View style={s.rateBanner}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Ionicons name="flash" size={14} color={theme.colors.success} />
-                <Text style={s.rateText}>
-                  1 {fromCurr} = {rate} {toCurr}
-                </Text>
-              </View>
-              <Badge variant="success" size="sm">Guaranteed for 60s</Badge>
+          {/* Rate summary banner */}
+          <View style={s.rateBanner}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Icon name="Zap" size={ICON_SIZES.micro} color={theme.colors.success} />
+              <Text style={s.rateText}>
+                1 {fromCurr} = {rate} {toCurr}
+              </Text>
             </View>
+            <Badge variant="success" size="sm">Guaranteed for 60s</Badge>
+          </View>
 
-            <Button
-              title={isConverting ? 'Processing FX Conversion...' : `Convert ${fromCurr} to ${toCurr}`}
-              variant="primary"
-              size="lg"
-              onPress={handleExecuteSwap}
-              disabled={isConverting}
-              style={{ marginTop: 14 }}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Quick Popular Pairs */}
-        <Text style={s.sectionTitle}>Popular Exchange Pairs</Text>
-        <View style={s.pairsGrid}>
-          {POPULAR_PAIRS.map((pair, idx) => {
-            const currentRate = FX_RATES[`${pair.from}_${pair.to}`] || 1.0;
-            return (
-              <Card key={idx} style={s.pairCard}>
-                <TouchableOpacity
-                  style={s.pairContent}
-                  onPress={() => {
-                    setFromCurr(pair.from);
-                    setToCurr(pair.to);
-                  }}
-                >
-                  <Text style={s.pairLabel}>{pair.label}</Text>
-                  <Text style={s.pairRate}>{currentRate.toFixed(4)}</Text>
-                  <Text style={s.tapToLoad}>Tap to convert</Text>
-                </TouchableOpacity>
-              </Card>
-            );
-          })}
-        </View>
-
-        <View style={s.quickLinksRow}>
           <Button
-            title="Live Market Tickers"
-            variant="outline"
-            size="sm"
-            onPress={() => router.push('/screens/forex/LiveRates' as any)}
-            style={{ flex: 1 }}
+            title={isConverting ? 'Processing FX Conversion...' : `Convert ${fromCurr} to ${toCurr}`}
+            variant="primary"
+            size="lg"
+            onPress={handleExecuteSwap}
+            disabled={isConverting}
+            style={{ marginTop: SPACING.md }}
           />
-          <Button
-            title="FX Rate Alerts"
-            variant="outline"
-            size="sm"
-            onPress={() => router.push('/screens/forex/CurrencyAlerts' as any)}
-            style={{ flex: 1 }}
-          />
-        </View>
-      </ScrollView>
-    </View>
+        </CardContent>
+      </Card>
+
+      {/* Quick Popular Pairs */}
+      <Text style={s.sectionTitle}>Popular Exchange Pairs</Text>
+      <View style={s.pairsGrid}>
+        {POPULAR_PAIRS.map((pair, idx) => {
+          const currentRate = FX_RATES[`${pair.from}_${pair.to}`] || 1.0;
+          return (
+            <Card key={idx} style={s.pairCard}>
+              <TouchableOpacity
+                style={s.pairContent}
+                onPress={() => {
+                  setFromCurr(pair.from);
+                  setToCurr(pair.to);
+                }}
+              >
+                <Text style={s.pairLabel}>{pair.label}</Text>
+                <Text style={s.pairRate}>{currentRate.toFixed(4)}</Text>
+                <Text style={s.tapToLoad}>Tap to convert</Text>
+              </TouchableOpacity>
+            </Card>
+          );
+        })}
+      </View>
+
+      <View style={s.quickLinksRow}>
+        <Button
+          title="Live Market Tickers"
+          variant="outline"
+          size="sm"
+          onPress={() => router.push('/screens/forex/LiveRates' as any)}
+          style={{ flex: 1 }}
+        />
+        <Button
+          title="FX Rate Alerts"
+          variant="outline"
+          size="sm"
+          onPress={() => router.push('/screens/forex/CurrencyAlerts' as any)}
+          style={{ flex: 1 }}
+        />
+      </View>
+    </AdaptiveScreen>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useMobileTheme>) {
   return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-    },
     headerIconBtn: {
       width: 32,
       height: 32,
-      borderRadius: 16,
+      borderRadius: RADIUS.full,
       backgroundColor: `${theme.colors.primary}12`,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    scrollContent: {
-      padding: 16,
-      paddingBottom: 40,
-    },
     converterCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: RADIUS.xl,
       borderWidth: 1,
       borderColor: theme.colors.border,
-      marginBottom: 20,
+      marginBottom: SPACING.xl,
     },
     converterContent: {
-      padding: 16,
+      padding: SPACING.lg,
     },
     inputBox: {
       backgroundColor: `${theme.colors.textSecondary}08`,
-      borderRadius: 12,
-      padding: 14,
+      borderRadius: RADIUS.lg,
+      padding: SPACING.md,
     },
     boxLabel: {
-      fontSize: 11,
+      fontSize: FONT_SIZES.caption,
       fontWeight: '600',
       color: theme.colors.textSecondary,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
-      marginBottom: 6,
+      marginBottom: SPACING.xs,
     },
     inputRow: {
       flexDirection: 'row',
@@ -258,20 +248,20 @@ function createStyles(theme: ReturnType<typeof useMobileTheme>) {
       color: theme.colors.textPrimary,
     },
     currBadge: {
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 8,
+      paddingHorizontal: SPACING.md,
+      paddingVertical: SPACING.xs,
+      borderRadius: RADIUS.md,
       backgroundColor: `${theme.colors.primary}15`,
     },
     currText: {
-      fontSize: 14,
+      fontSize: FONT_SIZES.subhead,
       fontWeight: '700',
       color: theme.colors.primary,
     },
     swapBtnRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginVertical: 10,
+      marginVertical: SPACING.sm,
     },
     line: {
       flex: 1,
@@ -287,65 +277,65 @@ function createStyles(theme: ReturnType<typeof useMobileTheme>) {
       borderColor: theme.colors.border,
       alignItems: 'center',
       justifyContent: 'center',
-      marginHorizontal: 12,
+      marginHorizontal: SPACING.md,
     },
     rateBanner: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingVertical: 10,
-      paddingHorizontal: 12,
+      paddingVertical: SPACING.sm,
+      paddingHorizontal: SPACING.md,
       backgroundColor: `${theme.colors.success}10`,
-      borderRadius: 8,
-      marginTop: 14,
+      borderRadius: RADIUS.md,
+      marginTop: SPACING.md,
     },
     rateText: {
-      fontSize: 12,
+      fontSize: FONT_SIZES.bodySm,
       fontWeight: '600',
       color: theme.colors.textPrimary,
-      marginLeft: 6,
+      marginLeft: SPACING.xs,
     },
     sectionTitle: {
-      fontSize: 14,
+      fontSize: FONT_SIZES.subhead,
       fontWeight: '700',
       color: theme.colors.textPrimary,
-      marginBottom: 10,
+      marginBottom: SPACING.sm,
     },
     pairsGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 10,
-      marginBottom: 16,
+      gap: SPACING.sm,
+      marginBottom: SPACING.lg,
     },
     pairCard: {
       width: '48%',
       backgroundColor: theme.colors.surface,
-      borderRadius: 12,
+      borderRadius: RADIUS.lg,
       borderWidth: 1,
       borderColor: theme.colors.border,
     },
     pairContent: {
-      padding: 12,
+      padding: SPACING.md,
     },
     pairLabel: {
-      fontSize: 13,
+      fontSize: FONT_SIZES.body,
       fontWeight: '700',
       color: theme.colors.textPrimary,
-      marginBottom: 2,
+      marginBottom: SPACING.xxs,
     },
     pairRate: {
-      fontSize: 16,
+      fontSize: FONT_SIZES.title,
       fontWeight: '800',
       color: theme.colors.primary,
-      marginBottom: 4,
+      marginBottom: SPACING.xs,
     },
     tapToLoad: {
-      fontSize: 10,
+      fontSize: FONT_SIZES.micro,
       color: theme.colors.textSecondary,
     },
     quickLinksRow: {
       flexDirection: 'row',
-      gap: 12,
+      gap: SPACING.md,
     },
   });
 }
