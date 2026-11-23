@@ -18,7 +18,7 @@ import { dashboardItemVariants } from "@core/animation/Animation";
 import { useToastStore } from "@store/toast.store";
 
 const inputCls =
-  "w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors";
+  "w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors";
 const labelCls = "block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5";
 
 
@@ -54,7 +54,7 @@ const FAQs: React.FC = () => {
             <DashCard className="cursor-pointer" onClick={() => setOpenId(openId === i ? null : i)}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
+                  <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
                     <HelpCircle size={14} />
                   </div>
                   <h4 className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">{faq.q}</h4>
