@@ -134,15 +134,15 @@ const Biometrics: React.FC = () => {
                   ? React.cloneElement(type.icon as React.ReactElement, { className: "w-8 h-8 sm:w-10 sm:h-10" })
                   : type.icon}
               </div>
-              <h3 className="text-xl sm:text-2xl font-black text-neutral-900 dark:text-white mb-3 uppercase tracking-tight">{type.name}</h3>
-              <p className="text-[13px] sm:text-sm text-neutral-500 dark:text-neutral-400 font-bold leading-relaxed mb-6">{type.description}</p>
+              <h3 className="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-white mb-3 uppercase tracking-tight">{type.name}</h3>
+              <p className="text-[13px] sm:text-sm text-neutral-500 dark:text-neutral-400 font-semibold leading-relaxed mb-6">{type.description}</p>
               
               <div className="space-y-3">
-                <p className="text-[10px] sm:text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Auth Protocols:</p>
+                <p className="text-[10px] sm:text-xs font-medium text-neutral-400 uppercase tracking-widest mb-2">Auth Protocols:</p>
                 {type.useCases.map((use) => (
-                  <div key={use} className="flex items-center gap-3 text-[13px] sm:text-sm text-neutral-600 dark:text-neutral-300 font-bold group/use">
+                  <div key={use} className="flex items-center gap-3 text-[13px] sm:text-sm text-neutral-600 dark:text-neutral-300 font-medium group/use">
                     <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 group-hover/use:scale-110 transition-transform">
-                      <CheckCircle className="w-3 h-3 text-emerald-500 font-black" />
+                      <CheckCircle className="w-3 h-3 text-emerald-500 font-medium" />
                     </div>
                     {use}
                   </div>
@@ -161,11 +161,11 @@ const Biometrics: React.FC = () => {
             viewport={{ once: true }}
             className="p-6 rounded-2xl bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-200"
           >
-            <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-6">How to Enroll</h3>
+            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-6">How to Enroll</h3>
             <div className="space-y-4">
               {enrollmentSteps.map((item, index) => (
                 <div key={item.step} className="flex gap-4">
-                  <div className="w-10 h-10 rounded-full bg-violet-600 text-white flex items-center justify-center font-bold flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-violet-600 text-white flex items-center justify-center font-medium flex-shrink-0">
                     {item.step}
                   </div>
                   <div className="flex-1 pb-4 border-b border-violet-200 last:border-0">
@@ -191,7 +191,7 @@ const Biometrics: React.FC = () => {
           >
             <div className="flex items-center gap-2 mb-6">
               <Shield className="w-6 h-6 text-emerald-400" />
-              <h3 className="text-xl font-bold">Security & Privacy</h3>
+              <h3 className="text-xl font-semibold">Security & Privacy</h3>
             </div>
 
             <p className="text-neutral-300 mb-6">
