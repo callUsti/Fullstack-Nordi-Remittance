@@ -36,6 +36,7 @@ import PendingLoans from "./app/loans/PendingLoans";
 import ApprovedLoans from "./app/loans/ApprovedLoans";
 import RejectedLoans from "./app/loans/RejectedLoans";
 import DelinquentLoans from "./app/loans/DelinquentLoans";
+import AdminLoanDetail from "./app/loans/AdminLoanDetail";
 
 // Investments
 import Investments from "./app/investments/Investments";
@@ -54,6 +55,7 @@ import FixedDepositAccounts from "./app/accounts/FixedDepositAccounts";
 import DormantAccounts from "./app/accounts/DormantAccounts";
 import AccountApplications from "./app/accounts/AccountApplications";
 import WalletOperations from "./app/accounts/WalletOperations";
+import ActivitySimulator from "./app/accounts/ActivitySimulator";
 
 // Forex
 import ForexManagement from "./app/forex/ForexManagement";
@@ -135,6 +137,7 @@ export default function AdminRoutes() {
       <Route path="loans/approved" element={<ApprovedLoans />} />
       <Route path="loans/rejected" element={<RejectedLoans />} />
       <Route path="loans/delinquent" element={<DelinquentLoans />} />
+      <Route path="loans/:applicationId" element={<AdminLoanDetail />} />
       {/* Investment Products */}
       <Route path="investments" element={<Investments />} />
       <Route path="investments/all" element={<AllInvestments />} />
@@ -152,6 +155,7 @@ export default function AdminRoutes() {
       <Route path="accounts/dormant" element={<DormantAccounts />} />
       <Route path="accounts/applications" element={<AccountApplications />} />
       <Route path="accounts/operations" element={<WalletOperations />} />
+      <Route path="accounts/simulator" element={<ActivitySimulator />} />
       {/* Foreign Exchange */}
       <Route path="forex" element={<ForexManagement />} />
       <Route path="forex/rates" element={<ForexRates />} />
