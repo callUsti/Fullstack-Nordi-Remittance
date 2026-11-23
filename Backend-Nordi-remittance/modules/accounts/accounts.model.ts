@@ -52,13 +52,28 @@ const WalletSchema = new Schema({
   creditScoreUpdatedAt: { type: Date },
 
   // ======================================================================
-  // ACCOUNT TYPE–SPECIFIC FIELDS
+  // ACCOUNT TYPE–SPECIFIC & APPLICATION METADATA FIELDS
   // ======================================================================
-  // Current account overdraft
+  applicationId: { type: Schema.Types.ObjectId, ref: "AccountApplications" },
+  nickname: { type: String },
+
+  // Savings specific
+  initialDeposit: { type: Number },
+  goal: { type: String },
+  autoSave: { type: Boolean, default: false },
+  autoSaveAmount: { type: Number },
+
+  // Current specific
+  purpose: { type: String, enum: ["personal", "business"] },
+  businessName: { type: String },
+  expectedMonthlyVolume: { type: Number },
+  overdraftRequested: { type: Boolean, default: false },
   overdraftLimit: { type: Number, default: 0 },
   overdraftUsed: { type: Number, default: 0 },
 
-  // Savings / Fixed Deposit interest
+  // Savings / Fixed Deposit interest & term
+  principal: { type: Number },
+  termMonths: { type: Number },
   interestRate: { type: Number },
   accruedInterest: { type: Number, default: 0 },
   lastInterestAccrualDate: { type: Date },
@@ -179,10 +194,14 @@ const AccountApplicationSchema = new Schema({
 
   // Fixed Deposit specific fields
   principal: { type: Number },
-  termMonths: { type: Number, enum: [3, 6, 12, 24, 36] },
+  termMonths: { type: Number },
   interestRate: { type: Number },
   maturityDate: { type: Date },
   autoRenew: { type: Boolean },
+
+  // Provisioned Wallet Reference (set on approval)
+  walletId: { type: Schema.Types.ObjectId, ref: "Wallets" },
+  walletNumber: { type: String },
 });
 
 // ==========================================================================
