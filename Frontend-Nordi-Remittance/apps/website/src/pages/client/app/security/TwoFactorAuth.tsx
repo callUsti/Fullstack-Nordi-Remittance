@@ -27,27 +27,71 @@ import { EmptyState } from "@components/shared/EmptyState";
 import { PageContainer, DashCard, StatCard, StatsGrid, StatusBadge } from "@components/shared/DashboardPrimitives";
 import { StatsGridSkeleton, TableSkeleton } from "@components/skeletons";
 import { dashboardItemVariants } from "@core/animation/Animation";
-import { useClientSecuritySettings, useEnable2FA } from "../../client-usecase/usesecurity-client-usecase";
+import {
+  useClientSecuritySettings,
+  useClientTwoFactorStatus,
+  useEnable2FA,
+  useConfirm2FA,
+  useDisable2FA,
+} from "../../client-usecase/usesecurity-client-usecase";
 import { useToastStore } from "@store/toast.store";
 
 const TwoFactorAuth: React.FC = () => {
   const { settings: securityData } = useClientSecuritySettings();
+  const { tfa } = useClientTwoFactorStatus();
   const enable2FA = useEnable2FA();
+  const confirm2FA = useConfirm2FA();
+  const disable2FA = useDisable2FA();
   const { showToast } = useToastStore();
-  const is2FAEnabled = (securityData._raw as any)?.twoFactorEnabled ?? false;
+
+  const is2FAEnabled = tfa.enabled || ((securityData._raw as any)?.twoFactorEnabled ?? false);
+  const [setupData, setSetupData] = useState<{ method: string; qrCode?: string; secret?: string } | null>(null);
+  const [code, setCode] = useState("");
 
   const methods = [
-    { key: "sms", icon: Smartphone, label: "SMS Verification", desc: "Receive codes via text message" },
-    { key: "email", icon: Mail, label: "Email Verification", desc: "Receive codes via email" },
-    { key: "app", icon: Key, label: "Authenticator App", desc: "Use Google/Microsoft Authenticator" },
+    { key: "sms" as const, icon: Smartphone, label: "SMS Verification", desc: "Receive codes via text message" },
+    { key: "email" as const, icon: Mail, label: "Email Verification", desc: "Receive codes via email" },
+    { key: "authenticator" as const, icon: Key, label: "Authenticator App", desc: "Use Google/Microsoft Authenticator" },
   ];
 
-  const handle2FA = async () => {
+  const handle2FA = async (method: "sms" | "email" | "authenticator") => {
     try {
-      await enable2FA.mutateAsync("authenticator");
-      showToast("2FA settings updated", "success");
+      const res: any = await enable2FA.mutateAsync(method);
+      setSetupData({
+        method,
+        qrCode: res?.qrCode || res?.qrCodeUrl,
+        secret: res?.secret || res?.manualEntryKey,
+      });
     } catch {
-      showToast("Failed to update 2FA", "error");
+      // handled by mutation onError
+    }
+  };
+
+  const handleConfirm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!code) {
+      showToast("Please enter the verification code", "error");
+      return;
+    }
+    try {
+      await confirm2FA.mutateAsync({ code, method: setupData?.method as any });
+      setSetupData(null);
+      setCode("");
+    } catch {
+      // handled by mutation onError
+    }
+  };
+
+  const handleDisable = async () => {
+    if (!code) {
+      showToast("Enter your 2FA code or password to disable", "warning");
+      return;
+    }
+    try {
+      await disable2FA.mutateAsync({ password: code, code });
+      setCode("");
+    } catch {
+      // handled by mutation onError
     }
   };
 
@@ -93,7 +137,7 @@ const TwoFactorAuth: React.FC = () => {
               <DashCard>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="rounded-xl bg-indigo-50 p-2 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
+                    <div className="rounded-xl bg-blue-50 p-2 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
                       <m.icon size={16} />
                     </div>
                     <div>
@@ -102,19 +146,71 @@ const TwoFactorAuth: React.FC = () => {
                     </div>
                   </div>
                   <motion.button
-                    onClick={handle2FA}
+                    onClick={() => handle2FA(m.key)}
                     disabled={enable2FA.isPending}
                     className="rounded-lg border border-gray-200 bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    {enable2FA.isPending ? "…" : "Setup"}
+                    {enable2FA.isPending ? "…" : tfa.method === m.key && is2FAEnabled ? "Configured" : "Setup"}
                   </motion.button>
                 </div>
               </DashCard>
             </motion.div>
           ))}
         </div>
+
+        {setupData && (
+          <DashCard className="mt-6">
+            <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
+              Verify {setupData.method.toUpperCase()} Setup
+            </h4>
+            {setupData.secret && (
+              <p className="mb-3 rounded-lg bg-gray-50 p-2 font-mono text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                Setup Key: {setupData.secret}
+              </p>
+            )}
+            <form onSubmit={handleConfirm} className="flex gap-2">
+              <input
+                type="text"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="Enter 6-digit verification code"
+                className="flex-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+              />
+              <button
+                type="submit"
+                disabled={confirm2FA.isPending}
+                className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                {confirm2FA.isPending ? "Verifying…" : "Confirm 2FA"}
+              </button>
+            </form>
+          </DashCard>
+        )}
+
+        {is2FAEnabled && !setupData && (
+          <DashCard className="mt-6">
+            <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Disable 2FA</h4>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="Enter current 2FA code to disable"
+                className="flex-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+              />
+              <button
+                type="button"
+                onClick={handleDisable}
+                disabled={disable2FA.isPending}
+                className="rounded-xl bg-rose-600 px-4 py-2 text-xs font-medium text-white hover:bg-rose-700 disabled:opacity-50"
+              >
+                {disable2FA.isPending ? "Disabling…" : "Disable"}
+              </button>
+            </div>
+          </DashCard>
+        )}
       </div>
     </PageContainer>
   );
