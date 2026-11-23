@@ -130,7 +130,7 @@ export const Logo: React.FC<LogoProps> = ({
 
       {/* Text */}
       {(variant === 'full' || variant === 'text') && (
-        <span className={cn('font-bold tracking-tight', sizes.text, colors.text)}>
+        <span className={cn('font-medium tracking-tight', sizes.text, colors.text)}>
           Remit
           <span className={colors.primary}>.</span>
         </span>

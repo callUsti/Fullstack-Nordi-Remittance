@@ -161,22 +161,22 @@ const CorporateLoans: React.FC = () => {
                   : product.icon}
               </div>
 
-              <h3 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-white mb-1.5 sm:mb-2 leading-tight">{product.name}</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-neutral-900 dark:text-white mb-1.5 sm:mb-2 leading-tight">{product.name}</h3>
               <p className="text-[13px] sm:text-sm text-neutral-500 dark:text-neutral-400 mb-3 sm:mb-4 leading-relaxed">{product.description}</p>
 
               {/* Key Metrics */}
               <div className="grid grid-cols-3 gap-1 sm:gap-3 p-3 sm:p-4 rounded-xl bg-slate-50 dark:bg-neutral-900 mb-4 border border-slate-100 dark:border-neutral-700 shadow-inner">
                 <div className="text-center">
                   <p className="text-[10px] text-neutral-400 uppercase tracking-wider font-medium mb-1">Amount</p>
-                  <p className="text-[11px] sm:text-sm font-bold text-neutral-900 dark:text-white leading-tight">{product.amount}</p>
+                  <p className="text-[11px] sm:text-sm font-medium text-neutral-900 dark:text-white leading-tight">{product.amount}</p>
                 </div>
                 <div className="text-center border-x border-slate-200 dark:border-neutral-700 px-1">
                   <p className="text-[10px] text-neutral-400 uppercase tracking-wider font-medium mb-1">Tenor</p>
-                  <p className="text-[11px] sm:text-sm font-bold text-neutral-900 dark:text-white leading-tight">{product.tenor}</p>
+                  <p className="text-[11px] sm:text-sm font-medium text-neutral-900 dark:text-white leading-tight">{product.tenor}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-[10px] text-neutral-400 uppercase tracking-wider font-medium mb-1">Rate</p>
-                  <p className="text-[11px] sm:text-sm font-bold text-neutral-900 dark:text-white leading-tight">{product.rate}</p>
+                  <p className="text-[11px] sm:text-sm font-medium text-neutral-900 dark:text-white leading-tight">{product.rate}</p>
                 </div>
               </div>
 
@@ -207,7 +207,7 @@ const CorporateLoans: React.FC = () => {
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
             <div>
-              <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 leading-tight">Streamlined Approval Process</h3>
+              <h3 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 leading-tight">Streamlined Approval Process</h3>
               <p className="text-sm sm:text-base text-slate-300 mb-6 sm:mb-8 leading-relaxed max-w-lg">
                 Our dedicated corporate banking team ensures quick turnaround times 
                 with a structured and transparent approval process.
@@ -238,7 +238,7 @@ const CorporateLoans: React.FC = () => {
                 <div className="absolute left-2.5 sm:left-3 top-0 bottom-0 w-0.5 bg-slate-700" />
                 {processSteps.map((step, index) => (
                   <div key={step.step} className="relative pb-6 sm:pb-8 last:pb-0">
-                    <div className="absolute left-0 w-5 h-5 sm:w-6 sm:h-6 -translate-x-1/2 rounded-full bg-rose-500 flex items-center justify-center text-[10px] sm:text-xs font-bold ring-4 ring-slate-900">
+                    <div className="absolute left-0 w-5 h-5 sm:w-6 sm:h-6 -translate-x-1/2 rounded-full bg-rose-500 flex items-center justify-center text-[10px] sm:text-xs font-medium ring-4 ring-slate-900">
                       {step.step}
                     </div>
                     <div className="ml-5 sm:ml-6">

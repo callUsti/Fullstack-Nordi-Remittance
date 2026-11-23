@@ -204,7 +204,7 @@ const ClerkOtpVerification = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: i * 0.05 }}
               className={`
-                h-14 w-12 rounded-xl border-2 text-center text-xl font-bold uppercase
+                h-14 w-12 rounded-xl border-2 text-center text-xl font-semibold uppercase
                 transition-all duration-200 focus:outline-none
                 ${
                   verifyMutation.isError

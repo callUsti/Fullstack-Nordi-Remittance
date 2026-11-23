@@ -168,7 +168,7 @@ const CorporateCashManagement: React.FC = () => {
                 {React.cloneElement(solution.icon as React.ReactElement, { className: "w-5 h-5 sm:w-6 sm:h-6" })}
               </div>
               
-              <h3 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-white mb-1.5 sm:mb-2 leading-tight">{solution.name}</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-neutral-900 dark:text-white mb-1.5 sm:mb-2 leading-tight">{solution.name}</h3>
               <p className="text-[13px] sm:text-sm text-neutral-500 dark:text-neutral-400 mb-3 sm:mb-4 leading-relaxed">{solution.description}</p>
               
               <ul className="space-y-1.5 sm:space-y-2 mb-5 sm:mb-6">
@@ -199,7 +199,7 @@ const CorporateCashManagement: React.FC = () => {
           
           <div className="relative grid lg:grid-cols-2 gap-8 items-center">
             <div>
-              <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 leading-tight">Enterprise Treasury Platform</h3>
+              <h3 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 leading-tight">Enterprise Treasury Platform</h3>
               <p className="text-sm sm:text-base text-teal-100 mb-6 sm:mb-8 leading-relaxed max-w-lg">
                 Connect all your banking relationships, ERP systems, and treasury 
                 workstations through our unified platform with seamless API integration.
@@ -222,7 +222,7 @@ const CorporateCashManagement: React.FC = () => {
                 { label: "Uptime SLA", value: "99.99%" },
               ].map((stat) => (
                 <div key={stat.label} className="p-3 sm:p-4 rounded-xl bg-white/10 text-center">
-                  <p className="text-xl sm:text-2xl font-bold text-white">{stat.value}</p>
+                  <p className="text-xl sm:text-2xl font-semibold text-white">{stat.value}</p>
                   <p className="text-[10px] sm:text-xs text-teal-200 mt-1 uppercase tracking-wider font-medium">{stat.label}</p>
                 </div>
               ))}

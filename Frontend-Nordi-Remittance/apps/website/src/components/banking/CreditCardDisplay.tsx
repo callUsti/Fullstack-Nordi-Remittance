@@ -46,10 +46,10 @@ const BrandLogos: Record<CardBrand, React.ReactNode> = {
     </div>
   ),
   amex: (
-    <div className="text-xs font-bold">AMEX</div>
+    <div className="text-xs font-medium">AMEX</div>
   ),
   discover: (
-    <div className="text-xs font-bold">DISCOVER</div>
+    <div className="text-xs font-medium">DISCOVER</div>
   ),
 };
 

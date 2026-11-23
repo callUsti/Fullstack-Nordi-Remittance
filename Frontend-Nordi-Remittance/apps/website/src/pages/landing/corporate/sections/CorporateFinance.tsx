@@ -144,7 +144,7 @@ const CorporateFinance: React.FC = () => {
                   {React.cloneElement(solution.icon as React.ReactElement, { className: "w-5 h-5 sm:w-6 sm:h-6" })}
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-white mb-1 leading-tight">{solution.name}</h3>
+                  <h3 className="text-lg sm:text-xl font-semibold text-neutral-900 dark:text-white mb-1 leading-tight">{solution.name}</h3>
                   <p className="text-[13px] sm:text-sm text-neutral-500 dark:text-neutral-400 mb-3 sm:mb-4 leading-relaxed">{solution.description}</p>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 mb-4 sm:mb-5">
@@ -158,7 +158,7 @@ const CorporateFinance: React.FC = () => {
  
                   <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-neutral-100 dark:border-neutral-700">
                     <span className="text-[10px] sm:text-xs text-neutral-400 uppercase tracking-wider font-medium">Typical Range</span>
-                    <span className="text-[13px] sm:text-sm font-bold text-blue-600">{solution.typical}</span>
+                    <span className="text-[13px] sm:text-sm font-medium text-blue-600">{solution.typical}</span>
                   </div>
                 </div>
               </div>
@@ -175,7 +175,7 @@ const CorporateFinance: React.FC = () => {
         >
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 sm:gap-10">
             <div className="lg:col-span-2">
-              <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 leading-tight">Advisory Services</h3>
+              <h3 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 leading-tight">Advisory Services</h3>
               <p className="text-sm sm:text-base text-blue-200 mb-6 sm:mb-8 leading-relaxed max-w-lg">
                 Our experienced bankers provide strategic advice on complex 
                 transactions, helping you navigate the financial landscape 
@@ -195,7 +195,7 @@ const CorporateFinance: React.FC = () => {
                   <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-blue-500/30 text-blue-300 flex items-center justify-center mb-3 shrink-0">
                     <service.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                  <h4 className="font-bold text-white text-[13px] sm:text-sm mb-1 leading-tight">{service.title}</h4>
+                  <h4 className="font-semibold text-white text-[13px] sm:text-sm mb-1 leading-tight">{service.title}</h4>
                   <p className="text-[10px] sm:text-xs text-blue-200 mt-0.5 leading-tight">{service.description}</p>
                 </div>
               ))}

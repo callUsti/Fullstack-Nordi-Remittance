@@ -187,7 +187,7 @@ const LoanCard: React.FC<LoanCardProps> = ({ loan, index }) => (
     </ul>
 
     {/* CTA */}
-    <Button variant="primary" size="lg" className="w-full bg-emerald-600 hover:bg-emerald-700 py-2.5 sm:py-3 text-sm font-bold shadow-md">
+    <Button variant="primary" size="lg" className="w-full bg-emerald-600 hover:bg-emerald-700 py-2.5 sm:py-3 text-sm font-medium shadow-md">
       Apply Now
       <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-1.5 sm:ml-2" />
     </Button>
@@ -262,13 +262,13 @@ const BusinessLoans: React.FC = () => {
                 <Calculator className="w-6 h-6 sm:w-10 sm:h-10" />
               </div>
               <div className="max-w-md">
-                <h3 className="text-xl sm:text-2xl font-bold mb-1.5 sm:mb-2 leading-tight">Business Loan Calculator</h3>
+                <h3 className="text-xl sm:text-2xl font-semibold mb-1.5 sm:mb-2 leading-tight">Business Loan Calculator</h3>
                 <p className="text-sm sm:text-base text-emerald-200 leading-relaxed">
                   Estimate your monthly payments and total cost of borrowing with our easy-to-use tool.
                 </p>
               </div>
             </div>
-            <Button variant="primary" size="lg" className="w-full md:w-auto bg-amber-400 hover:bg-amber-500 text-emerald-900 font-bold px-8 shadow-xl">
+            <Button variant="primary" size="lg" className="w-full md:w-auto bg-amber-400 hover:bg-amber-500 text-emerald-900 font-medium px-8 shadow-xl">
               Calculate Now
               <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
             </Button>

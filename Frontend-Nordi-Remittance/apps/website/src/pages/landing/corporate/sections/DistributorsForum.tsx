@@ -165,7 +165,7 @@ const DistributorsForum: React.FC = () => {
                 {React.cloneElement(benefit.icon as React.ReactElement, { className: "w-5 h-5 sm:w-6 sm:h-6" })}
               </div>
               
-              <h3 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-white mb-1.5 sm:mb-2 leading-tight">{benefit.name}</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-neutral-900 dark:text-white mb-1.5 sm:mb-2 leading-tight">{benefit.name}</h3>
               <p className="text-[13px] sm:text-sm text-neutral-500 dark:text-neutral-400 mb-4 sm:mb-5 leading-relaxed">{benefit.description}</p>
               
               <ul className="space-y-1.5 sm:space-y-2 mt-auto">
@@ -189,7 +189,7 @@ const DistributorsForum: React.FC = () => {
         >
           <div className="flex items-center gap-2.5 sm:gap-3 mb-6">
             <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
-            <h4 className="font-bold text-neutral-900 dark:text-white text-sm sm:text-base">Principal Partners</h4>
+            <h4 className="font-semibold text-neutral-900 dark:text-white text-sm sm:text-base">Principal Partners</h4>
           </div>
           <div className="flex flex-wrap gap-2 sm:gap-3">
             {principalPartners.map((partner) => (
@@ -200,7 +200,7 @@ const DistributorsForum: React.FC = () => {
                 {partner}
               </span>
             ))}
-            <span className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-[11px] sm:text-sm font-bold">
+            <span className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-[11px] sm:text-sm font-medium">
               +40 more
             </span>
           </div>
@@ -215,7 +215,7 @@ const DistributorsForum: React.FC = () => {
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
             <div>
-              <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 leading-tight">Join the Forum</h3>
+              <h3 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 leading-tight">Join the Forum</h3>
               <p className="text-sm sm:text-lg text-orange-100 mb-6 sm:mb-8 leading-relaxed max-w-lg">
                 If you're an authorized distributor of any of our principal partners, 
                 you're eligible to join the Distributors Forum and access exclusive benefits.
@@ -244,7 +244,7 @@ const DistributorsForum: React.FC = () => {
 
             <div className="block lg:block">
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 sm:p-6 border border-white/20">
-                <h4 className="font-bold mb-4 text-sm sm:text-base uppercase tracking-wider">Quick Eligibility Check</h4>
+                <h4 className="font-semibold mb-4 text-sm sm:text-base uppercase tracking-wider">Quick Eligibility Check</h4>
                 <ul className="space-y-3 sm:space-y-4">
                   {[
                     "Valid distributor agreement",
@@ -253,7 +253,7 @@ const DistributorsForum: React.FC = () => {
                     "Principal recommendation",
                   ].map((item, i) => (
                     <li key={i} className="flex items-center gap-3 sm:gap-4">
-                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-emerald-400 text-white flex items-center justify-center text-[10px] sm:text-xs font-bold shrink-0 shadow-lg">
+                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-emerald-400 text-white flex items-center justify-center text-[10px] sm:text-xs font-medium shrink-0 shadow-lg">
                         {i + 1}
                       </div>
                       <span className="text-[13px] sm:text-sm font-medium">{item}</span>

@@ -194,7 +194,7 @@ const InsuranceCard: React.FC<InsuranceCardProps> = ({ product, index }) => (
 
     {/* Pricing */}
     <div className="flex items-baseline gap-2 py-2 sm:py-3 border-y border-neutral-100 dark:border-neutral-700 mb-2.5 sm:mb-3">
-      <span className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white">{product.startingFrom}</span>
+      <span className="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-white">{product.startingFrom}</span>
       <span className="text-[10px] sm:text-xs text-neutral-400">Coverage: {product.coverage}</span>
     </div>
 

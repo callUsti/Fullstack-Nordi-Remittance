@@ -139,7 +139,7 @@ const TreasuryServices: React.FC = () => {
                 )}
               >
                 {product.badge && (
-                  <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-[10px] sm:text-xs font-bold uppercase tracking-wider">
+                  <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-[10px] sm:text-xs font-medium uppercase tracking-wider">
                     {product.badge}
                   </span>
                 )}
@@ -150,7 +150,7 @@ const TreasuryServices: React.FC = () => {
                     : product.icon}
                 </div>
                 
-                <h3 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-white mb-1.5 sm:mb-2">{product.name}</h3>
+                <h3 className="text-lg sm:text-xl font-semibold text-neutral-900 dark:text-white mb-1.5 sm:mb-2">{product.name}</h3>
                 <p className="text-[13px] sm:text-sm text-neutral-500 dark:text-neutral-400 mb-4 sm:mb-5 leading-relaxed">{product.description}</p>
                 
                 <ul className="space-y-1.5 sm:space-y-2 mt-auto">
@@ -175,8 +175,8 @@ const TreasuryServices: React.FC = () => {
             {/* Live Rates */}
             <div className="p-5 sm:p-6 rounded-2xl bg-neutral-900 text-white border border-neutral-800">
               <div className="flex items-center justify-between mb-4 sm:mb-6">
-                <h4 className="font-bold text-sm sm:text-base uppercase tracking-wider">Live FX Rates</h4>
-                <span className="flex items-center gap-1.5 text-[10px] sm:text-xs text-emerald-400 font-bold">
+                <h4 className="font-semibold text-sm sm:text-base uppercase tracking-wider">Live FX Rates</h4>
+                <span className="flex items-center gap-1.5 text-[10px] sm:text-xs text-emerald-400 font-medium">
                   <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-emerald-400 rounded-full animate-pulse" />
                   LIVE
                 </span>
@@ -188,11 +188,11 @@ const TreasuryServices: React.FC = () => {
                     key={insight.pair}
                     className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
                   >
-                    <span className="font-bold text-[13px] sm:text-sm">{insight.pair}</span>
+                    <span className="font-medium text-[13px] sm:text-sm">{insight.pair}</span>
                     <div className="text-right">
-                      <p className="font-bold text-[13px] sm:text-sm">{insight.rate}</p>
+                      <p className="font-medium text-[13px] sm:text-sm">{insight.rate}</p>
                       <p className={cn(
-                        "text-[10px] sm:text-xs font-bold",
+                        "text-[10px] sm:text-xs font-medium",
                         insight.trend === "up" ? "text-emerald-400" : "text-red-400"
                       )}>
                         {insight.change}
@@ -214,7 +214,7 @@ const TreasuryServices: React.FC = () => {
                   <Calculator className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-neutral-900 dark:text-white text-sm sm:text-base leading-tight">Risk Assessment</h4>
+                  <h4 className="font-semibold text-neutral-900 dark:text-white text-sm sm:text-base leading-tight">Risk Assessment</h4>
                   <p className="text-[10px] sm:text-xs text-neutral-500 dark:text-neutral-400 font-medium uppercase tracking-wider mt-0.5">Free consultation</p>
                 </div>
               </div>
@@ -222,7 +222,7 @@ const TreasuryServices: React.FC = () => {
                 Get a comprehensive analysis of your currency and interest rate exposures 
                 with recommended hedging strategies.
               </p>
-              <Button variant="primary" className="w-full bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-sm py-2.5 font-bold">
+              <Button variant="primary" className="w-full bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-sm py-2.5 font-medium">
                 Request Assessment
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
@@ -230,7 +230,7 @@ const TreasuryServices: React.FC = () => {
 
             {/* Research */}
             <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
-              <h4 className="font-bold text-neutral-900 dark:text-white mb-4 sm:mb-6 text-sm sm:text-base uppercase tracking-wider">Treasury Research</h4>
+              <h4 className="font-semibold text-neutral-900 dark:text-white mb-4 sm:mb-6 text-sm sm:text-base uppercase tracking-wider">Treasury Research</h4>
               <ul className="space-y-3 sm:space-y-4">
                 {[
                   "Q4 FX Outlook Report",

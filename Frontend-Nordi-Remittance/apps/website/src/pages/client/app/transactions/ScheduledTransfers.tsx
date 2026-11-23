@@ -91,7 +91,7 @@ const TransactionRow: React.FC<TransactionRowProps> = ({ tx, show }) => (
       </div>
     </div>
     <p
-      className={`text-xs font-bold sm:text-sm ${
+      className={`text-xs font-medium sm:text-sm ${
         (tx.type || "").toLowerCase().includes("credit") || (tx.type || "").toLowerCase().includes("in")
           ? "text-emerald-600 dark:text-emerald-400"
           : "text-red-600 dark:text-red-400"
@@ -157,7 +157,7 @@ const ScheduledTransfers: React.FC = () => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs font-bold text-gray-900 dark:text-white sm:text-sm">
+                  <p className="text-xs font-medium text-gray-900 dark:text-white sm:text-sm">
                     {show ? fmt(tx.amount || 0) : "••••••"}
                   </p>
                   <StatusBadge status="pending" />

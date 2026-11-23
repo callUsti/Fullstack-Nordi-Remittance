@@ -40,7 +40,7 @@ const HeroOverlay: React.FC<HeroOverlayProps> = ({ slideIndex }) => {
             </div>
             <div className="min-w-0">
               <p className="text-[7.5px] uppercase tracking-wider text-white/50 sm:text-[10px]">Portfolio Growth</p>
-              <p className="text-xs font-bold text-white sm:text-base lg:text-lg">+24.8%</p>
+              <p className="text-xs font-medium text-white sm:text-base lg:text-lg">+24.8%</p>
             </div>
           </div>
           <div className="flex items-center gap-0.5 sm:gap-1">
@@ -63,7 +63,7 @@ const HeroOverlay: React.FC<HeroOverlayProps> = ({ slideIndex }) => {
             </div>
             <div className="min-w-0">
               <p className="text-[10px] uppercase tracking-wider text-white/50">Global Transfers</p>
-              <p className="text-base font-bold text-white lg:text-lg">180+ Countries</p>
+              <p className="text-base font-semibold text-white lg:text-lg">180+ Countries</p>
             </div>
           </div>
           <div className="mt-1 flex gap-1.5">
@@ -96,7 +96,7 @@ const HeroOverlay: React.FC<HeroOverlayProps> = ({ slideIndex }) => {
             </div>
             <div className="min-w-0">
               <p className="text-[7.5px] uppercase tracking-wider text-white/50 sm:text-[10px]">Security Level</p>
-              <p className="text-xs font-bold text-white sm:text-base lg:text-lg">Bank-Grade</p>
+              <p className="text-xs font-medium text-white sm:text-base lg:text-lg">Bank-Grade</p>
             </div>
           </div>
           <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-white/10 sm:mt-2 sm:h-1.5">
@@ -123,7 +123,7 @@ const HeroOverlay: React.FC<HeroOverlayProps> = ({ slideIndex }) => {
             </div>
             <div className="min-w-0">
               <p className="text-[10px] uppercase tracking-wider text-white/50">Active Users</p>
-              <p className="text-base font-bold text-white lg:text-lg">2.4M+</p>
+              <p className="text-base font-semibold text-white lg:text-lg">2.4M+</p>
             </div>
           </div>
           <div className="mt-1.5 flex items-center gap-1">

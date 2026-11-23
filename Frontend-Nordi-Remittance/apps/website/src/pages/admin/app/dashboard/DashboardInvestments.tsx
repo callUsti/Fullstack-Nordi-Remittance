@@ -89,7 +89,7 @@ const DashboardInvestments: React.FC<DashboardInvestmentsProps> = ({ investments
           <div key={label} className={`flex items-center gap-2 p-2.5 rounded-xl ${bg}`}>
             <span className={color}>{icon}</span>
             <div>
-              <p className="text-sm font-bold text-gray-900 dark:text-white">{value}</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">{value}</p>
               <p className="text-[10px] text-gray-500 dark:text-gray-400">{label}</p>
             </div>
           </div>

@@ -155,7 +155,7 @@ const EconomicResearch: React.FC = () => {
                 <theme.icon className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div>
-                <p className="font-bold text-neutral-900 dark:text-white text-[11px] sm:text-sm leading-tight">{theme.name}</p>
+                <p className="font-medium text-neutral-900 dark:text-white text-[11px] sm:text-sm leading-tight">{theme.name}</p>
                 <p className="text-[10px] sm:text-xs text-neutral-500 dark:text-neutral-400 mt-0.5 leading-tight">{theme.count} reports</p>
               </div>
             </div>
@@ -197,12 +197,12 @@ const EconomicResearch: React.FC = () => {
                   
                   <div className="flex-1 min-w-0 font-medium">
                     <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5">
-                      <span className={cn("px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-wider", typeBadgeColors[report.type])}>
+                      <span className={cn("px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium uppercase tracking-wider", typeBadgeColors[report.type])}>
                         {report.type}
                       </span>
                       <span className="text-[10px] sm:text-xs text-neutral-400">{report.category}</span>
                     </div>
-                    <h4 className="text-[13px] sm:text-base font-bold text-neutral-900 dark:text-white group-hover:text-indigo-600 transition-colors leading-tight">
+                    <h4 className="text-[13px] sm:text-base font-semibold text-neutral-900 dark:text-white group-hover:text-indigo-600 transition-colors leading-tight">
                       {report.title}
                     </h4>
                     <div className="flex items-center gap-2 mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-neutral-500 dark:text-neutral-400">
@@ -233,7 +233,7 @@ const EconomicResearch: React.FC = () => {
               className="p-5 sm:p-6 rounded-2xl bg-indigo-600 text-white"
             >
               <Mail className="w-6 h-6 sm:w-8 sm:h-8 mb-3 sm:mb-4" />
-              <h4 className="text-lg sm:text-xl font-bold mb-1.5 sm:mb-2 leading-tight">Expert Analysis to Your Inbox</h4>
+              <h4 className="text-lg sm:text-xl font-semibold mb-1.5 sm:mb-2 leading-tight">Expert Analysis to Your Inbox</h4>
               <p className="text-[13px] sm:text-sm text-indigo-100 mb-5 sm:mb-6 leading-relaxed">
                 Subscribe to our weekly economic briefing and never miss a market move.
               </p>
@@ -243,7 +243,7 @@ const EconomicResearch: React.FC = () => {
                   placeholder="Official Email"
                   className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 text-sm"
                 />
-                <Button className="w-full bg-white text-indigo-600 hover:bg-indigo-50 font-bold text-sm py-2.5">
+                <Button className="w-full bg-white text-indigo-600 hover:bg-indigo-50 font-medium text-sm py-2.5">
                   Subscribe Now
                 </Button>
               </div>
@@ -257,17 +257,17 @@ const EconomicResearch: React.FC = () => {
               transition={{ delay: 0.1 }}
               className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700"
             >
-              <h4 className="font-bold text-neutral-900 dark:text-white mb-4 sm:mb-6 text-sm sm:text-base uppercase tracking-wider">Our Lead Economists</h4>
+              <h4 className="font-semibold text-neutral-900 dark:text-white mb-4 sm:mb-6 text-sm sm:text-base uppercase tracking-wider">Our Lead Economists</h4>
               <div className="space-y-4 sm:space-y-6">
                 {economists.map((economist) => (
                   <div key={economist.name} className="flex items-center gap-3 sm:gap-4 group cursor-pointer">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-neutral-100 dark:bg-neutral-700 overflow-hidden border-2 border-transparent group-hover:border-indigo-500 transition-all">
-                      <div className="w-full h-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm">
+                      <div className="w-full h-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium text-sm">
                         {economist.name.split(' ').map(n => n[0]).join('')}
                       </div>
                     </div>
                     <div>
-                      <p className="text-[13px] sm:text-sm font-bold text-neutral-900 dark:text-white group-hover:text-indigo-600 transition-colors leading-tight">{economist.name}</p>
+                      <p className="text-[13px] sm:text-sm font-medium text-neutral-900 dark:text-white group-hover:text-indigo-600 transition-colors leading-tight">{economist.name}</p>
                       <p className="text-[10px] sm:text-xs text-neutral-500 dark:text-neutral-400 mt-0.5 leading-tight">{economist.role}</p>
                       <p className="text-[10px] sm:text-xs text-indigo-500 font-semibold mt-0.5 uppercase tracking-wider">{economist.specialty}</p>
                     </div>
@@ -286,9 +286,9 @@ const EconomicResearch: React.FC = () => {
             >
               <div className="flex items-center gap-2 text-indigo-400 mb-3 sm:mb-4">
                 <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">Upcoming Webinar</span>
+                <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider">Upcoming Webinar</span>
               </div>
-              <h4 className="text-sm sm:text-base font-bold mb-3 sm:mb-4 leading-tight">Q2 2024 Macroeconomic Outlook: Navigating Volatility</h4>
+              <h4 className="text-sm sm:text-base font-semibold mb-3 sm:mb-4 leading-tight">Q2 2024 Macroeconomic Outlook: Navigating Volatility</h4>
               <div className="flex items-center gap-3 mb-5 sm:mb-6 text-[10px] sm:text-xs text-neutral-400 font-medium">
                 <Calendar className="w-3.5 h-3.5" />
                 Nov 15, 2024 • 10:00 AM WAT

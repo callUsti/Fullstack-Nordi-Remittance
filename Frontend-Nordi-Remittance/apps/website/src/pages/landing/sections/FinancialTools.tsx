@@ -106,7 +106,7 @@ const MiniCalculator: React.FC = () => {
         <div className="flex items-center justify-between py-3 px-4 rounded-lg bg-indigo-50 dark:bg-indigo-900/30">
           <div>
             <div className="text-xs text-indigo-600">Est. Monthly Payment</div>
-            <div className="text-xl font-bold text-indigo-700">
+            <div className="text-xl font-semibold text-indigo-700">
               ${monthlyPayment.toLocaleString()}
             </div>
           </div>

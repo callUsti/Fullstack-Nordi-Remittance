@@ -170,7 +170,7 @@ const LoanCard: React.FC<LoanCardProps> = ({ loan, index }) => {
       <div className="grid grid-cols-3 gap-2 sm:gap-3 py-3 sm:py-4 border-y border-neutral-100 dark:border-neutral-700 mb-3 sm:mb-4">
         <div>
           <p className="text-[10px] text-neutral-400">Rate from</p>
-          <p className="text-base sm:text-lg font-bold text-neutral-900 dark:text-white">{loan.rateFrom}</p>
+          <p className="text-base sm:text-lg font-semibold text-neutral-900 dark:text-white">{loan.rateFrom}</p>
         </div>
         <div>
           <p className="text-[10px] text-neutral-400">Max Amount</p>
@@ -247,7 +247,7 @@ const LoanCalculatorPreview: React.FC = () => {
           onChange={(e) => setAmount(Number(e.target.value))}
           className="w-full accent-amber-400"
         />
-        <p className="text-xl sm:text-2xl font-bold mt-1.5 sm:mt-2">${amount.toLocaleString()}</p>
+        <p className="text-xl sm:text-2xl font-semibold mt-1.5 sm:mt-2">${amount.toLocaleString()}</p>
       </div>
 
       {/* Term */}
@@ -262,7 +262,7 @@ const LoanCalculatorPreview: React.FC = () => {
           onChange={(e) => setTerm(Number(e.target.value))}
           className="w-full accent-amber-400"
         />
-        <p className="text-xl sm:text-2xl font-bold mt-1.5 sm:mt-2">{term} months</p>
+        <p className="text-xl sm:text-2xl font-semibold mt-1.5 sm:mt-2">{term} months</p>
       </div>
 
       {/* Result */}

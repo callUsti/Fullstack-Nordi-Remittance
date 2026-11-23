@@ -181,11 +181,11 @@ const InvestmentCard: React.FC<InvestmentCardProps> = ({ option, index }) => (
     <div className="grid grid-cols-2 gap-3 sm:gap-4 py-3 sm:py-4 border-y border-neutral-100 dark:border-neutral-700 mb-3 sm:mb-4">
       <div>
         <p className="text-[10px] text-neutral-400">Expected Return</p>
-        <p className="text-base sm:text-lg font-bold text-emerald-600">{option.expectedReturn}</p>
+        <p className="text-base sm:text-lg font-semibold text-emerald-600">{option.expectedReturn}</p>
       </div>
       <div>
         <p className="text-[10px] text-neutral-400">Min. Investment</p>
-        <p className="text-base sm:text-lg font-bold text-neutral-900 dark:text-white">{option.minInvestment}</p>
+        <p className="text-base sm:text-lg font-semibold text-neutral-900 dark:text-white">{option.minInvestment}</p>
       </div>
     </div>
 
@@ -271,7 +271,7 @@ const Investments: React.FC = () => {
           viewport={{ once: true }}
           className="mt-10 sm:mt-16 text-center p-6 sm:p-8 rounded-2xl bg-indigo-900 text-white"
         >
-          <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3">Ready to Start Investing?</h3>
+          <h3 className="text-xl sm:text-2xl font-semibold mb-2 sm:mb-3">Ready to Start Investing?</h3>
           <p className="text-sm sm:text-base text-indigo-200 mb-4 sm:mb-6 max-w-xl mx-auto">
             Schedule a free consultation with our investment advisors and create a 
             personalized investment strategy.

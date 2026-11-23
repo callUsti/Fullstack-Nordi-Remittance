@@ -106,7 +106,7 @@ const WaysHero: React.FC = () => {
                   <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/10 text-cyan-300 flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
                     <link.icon className="w-5 h-5 sm:w-6 sm:h-6" />
                   </div>
-                  <span className="text-white font-bold text-[13px] sm:text-base tracking-tight">{link.label}</span>
+                  <span className="text-white font-medium text-[13px] sm:text-base tracking-tight">{link.label}</span>
                   <ChevronRight className="w-4 h-4 text-blue-300 ml-auto group-hover:translate-x-1 transition-transform" />
                 </a>
               ))}
@@ -143,7 +143,7 @@ const WaysHero: React.FC = () => {
                     <div className="w-10 h-10 mx-auto rounded-full bg-cyan-400/20 text-cyan-300 flex items-center justify-center mb-3">
                       <stat.icon className="w-5 h-5" />
                     </div>
-                    <p className="text-2xl font-bold text-white">{stat.value}</p>
+                    <p className="text-2xl font-semibold text-white">{stat.value}</p>
                     <p className="text-xs text-blue-200 mt-1">{stat.label}</p>
                   </motion.div>
                 ))}

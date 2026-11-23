@@ -56,7 +56,7 @@ const sizeStyles: Record<FeatureCardSize, { padding: string; icon: string; title
   lg: {
     padding: 'p-8',
     icon: 'w-14 h-14 p-3',
-    title: 'text-xl font-bold',
+    title: 'text-xl font-semibold',
     desc: 'text-base',
   },
 };

@@ -212,7 +212,7 @@ export const SessionExpiredModal: React.FC<SessionExpiredModalProps> = ({
                       className="text-amber-500 transition-all duration-1000"
                     />
                   </svg>
-                  <span className="absolute inset-0 flex items-center justify-center text-2xl font-bold text-gray-900 dark:text-white">
+                  <span className="absolute inset-0 flex items-center justify-center text-2xl font-semibold text-gray-900 dark:text-white">
                     {countdown}
                   </span>
                 </div>

@@ -86,7 +86,7 @@ const Partners: React.FC = () => {
               className={cn(
                 "px-3 sm:px-6 py-2 sm:py-3 rounded-lg",
                 "bg-white dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700",
-                "text-neutral-400 font-bold text-sm sm:text-lg",
+                "text-neutral-400 font-semibold text-sm sm:text-lg",
                 "hover:text-neutral-600 dark:text-neutral-300 hover:border-neutral-200 dark:border-neutral-700 transition-all"
               )}
             >

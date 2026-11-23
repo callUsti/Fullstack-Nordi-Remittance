@@ -259,7 +259,7 @@ const DiasporaBanking: React.FC = () => {
                     className="p-3 sm:p-4 rounded-xl bg-white/10 border border-white/10"
                   >
                     <p className="text-xs sm:text-sm text-indigo-200 mb-0.5 sm:mb-1">{rate.corridor}</p>
-                    <p className="text-lg sm:text-xl font-bold text-amber-400 leading-tight">{rate.rate}</p>
+                    <p className="text-lg sm:text-xl font-semibold text-amber-400 leading-tight">{rate.rate}</p>
                     <p className="text-[10px] sm:text-xs text-indigo-300">Fee: {rate.fee}</p>
                   </div>
                 ))}

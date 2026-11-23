@@ -136,13 +136,13 @@ const ProgramCard: React.FC<ProgramCardProps> = ({ program, index }) => (
     </div>
 
     {/* Header */}
-    <h3 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-white mb-1 leading-tight">{program.name}</h3>
+    <h3 className="text-lg sm:text-xl font-semibold text-neutral-900 dark:text-white mb-1 leading-tight">{program.name}</h3>
     <p className="text-[13px] sm:text-sm text-neutral-500 dark:text-neutral-400 mb-4 leading-tight">{program.description}</p>
 
     {/* Benefit Badge */}
     <div className="py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/30 mb-4 sm:mb-5">
-      <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider mb-0.5">Key Benefit</p>
-      <p className="text-base sm:text-lg font-bold text-emerald-700 dark:text-emerald-300 leading-tight">{program.benefit}</p>
+      <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium uppercase tracking-wider mb-0.5">Key Benefit</p>
+      <p className="text-base sm:text-lg font-semibold text-emerald-700 dark:text-emerald-300 leading-tight">{program.benefit}</p>
     </div>
 
     {/* Features */}
@@ -156,7 +156,7 @@ const ProgramCard: React.FC<ProgramCardProps> = ({ program, index }) => (
     </ul>
 
     {/* CTA */}
-    <Button variant="primary" className={cn("w-full text-sm py-2.5 sm:py-3 font-bold shadow-md", program.color, "hover:opacity-90")}>
+    <Button variant="primary" className={cn("w-full text-sm py-2.5 sm:py-3 font-medium shadow-md", program.color, "hover:opacity-90")}>
       Apply Now
       <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-1.5 sm:ml-2" />
     </Button>
@@ -203,7 +203,7 @@ const EmergingBusinesses: React.FC = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <h3 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white text-center mb-6 sm:mb-8">
+          <h3 className="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-white text-center mb-6 sm:mb-8">
             Success Stories
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
@@ -217,7 +217,7 @@ const EmergingBusinesses: React.FC = () => {
                 className="p-5 sm:p-6 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700"
               >
                 <div className="flex items-center gap-3 mb-3 sm:mb-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-indigo-100 dark:bg-indigo-800/30 flex items-center justify-center text-indigo-600 font-bold text-sm sm:text-base">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-indigo-100 dark:bg-indigo-800/30 flex items-center justify-center text-indigo-600 font-medium text-sm sm:text-base">
                     {story.founder.charAt(0)}
                   </div>
                   <div>
@@ -229,11 +229,11 @@ const EmergingBusinesses: React.FC = () => {
                 <div className="flex gap-4 pt-3 sm:pt-4 border-t border-neutral-100 dark:border-neutral-700">
                   <div>
                     <p className="text-[10px] text-neutral-400 uppercase tracking-wider">Raised</p>
-                    <p className="font-bold text-emerald-600 text-sm sm:text-base leading-tight">{story.raised}</p>
+                    <p className="font-medium text-emerald-600 text-sm sm:text-base leading-tight">{story.raised}</p>
                   </div>
                   <div>
                     <p className="text-[10px] text-neutral-400 uppercase tracking-wider">Employees</p>
-                    <p className="font-bold text-neutral-900 dark:text-white text-sm sm:text-base leading-tight">{story.employees}</p>
+                    <p className="font-medium text-neutral-900 dark:text-white text-sm sm:text-base leading-tight">{story.employees}</p>
                   </div>
                 </div>
               </motion.div>
@@ -265,7 +265,7 @@ const EmergingBusinesses: React.FC = () => {
               Get access to exclusive events, mentorship opportunities, and connect 
               with other founders building the future of African tech.
             </p>
-            <Button variant="primary" size="lg" className="w-full sm:w-auto bg-amber-400 hover:bg-amber-500 text-indigo-900 font-bold px-10 py-3.5 sm:py-4 shadow-xl">
+            <Button variant="primary" size="lg" className="w-full sm:w-auto bg-amber-400 hover:bg-amber-500 text-indigo-900 font-medium px-10 py-3.5 sm:py-4 shadow-xl">
               Apply for Startup Program
               <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
             </Button>

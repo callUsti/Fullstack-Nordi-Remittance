@@ -198,7 +198,7 @@ const AccountCard: React.FC<AccountCardProps> = ({ account, index }) => (
     <Button
       variant={account.popular ? "primary" : "outline"}
       className={cn(
-        "w-full text-sm py-2 sm:py-2.5 font-bold",
+        "w-full text-sm py-2 sm:py-2.5 font-medium",
         account.popular && "bg-emerald-600 hover:bg-emerald-700 shadow-md"
       )}
     >

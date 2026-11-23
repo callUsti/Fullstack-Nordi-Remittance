@@ -94,7 +94,7 @@ const CtaCard: React.FC<CtaCardProps> = ({ item, index }) => {
             className="w-full h-full object-contain"
           />
         </div>
-        <h3 className="text-xs sm:text-sm md:text-lg font-bold text-white leading-tight">
+        <h3 className="text-xs sm:text-sm md:text-lg font-medium text-white leading-tight">
           {item.title}
         </h3>
         <p className="mt-1 sm:mt-2 text-[10px] sm:text-sm text-white/80 hidden sm:block">

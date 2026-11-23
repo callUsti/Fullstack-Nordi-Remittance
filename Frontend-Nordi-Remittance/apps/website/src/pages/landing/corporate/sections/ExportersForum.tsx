@@ -167,7 +167,7 @@ const ExportersForum: React.FC = () => {
                 {React.cloneElement(solution.icon as React.ReactElement, { className: "w-5 h-5 sm:w-6 sm:h-6" })}
               </div>
               
-              <h3 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-white mb-1.5 sm:mb-2 leading-tight">{solution.name}</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-neutral-900 dark:text-white mb-1.5 sm:mb-2 leading-tight">{solution.name}</h3>
               <p className="text-[13px] sm:text-sm text-neutral-500 dark:text-neutral-400 mb-4 sm:mb-5 leading-relaxed">{solution.description}</p>
               
               <ul className="space-y-1.5 sm:space-y-2 mb-6 sm:mb-8 flex-1">
@@ -198,15 +198,15 @@ const ExportersForum: React.FC = () => {
           >
             <div className="flex items-center gap-2.5 sm:gap-3 mb-6 sm:mb-8">
               <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-600" />
-              <h4 className="font-bold text-neural-900 dark:text-white text-sm sm:text-base uppercase tracking-wider">Export Destinations</h4>
+              <h4 className="font-semibold text-neural-900 dark:text-white text-sm sm:text-base uppercase tracking-wider">Export Destinations</h4>
             </div>
             <div className="space-y-5 sm:space-y-6">
               {exportDestinations.map((dest) => (
                 <div key={dest.region} className="flex items-center gap-4">
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-                      <span className="text-[13px] sm:text-sm font-bold text-neutral-700 dark:text-neutral-200">{dest.region}</span>
-                      <span className="text-[13px] sm:text-sm font-bold text-cyan-600 dark:text-cyan-400">{dest.share}</span>
+                      <span className="text-[13px] sm:text-sm font-medium text-neutral-700 dark:text-neutral-200">{dest.region}</span>
+                      <span className="text-[13px] sm:text-sm font-medium text-cyan-600 dark:text-cyan-400">{dest.share}</span>
                     </div>
                     <div className="h-1.5 sm:h-2 bg-neutral-100 dark:bg-neutral-700 rounded-full overflow-hidden">
                       <div
@@ -232,7 +232,7 @@ const ExportersForum: React.FC = () => {
           >
             <div className="flex items-center gap-2.5 sm:gap-3 mb-6 sm:mb-8">
               <Award className="w-4 h-4 sm:w-5 sm:h-5" />
-              <h4 className="font-bold text-sm sm:text-base uppercase tracking-wider">Forum Member Benefits</h4>
+              <h4 className="font-semibold text-sm sm:text-base uppercase tracking-wider">Forum Member Benefits</h4>
             </div>
             <ul className="space-y-4 sm:space-y-5 mb-8 sm:mb-10">
               {[

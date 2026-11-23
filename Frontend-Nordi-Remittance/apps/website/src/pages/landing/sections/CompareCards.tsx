@@ -142,11 +142,11 @@ const CardPreview: React.FC<CardPreviewProps> = ({ card, index }) => (
       <div className="grid grid-cols-2 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
         <div className="p-2 sm:p-3 rounded-lg bg-neutral-50 dark:bg-neutral-700">
           <div className="text-[10px] sm:text-xs text-neutral-500 dark:text-neutral-400">Annual Fee</div>
-          <div className="text-base sm:text-lg font-bold text-neutral-900 dark:text-neutral-100">{card.annualFee}</div>
+          <div className="text-base sm:text-lg font-semibold text-neutral-900 dark:text-neutral-100">{card.annualFee}</div>
         </div>
         <div className="p-2 sm:p-3 rounded-lg bg-neutral-50 dark:bg-neutral-700">
           <div className="text-[10px] sm:text-xs text-neutral-500 dark:text-neutral-400">Rewards</div>
-          <div className="text-base sm:text-lg font-bold text-indigo-600 dark:text-indigo-400">{card.rewards}</div>
+          <div className="text-base sm:text-lg font-semibold text-indigo-600 dark:text-indigo-400">{card.rewards}</div>
         </div>
       </div>
 

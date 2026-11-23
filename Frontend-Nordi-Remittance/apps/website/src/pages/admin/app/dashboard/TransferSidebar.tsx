@@ -36,21 +36,21 @@ const TransferSidebar: React.FC<TransferSidebarProps> = ({ stats }) => {
               <FiTrendingUp size={14} className="text-indigo-500" />
               <span className="text-xs text-gray-600 dark:text-gray-400">Volume</span>
             </div>
-            <span className="text-sm font-bold text-gray-900 dark:text-white">{formatAmount(stats.todayVolume)}</span>
+            <span className="text-sm font-medium text-gray-900 dark:text-white">{formatAmount(stats.todayVolume)}</span>
           </div>
           <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50">
             <div className="flex items-center gap-2">
               <FiArrowUpRight size={14} className="text-emerald-500" />
               <span className="text-xs text-gray-600 dark:text-gray-400">Transfers</span>
             </div>
-            <span className="text-sm font-bold text-gray-900 dark:text-white">{stats.todayCount}</span>
+            <span className="text-sm font-medium text-gray-900 dark:text-white">{stats.todayCount}</span>
           </div>
           <div className="flex items-center justify-between p-2.5 rounded-xl bg-purple-50 dark:bg-purple-950/50">
             <div className="flex items-center gap-2">
               <FiArrowDownRight size={14} className="text-purple-500" />
               <span className="text-xs text-gray-600 dark:text-gray-400">Avg Size</span>
             </div>
-            <span className="text-sm font-bold text-gray-900 dark:text-white">{formatAmount(stats.avgTransferSize)}</span>
+            <span className="text-sm font-medium text-gray-900 dark:text-white">{formatAmount(stats.avgTransferSize)}</span>
           </div>
         </div>
       </DashCard>
@@ -61,7 +61,7 @@ const TransferSidebar: React.FC<TransferSidebarProps> = ({ stats }) => {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-600 dark:text-gray-400">Success Rate</span>
-            <span className="text-xs font-bold text-gray-900 dark:text-white">{stats.successRate}%</span>
+            <span className="text-xs font-medium text-gray-900 dark:text-white">{stats.successRate}%</span>
           </div>
           <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2">
             <div
@@ -73,14 +73,14 @@ const TransferSidebar: React.FC<TransferSidebarProps> = ({ stats }) => {
             <div className="flex items-center gap-1.5 p-2 rounded-lg bg-amber-50 dark:bg-amber-950/50">
               <FiClock size={12} className="text-amber-500" />
               <div>
-                <p className="text-xs font-bold text-gray-900 dark:text-white">{stats.pendingCount}</p>
+                <p className="text-xs font-medium text-gray-900 dark:text-white">{stats.pendingCount}</p>
                 <p className="text-[9px] text-gray-500 dark:text-gray-400">Pending</p>
               </div>
             </div>
             <div className="flex items-center gap-1.5 p-2 rounded-lg bg-rose-50 dark:bg-rose-950/50">
               <FiRefreshCw size={12} className="text-rose-500" />
               <div>
-                <p className="text-xs font-bold text-gray-900 dark:text-white">{stats.failedCount}</p>
+                <p className="text-xs font-medium text-gray-900 dark:text-white">{stats.failedCount}</p>
                 <p className="text-[9px] text-gray-500 dark:text-gray-400">Failed</p>
               </div>
             </div>

@@ -142,7 +142,7 @@ const Helpful_tools: React.FC = () => {
           viewport={{ once: true }}
           className="text-center mb-6 sm:mb-8"
         >
-          <h3 className="text-base sm:text-xl md:text-2xl font-bold text-neutral-900 dark:text-white">
+          <h3 className="text-base sm:text-xl md:text-2xl font-semibold text-neutral-900 dark:text-white">
             Helpful <span className="text-primary-600 dark:text-primary-400">Tools</span>
           </h3>
           <p className="text-[10px] sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">

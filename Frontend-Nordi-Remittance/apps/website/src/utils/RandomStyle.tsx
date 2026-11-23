@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 // Random style generator for fonts, weights, and colors
 const getRandomStyle = () => {
     const fonts = ['font-sans', 'font-serif', 'font-mono'];
-    const weights = ['font-light', 'font-semibold', 'font-bold', 'font-extrabold'];
+    const weights = ['font-light', 'font-semibold', 'font-medium', 'font-semibold'];
     const colors = ['text-amber-500', 'text-white', 'text-gray-200', 'text-slate-100'];
   
     return {

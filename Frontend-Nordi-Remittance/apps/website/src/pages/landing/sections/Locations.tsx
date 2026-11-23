@@ -243,15 +243,15 @@ const Locations: React.FC = () => {
               {/* Stats overlay */}
               <div className="absolute bottom-4 left-4 right-4 flex gap-3">
                 <div className="flex-1 p-3 rounded-lg bg-white/90 backdrop-blur-sm">
-                  <div className="text-lg font-bold text-neutral-900 dark:text-white">150+</div>
+                  <div className="text-lg font-semibold text-neutral-900 dark:text-white">150+</div>
                   <div className="text-xs text-neutral-500 dark:text-neutral-400">Branches</div>
                 </div>
                 <div className="flex-1 p-3 rounded-lg bg-white/90 backdrop-blur-sm">
-                  <div className="text-lg font-bold text-neutral-900 dark:text-white">2,500+</div>
+                  <div className="text-lg font-semibold text-neutral-900 dark:text-white">2,500+</div>
                   <div className="text-xs text-neutral-500 dark:text-neutral-400">ATMs</div>
                 </div>
                 <div className="flex-1 p-3 rounded-lg bg-white/90 backdrop-blur-sm">
-                  <div className="text-lg font-bold text-neutral-900 dark:text-white">50+</div>
+                  <div className="text-lg font-semibold text-neutral-900 dark:text-white">50+</div>
                   <div className="text-xs text-neutral-500 dark:text-neutral-400">States</div>
                 </div>
               </div>

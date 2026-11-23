@@ -152,7 +152,7 @@ const DormantAccounts: React.FC = () => {
                   className="flex gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700"
                 >
                   <div className="flex-shrink-0">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-indigo-100 dark:bg-indigo-800/30 text-indigo-600 flex items-center justify-center font-bold text-sm sm:text-base">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-indigo-100 dark:bg-indigo-800/30 text-indigo-600 flex items-center justify-center font-medium text-sm sm:text-base">
                       {step.step}
                     </div>
                   </div>

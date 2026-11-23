@@ -130,7 +130,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, index }) => (
     </div>
 
     {/* Content */}
-    <h3 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-white mb-1.5 sm:mb-2 leading-tight">{service.name}</h3>
+    <h3 className="text-lg sm:text-xl font-semibold text-neutral-900 dark:text-white mb-1.5 sm:mb-2 leading-tight">{service.name}</h3>
     <p className="text-[13px] sm:text-sm text-neutral-500 dark:text-neutral-400 mb-4 sm:mb-5 leading-relaxed">{service.description}</p>
 
     {/* Features */}
@@ -144,7 +144,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, index }) => (
     </ul>
 
     {/* CTA */}
-    <Button variant="outline" className="w-full text-sm py-2 sm:py-2.5 font-bold group">
+    <Button variant="outline" className="w-full text-sm py-2 sm:py-2.5 font-medium group">
       Learn More
       <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5 sm:ml-2 group-hover:translate-x-1 transition-transform" />
     </Button>
@@ -250,7 +250,7 @@ const CashManagement: React.FC = () => {
               ].map((stat) => (
                 <div key={stat.label} className="p-4 sm:p-6 rounded-2xl bg-white/5 border border-white/5 text-center group hover:bg-white/10 transition-colors">
                   <p className={cn("text-2xl sm:text-4xl font-bold mb-1 group-hover:scale-110 transition-transform", stat.accent)}>{stat.value}</p>
-                  <p className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-widest">{stat.label}</p>
+                  <p className="text-[10px] sm:text-xs text-slate-400 font-medium uppercase tracking-widest">{stat.label}</p>
                 </div>
               ))}
             </div>

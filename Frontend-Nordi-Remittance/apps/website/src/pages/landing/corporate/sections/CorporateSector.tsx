@@ -177,7 +177,7 @@ const CorporateSector: React.FC = () => {
               </div>
 
               {/* Content */}
-              <h3 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-white mb-1.5 sm:mb-2 leading-tight">{sector.name}</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-neutral-900 dark:text-white mb-1.5 sm:mb-2 leading-tight">{sector.name}</h3>
               <p className="text-[13px] sm:text-sm text-neutral-500 dark:text-neutral-400 mb-4 sm:mb-5 leading-relaxed">{sector.description}</p>
 
               {/* Solutions */}
@@ -198,7 +198,7 @@ const CorporateSector: React.FC = () => {
                 </div>
                 <Button
                   variant="ghost"
-                  className={cn("text-sm p-0 h-auto font-bold", sector.color, "hover:opacity-80")}
+                  className={cn("text-sm p-0 h-auto font-medium", sector.color, "hover:opacity-80")}
                 >
                   Learn More
                   <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1" />
@@ -215,7 +215,7 @@ const CorporateSector: React.FC = () => {
           viewport={{ once: true }}
           className="mt-10 sm:mt-12 p-6 sm:p-10 rounded-2xl bg-gradient-to-r from-slate-800 to-slate-900 text-white text-center"
         >
-          <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 leading-tight">Don't See Your Industry?</h3>
+          <h3 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 leading-tight">Don't See Your Industry?</h3>
           <p className="text-sm sm:text-lg text-slate-300 mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed">
             Our corporate banking team has expertise across all major industries. 
             Connect with a relationship manager to discuss your specific needs.

@@ -91,7 +91,7 @@ const DashboardFraud: React.FC<DashboardFraudProps> = ({ fraudData, isLoading })
           </div>
         </div>
         <div className="text-right">
-          <p className={`text-lg font-bold ${riskColor}`}>{fraudData.riskScore}</p>
+          <p className={`text-lg font-semibold ${riskColor}`}>{fraudData.riskScore}</p>
           <p className={`text-[10px] font-medium capitalize ${riskColor}`}>{riskLevel}</p>
         </div>
       </div>
@@ -102,7 +102,7 @@ const DashboardFraud: React.FC<DashboardFraudProps> = ({ fraudData, isLoading })
           <div key={label} className={`flex items-center gap-2 p-2.5 rounded-xl ${bg}`}>
             <span className={color}>{icon}</span>
             <div>
-              <p className="text-sm font-bold text-gray-900 dark:text-white">{value}</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">{value}</p>
               <p className="text-[10px] text-gray-500 dark:text-gray-400">{label}</p>
             </div>
           </div>

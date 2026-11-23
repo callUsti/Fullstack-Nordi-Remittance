@@ -175,7 +175,7 @@ const BusinessBanking: React.FC = () => {
               key={stat.label}
               className="text-center p-4 rounded-xl bg-slate-800/50 border border-slate-700"
             >
-              <div className="text-2xl font-bold text-indigo-400">{stat.value}</div>
+              <div className="text-2xl font-semibold text-indigo-400">{stat.value}</div>
               <div className="text-xs text-slate-400 mt-1">{stat.label}</div>
             </div>
           ))}

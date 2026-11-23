@@ -244,11 +244,11 @@ const CreditCardCard: React.FC<CreditCardCardProps> = ({ card, index }) => (
     <div className="grid grid-cols-2 gap-2 sm:gap-3 py-3 sm:py-4 border-y border-neutral-100 dark:border-neutral-700 mb-3 sm:mb-4">
       <div>
         <p className="text-[10px] text-neutral-400">Annual Fee</p>
-        <p className="text-base sm:text-lg font-bold text-neutral-900 dark:text-white">{card.annualFee}</p>
+        <p className="text-base sm:text-lg font-semibold text-neutral-900 dark:text-white">{card.annualFee}</p>
       </div>
       <div>
         <p className="text-[10px] text-neutral-400">Sign-up Bonus</p>
-        <p className="text-base sm:text-lg font-bold text-emerald-600">{card.signupBonus}</p>
+        <p className="text-base sm:text-lg font-semibold text-emerald-600">{card.signupBonus}</p>
       </div>
     </div>
 

@@ -130,7 +130,7 @@ const OfferCard: React.FC<OfferCardProps> = ({ offer, index }) => (
   >
     {/* Savings Badge */}
     <div className="absolute -top-3 right-6">
-      <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-500 text-white text-xs font-bold rounded-full">
+      <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-500 text-white text-xs font-medium rounded-full">
         {offer.savings}
       </span>
     </div>
@@ -222,7 +222,7 @@ const BackToSchool: React.FC = () => {
                   className="flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-neutral-50 dark:bg-neutral-700/50"
                 >
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 border-neutral-300 flex items-center justify-center text-[10px] sm:text-xs font-bold text-neutral-400">
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 border-neutral-300 flex items-center justify-center text-[10px] sm:text-xs font-medium text-neutral-400">
                       {index + 1}
                     </div>
                     <span className="text-[13px] sm:text-sm text-neutral-700 dark:text-neutral-200">{item.item}</span>

@@ -89,7 +89,7 @@ const FooterColumn: React.FC<FooterColumnProps> = ({ category, index }) => {
       transition={{ delay: index * 0.1 }}
       className="mb-8 lg:mb-0"
     >
-      <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-white">{category.title}</h3>
+      <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white">{category.title}</h3>
       <nav className="space-y-2">
         {category.links.map((link, i) => (
           <a
