@@ -36,6 +36,7 @@ import { TransactionListSkeleton, StatsGridSkeleton, FormSkeleton } from "@compo
 import { dashboardItemVariants } from "@core/animation/Animation";
 import { useClientRecentTransactions } from "../../client-usecase/usetransaction-client-usecase";
 import { useUIStore } from "@store/ui.store";
+import ClientTransactionsTable from "./ClientTransactionsTable";
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }).format(n);
@@ -91,7 +92,7 @@ const TransactionRow: React.FC<TransactionRowProps> = ({ tx, show }) => (
       </div>
     </div>
     <p
-      className={`text-xs font-bold sm:text-sm ${
+      className={`text-xs font-medium sm:text-sm ${
         (tx.type || "").toLowerCase().includes("credit") || (tx.type || "").toLowerCase().includes("in")
           ? "text-emerald-600 dark:text-emerald-400"
           : "text-red-600 dark:text-red-400"
@@ -134,42 +135,41 @@ const RecentActivity: React.FC = () => {
         </>
       ) : (
         <>
-          <StatsGrid cols={3}>
+          <StatsGrid
+            cols={3}
+            className="!flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 touch-pan-x scrollbar-hide sm:!grid sm:!grid-cols-3 sm:overflow-visible sm:pb-0 [&>*]:min-w-[76%] [&>*]:shrink-0 [&>*]:snap-start sm:[&>*]:min-w-0 sm:[&>*]:shrink"
+          >
             <StatCard
               label="Total In"
               value={show ? fmt(totalIn) : "••••••"}
               icon={<TrendingUp size={20} />}
-              iconColor="from-emerald-500 to-teal-500"
+              iconColor="bg-emerald-600"
             />
             <StatCard
               label="Total Out"
               value={show ? fmt(totalOut) : "••••••"}
               icon={<TrendingDown size={20} />}
-              iconColor="from-red-500 to-pink-500"
+              iconColor="bg-rose-600"
             />
             <StatCard
               label="Transactions"
               value={String(txns.length)}
               icon={<Clock size={20} />}
-              iconColor="from-indigo-500 to-purple-500"
+              iconColor="bg-blue-600"
             />
           </StatsGrid>
 
           {txns.length === 0 ? (
             <EmptyState title="No Recent Transactions" description="Your recent transactions will appear here." />
           ) : (
-            <DashCard padding="none" className="mt-6">
+            <DashCard padding="none" className="mt-6 w-full min-w-0 overflow-hidden">
               <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-800">
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
                   Recent Transactions
                 </h3>
                 <span className="text-xs text-gray-500 dark:text-gray-400">{txns.length} total</span>
               </div>
-              <div className="divide-y divide-gray-100 dark:divide-gray-800">
-                {txns.slice(0, 20).map((tx: any, i: number) => (
-                  <TransactionRow key={tx._id || tx.id || i} tx={tx} show={show} />
-                ))}
-              </div>
+              <ClientTransactionsTable transactions={txns.slice(0, 20)} showBalances={show} />
             </DashCard>
           )}
         </>
