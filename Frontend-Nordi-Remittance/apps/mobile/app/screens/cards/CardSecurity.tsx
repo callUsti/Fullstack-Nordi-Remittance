@@ -17,6 +17,7 @@ import { useMobileTheme } from '@/core/theme/useMobileTheme';
 import { ScreenHeader } from '@/components/shared/ScreenHeader';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { AdaptiveScreen } from '@/components/layout/AdaptiveScreen';
 import { useCardSecurityDomain } from '@nordi/shared/client-usecase';
 
 export default function CardSecurityScreen() {
@@ -32,18 +33,17 @@ export default function CardSecurityScreen() {
   } = useCardSecurityDomain();
 
   return (
-    <View style={s.container}>
-      <ScreenHeader
-        title="Card Security & Controls"
-        subtitle="Channel restrictions, freeze toggles & emergency freeze"
-        showBack
-        onBackPress={() => router.back()}
-      />
-
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={s.scrollContent}
-      >
+    <AdaptiveScreen
+      withTabBar={false}
+      header={
+        <ScreenHeader
+          title="Card Security & Controls"
+          subtitle="Channel restrictions, freeze toggles & emergency freeze"
+          showBack
+          onBackPress={() => router.back()}
+        />
+      }
+    >
         <Card style={s.metaCard}>
           <CardContent style={s.metaCardInner}>
             <View style={s.toggleRow}>
@@ -136,8 +136,7 @@ export default function CardSecurityScreen() {
             disabled={isPending}
           />
         </View>
-      </ScrollView>
-    </View>
+    </AdaptiveScreen>
   );
 }
 
