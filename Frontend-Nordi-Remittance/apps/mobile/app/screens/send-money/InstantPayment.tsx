@@ -19,6 +19,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Avatar } from '@/components/ui/Avatar';
+import { AdaptiveScreen } from '@/components/layout/AdaptiveScreen';
 import { useWallets } from '@nordi/shared/hooks/api-queries/useAccounts';
 import { useSendMoneyStore } from '@/stores';
 
@@ -100,21 +101,23 @@ export default function AccessSwiftPay() {
   }
 
   return (
-    <View style={s.container}>
-      <ScreenHeader
-        title="SwiftPay Instant"
-        subtitle="Zero-fee real-time peer-to-peer transfer"
-        rightAction={
-          <TouchableOpacity
-            style={s.qrIconBtn}
-            onPress={() => router.push('/(tabs)/scan')}
-          >
-            <Ionicons name="qr-code-outline" size={20} color={theme.text} />
-          </TouchableOpacity>
-        }
-      />
-
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
+    <AdaptiveScreen
+      withTabBar={false}
+      header={
+        <ScreenHeader
+          title="SwiftPay Instant"
+          subtitle="Zero-fee real-time peer-to-peer transfer"
+          rightAction={
+            <TouchableOpacity
+              style={s.qrIconBtn}
+              onPress={() => router.push('/(tabs)/scan')}
+            >
+              <Ionicons name="qr-code-outline" size={20} color={theme.text} />
+            </TouchableOpacity>
+          }
+        />
+      }
+    >
         {/* Recipient Input Card */}
         <Card variant="default" style={s.cardWrapper}>
           <CardContent style={s.cardInner}>
@@ -206,8 +209,7 @@ export default function AccessSwiftPay() {
             {amount ? `Send $${amount} Instantly` : 'Send Payment'}
           </Button>
         </View>
-      </ScrollView>
-    </View>
+    </AdaptiveScreen>
   );
 }
 
