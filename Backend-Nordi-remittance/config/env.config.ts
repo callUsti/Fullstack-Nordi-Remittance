@@ -68,7 +68,8 @@ interface EnvConfig {
   ENABLE_KYC_VERIFICATION: boolean;
   ENABLE_FRAUD_DETECTION: boolean;
 
-  // Kafka
+  // Kafka (DISABLED at this stage — no-op adapter in services/kafka.service.ts)
+  KAFKA_ENABLED: boolean;
   KAFKA_BROKERS: string;
   KAFKA_CLIENT_ID: string;
   KAFKA_GROUP_ID: string;
@@ -99,6 +100,14 @@ interface EnvConfig {
   HUGGINGFACE_API_KEY?: string;
   ML_SERVICE_URL: string;
   ENABLE_AI_AGENT: boolean;
+
+  // Market Data APIs (Crypto, Stocks & Forex)
+  COINMARKETCAP_API_KEY: string;
+  COINMARKETCAP_BASE_URL: string;
+  TWELVEDATA_API_KEY: string;
+  FINNHUB_API_KEY: string;
+  ALPHAVANTAGE_API_KEY: string;
+  EXCHANGERATE_API_KEY: string;
 }
 
 function getEnvString(key: string, defaultValue?: string): string {
@@ -194,7 +203,8 @@ export const env: EnvConfig = {
   ENABLE_KYC_VERIFICATION: getEnvBoolean('ENABLE_KYC_VERIFICATION', true),
   ENABLE_FRAUD_DETECTION: getEnvBoolean('ENABLE_FRAUD_DETECTION', true),
 
-  // Kafka
+  // Kafka (DISABLED by default — flip KAFKA_ENABLED=true after restoring the real service)
+  KAFKA_ENABLED: getEnvBoolean('KAFKA_ENABLED', false),
   KAFKA_BROKERS: getEnvString('KAFKA_BROKERS', 'localhost:9092'),
   KAFKA_CLIENT_ID: getEnvString('KAFKA_CLIENT_ID', 'nordi-remit-api'),
   KAFKA_GROUP_ID: getEnvString('KAFKA_GROUP_ID', 'nordi-remit-group'),
@@ -225,6 +235,14 @@ export const env: EnvConfig = {
   HUGGINGFACE_API_KEY: process.env.HUGGINGFACE_API_KEY,
   ML_SERVICE_URL: getEnvString('ML_SERVICE_URL', 'http://localhost:8000'),
   ENABLE_AI_AGENT: getEnvBoolean('ENABLE_AI_AGENT', true),
+
+  // Market Data APIs (Crypto, Stocks & Forex)
+  COINMARKETCAP_API_KEY: getEnvString('COINMARKETCAP_API_KEY', 'your_coinmarketcap_api_key_here'),
+  COINMARKETCAP_BASE_URL: getEnvString('COINMARKETCAP_BASE_URL', 'https://pro-api.coinmarketcap.com/v1'),
+  TWELVEDATA_API_KEY: getEnvString('TWELVEDATA_API_KEY', 'your_twelvedata_api_key_here'),
+  FINNHUB_API_KEY: getEnvString('FINNHUB_API_KEY', 'your_finnhub_api_key_here'),
+  ALPHAVANTAGE_API_KEY: getEnvString('ALPHAVANTAGE_API_KEY', 'your_alphavantage_api_key_here'),
+  EXCHANGERATE_API_KEY: getEnvString('EXCHANGERATE_API_KEY', 'your_exchangerate_api_key_here'),
 };
 
 // ============================================================================
