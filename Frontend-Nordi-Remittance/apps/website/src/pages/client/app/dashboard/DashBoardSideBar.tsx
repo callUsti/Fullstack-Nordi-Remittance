@@ -72,7 +72,7 @@ const SavingsGoalsSection: React.FC<{
           >
             <div className="mb-1 flex items-center justify-between">
               <h3 className="text-xs font-medium text-gray-900 dark:text-white sm:text-sm">{goal.name}</h3>
-              <span className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 sm:text-xs">
+              <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 sm:text-xs">
                 {goal.percentage.toFixed(0)}%
               </span>
             </div>
@@ -85,7 +85,7 @@ const SavingsGoalsSection: React.FC<{
         ))}
       </div>
       <motion.button
-        className="mt-2 flex w-full items-center justify-center text-center text-[10px] text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 sm:text-xs"
+        className="mt-2 flex w-full items-center justify-center text-center text-[10px] text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 sm:text-xs"
         whileHover={{ x: 2 }}
         onClick={() => navigate("/customer/savings")}
       >
@@ -160,18 +160,18 @@ const VerificationStatusSection: React.FC<{
           </motion.div>
         ))}
         <motion.div
-          className="flex cursor-pointer items-center justify-between rounded-lg bg-indigo-50 p-2.5 dark:bg-indigo-950/30"
+          className="flex cursor-pointer items-center justify-between rounded-lg bg-blue-50 p-2.5 dark:bg-blue-950/30"
           variants={sidebarItemVariants}
           whileHover={{ x: 2 }}
           onClick={() => navigate("/customer/profile/documents")}
         >
           <div className="flex items-center gap-2">
-            <Upload size={16} className="text-indigo-600 dark:text-indigo-400" />
-            <span className="text-xs font-medium text-indigo-800 dark:text-indigo-300 sm:text-sm">
+            <Upload size={16} className="text-blue-600 dark:text-blue-400" />
+            <span className="text-xs font-medium text-blue-800 dark:text-blue-300 sm:text-sm">
               Upload Documents
             </span>
           </div>
-          <ChevronRight size={14} className="text-indigo-600 dark:text-indigo-400" />
+          <ChevronRight size={14} className="text-blue-600 dark:text-blue-400" />
         </motion.div>
       </div>
     </DashCard>
@@ -208,7 +208,7 @@ const NotificationsSection: React.FC<{
         icon={<Bell size={16} />}
         action={
           typeof unreadCount === "number" && unreadCount > 0 ? (
-            <span className="rounded-full bg-indigo-600 px-1.5 py-0.5 text-[10px] text-white dark:bg-indigo-500">
+            <span className="rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] text-white dark:bg-blue-500">
               {unreadCount}
             </span>
           ) : undefined
@@ -241,7 +241,7 @@ const NotificationsSection: React.FC<{
         </div>
       )}
       <motion.button
-        className="mt-2 w-full text-center text-[10px] text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 sm:text-xs"
+        className="mt-2 w-full text-center text-[10px] text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 sm:text-xs"
         whileHover={{ x: 2 }}
         onClick={() => navigate("/customer/mobile/notifications")}
       >
