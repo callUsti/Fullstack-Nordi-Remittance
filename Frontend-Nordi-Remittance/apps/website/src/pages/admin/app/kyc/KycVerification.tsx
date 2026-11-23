@@ -61,7 +61,7 @@ export default function KycVerification() {
   const activeStatus = statusFilter === "all" ? "All" : statusFilter;
 
   return (
-    <PageContainer>
+    <PageContainer className="px-2 sm:px-3 lg:px-4 [&>div]:max-w-full">
       <PageHeader
         title="KYC Verification"
         subtitle="Review and manage identity verification applications"
@@ -79,14 +79,14 @@ export default function KycVerification() {
           label="Total Applications"
           value={stats.totalPending + stats.totalApproved + stats.totalRejected}
           icon={<ShieldQuestion size={18} />}
-          iconColor="from-blue-500 to-blue-600"
+          iconColor="bg-blue-600"
           index={0}
         />
         <StatCard
           label="Pending Review"
           value={stats.totalPending}
           icon={<ShieldAlert size={18} />}
-          iconColor="from-amber-500 to-amber-600"
+          iconColor="bg-amber-600"
           change={`${stats.totalPending} awaiting`}
           index={1}
         />
@@ -94,7 +94,7 @@ export default function KycVerification() {
           label="Verified"
           value={stats.totalApproved}
           icon={<ShieldCheck size={18} />}
-          iconColor="from-emerald-500 to-emerald-600"
+          iconColor="bg-emerald-600"
           positive
           index={2}
         />
@@ -102,13 +102,13 @@ export default function KycVerification() {
           label="Rejected"
           value={stats.totalRejected}
           icon={<ShieldX size={18} />}
-          iconColor="from-rose-500 to-rose-600"
+          iconColor="bg-rose-600"
           index={3}
         />
       </StatsGrid>
 
       {/* Status Filter Pills */}
-      <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-1 touch-pan-x scrollbar-hide">
         {kycStatuses.map((s) => (
           <FilterPill
             key={s}
@@ -252,7 +252,10 @@ export default function KycVerification() {
                         </div>
 
                         {/* Action Buttons */}
-                        {(kyc.kycStatus === "pending" || kyc.kycStatus === "under_review") && (
+                        {(kyc.kycStatus === "pending" ||
+                          kyc.kycStatus === "in_review" ||
+                          kyc.kycStatus === "under_review" ||
+                          kyc.kycStatus === "rejected") && (
                           <div className="mt-4 flex gap-2">
                             <ActionButton
                               label="View Documents"
