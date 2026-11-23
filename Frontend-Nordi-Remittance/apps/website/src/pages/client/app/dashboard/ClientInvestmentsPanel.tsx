@@ -37,8 +37,8 @@ const ClientInvestmentsPanel: React.FC<ClientInvestmentsPanelProps> = ({
       icon: <FiPieChart size={14} />,
       label: "Portfolio Value",
       value: formatCurrency(investmentsData.totalPortfolioValue),
-      color: "text-purple-500",
-      bg: "bg-purple-50 dark:bg-purple-950/50",
+      color: "text-blue-500",
+      bg: "bg-blue-50 dark:bg-blue-950/50",
     },
     {
       icon: <FiTrendingUp size={14} />,
@@ -77,7 +77,7 @@ const ClientInvestmentsPanel: React.FC<ClientInvestmentsPanelProps> = ({
           <div key={label} className={`flex items-center gap-2 p-2.5 rounded-xl ${bg}`}>
             <span className={color}>{icon}</span>
             <div>
-              <p className="text-sm font-bold text-gray-900 dark:text-white">{value}</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">{value}</p>
               <p className="text-[10px] text-gray-500 dark:text-gray-400">{label}</p>
             </div>
           </div>
@@ -95,7 +95,7 @@ const ClientInvestmentsPanel: React.FC<ClientInvestmentsPanelProps> = ({
           </div>
           <ProgressBar
             value={investmentsData.savingsProgress}
-            color="bg-gradient-to-r from-purple-500 to-violet-500"
+            color="bg-blue-600"
             height="sm"
           />
         </div>
