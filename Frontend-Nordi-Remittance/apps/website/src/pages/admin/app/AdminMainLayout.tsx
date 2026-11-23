@@ -1,12 +1,15 @@
-import React from 'react'
+import React, { useState } from 'react'
 import AdminLeftContainer from '../container/AdminLeftContainer'
 import AdminRightContainer from '../container/AdminRightContainer'
 import AdminRoutes from '../AdminRoutes'
+import MobileBottomNav from '../presentation/MobileBottomNav'
 import { useRealtimeUpdates } from '@hooks/useSocket'
 import { useSessionManager } from '@hooks/useSessionManager'
 import { SessionExpiredModal } from '@components/shared/SessionExpiredModal'
 
 const AdminMainLayout = () => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   // Activate all real-time WebSocket subscriptions for admin role
   useRealtimeUpdates('admin');
 
@@ -15,18 +18,23 @@ const AdminMainLayout = () => {
 
   return (
     <>
-      <div className="flex w-full h-screen bg-white dark:bg-gray-950 transition-colors duration-200">
-        {/* Left Container - fixed, full height */}
-        <div className="h-screen">
-          <AdminLeftContainer />
-        </div>
-        {/* Right Container - flex-1, scrollable */}
-        <div className="flex-1 h-screen overflow-y-auto bg-white dark:bg-gray-950">
-          <AdminRightContainer>
+      <div className="flex h-[100dvh] w-full overflow-hidden bg-white transition-colors duration-200 dark:bg-gray-950">
+        {/* Left Container - docked on desktop (lg+), slide-over drawer on mobile/tablet */}
+        <AdminLeftContainer
+          mobileOpen={mobileMenuOpen}
+          onCloseMobile={() => setMobileMenuOpen(false)}
+        />
+
+        {/* Right Container - full width on mobile, flex-1 on desktop */}
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-white transition-colors duration-200 dark:bg-gray-950">
+          <AdminRightContainer onOpenMobileMenu={() => setMobileMenuOpen(true)}>
             <AdminRoutes />
           </AdminRightContainer>
         </div>
       </div>
+
+      {/* Sleek Mobile Bottom Tab Bar (< lg) */}
+      <MobileBottomNav onOpenMenu={() => setMobileMenuOpen(true)} />
 
       {/* Session expired / inactivity warning modal */}
       <SessionExpiredModal
