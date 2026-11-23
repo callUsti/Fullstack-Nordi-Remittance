@@ -22,6 +22,7 @@ import {
 } from "@constants/icons";
 import { useClientWallets } from "../../client-usecase/useaccounts-client-usecase";
 import { useTransferToUser, useClientRecentRecipients } from "../../client-usecase/usetransaction-client-usecase";
+import { parseApiError, type ParsedApiError } from "@core/errors/apiErrors";
 import {
   TransferLayout,
   StepIndicator,
@@ -87,6 +88,7 @@ const QuickTransfer: React.FC = () => {
   const [result, setResult] = useState<{
     success: boolean;
     reference?: string;
+    error?: ParsedApiError;
   } | null>(null);
   const [contactSearch, setContactSearch] = useState("");
 
@@ -95,7 +97,7 @@ const QuickTransfer: React.FC = () => {
   const { recipients: recentArr, isLoading: recipientsLoading } = useClientRecentRecipients(20);
   const transferToUser = useTransferToUser();
 
-  const wallets: AccountOption[] = walletsArr;
+  const wallets: AccountOption[] = walletsArr as any;
   const recentContacts = recentArr;
 
   const filteredContacts = useMemo(
@@ -150,8 +152,8 @@ const QuickTransfer: React.FC = () => {
               reference: data?.referenceNumber || data?.id || `QT${Date.now().toString().slice(-9)}`,
             });
           },
-          onError: () => {
-            setResult({ success: false });
+          onError: (err: any) => {
+            setResult({ success: false, error: parseApiError(err) });
           },
         },
       );
@@ -200,11 +202,12 @@ const QuickTransfer: React.FC = () => {
         <TCard>
           <TransferResult
             success={result.success}
-            title={result.success ? "Money Sent!" : "Transfer Failed"}
+            title={result.success ? "Money Sent!" : result.error?.title || "Transfer Failed"}
             subtitle={
               result.success
                 ? `Your quick transfer to ${recipientDisplay} is being processed.`
-                : "Something went wrong. Please try again."
+                : [result.error?.message, result.error?.guidance].filter(Boolean).join(" ") ||
+                  "Something went wrong. Please try again."
             }
             reference={result.reference}
             details={
@@ -266,7 +269,7 @@ const QuickTransfer: React.FC = () => {
                     }}
                     className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
                       values.recipientMethod === t.key
-                        ? "border-indigo-500 bg-indigo-50 text-indigo-600 dark:bg-indigo-950/30 dark:text-indigo-400"
+                        ? "border-blue-500 bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400"
                         : "border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
                     }`}
                   >
@@ -284,7 +287,7 @@ const QuickTransfer: React.FC = () => {
                       value={contactSearch}
                       onChange={(e) => setContactSearch(e.target.value)}
                       placeholder="Search contacts…"
-                      className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
+                      className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
                     />
                   </div>
 
@@ -305,11 +308,11 @@ const QuickTransfer: React.FC = () => {
                           onClick={() => setFieldValue("recipientId", c.id)}
                           className={`flex items-center gap-3 rounded-lg border p-3 text-left transition-all ${
                             values.recipientId === c.id
-                              ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30"
+                              ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30"
                               : "border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600"
                           }`}
                         >
-                          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 text-xs font-bold text-white">
+                          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-medium text-white">
                             {(c.firstName || c.name || "?").charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0 flex-1">
@@ -363,7 +366,7 @@ const QuickTransfer: React.FC = () => {
             </TCard>
 
             {/* Limits info */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               {[
                 {
                   label: "Per Transfer",
@@ -438,14 +441,14 @@ const QuickTransfer: React.FC = () => {
                     onClick={() => setFieldValue("network", n.value)}
                     className={`rounded-lg border p-3 text-left transition-all ${
                       values.network === n.value
-                        ? "border-indigo-500 bg-indigo-50 ring-1 ring-indigo-500/50 dark:bg-indigo-950/30"
+                        ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500/50 dark:bg-blue-950/30"
                         : "border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600"
                     }`}
                   >
                     <span className="block text-sm font-medium text-gray-900 dark:text-white">{n.label}</span>
                     <div className="mt-1 flex items-center gap-3">
                       <span className="text-xs text-gray-500 dark:text-gray-400">Fee: {n.fee}</span>
-                      <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400">{n.eta}</span>
+                      <span className="text-xs font-medium text-blue-600 dark:text-blue-400">{n.eta}</span>
                     </div>
                   </button>
                 ))}
