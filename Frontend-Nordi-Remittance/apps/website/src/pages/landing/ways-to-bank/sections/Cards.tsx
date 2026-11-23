@@ -139,8 +139,8 @@ const Cards: React.FC = () => {
                 <feature.icon className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <div>
-                <p className="font-black text-[13px] sm:text-sm text-neutral-900 dark:text-white uppercase tracking-tight leading-tight mb-1">{feature.title}</p>
-                <p className="text-[10px] sm:text-xs text-neutral-500 dark:text-neutral-400 font-bold leading-relaxed">{feature.description}</p>
+                <p className="font-medium text-[13px] sm:text-sm text-neutral-900 dark:text-white uppercase tracking-tight leading-tight mb-1">{feature.title}</p>
+                <p className="text-[10px] sm:text-xs text-neutral-500 dark:text-neutral-400 font-medium leading-relaxed">{feature.description}</p>
               </div>
             </div>
           ))}
@@ -180,7 +180,7 @@ const Cards: React.FC = () => {
                       <CreditCard className="w-6 h-6 opacity-50" />
                     </div>
                     <div>
-                      <p className="font-bold">{card.name}</p>
+                      <p className="font-medium">{card.name}</p>
                       <p className="text-xs opacity-80">{card.limit}</p>
                     </div>
                   </div>
@@ -213,7 +213,7 @@ const Cards: React.FC = () => {
           viewport={{ once: true }}
           className="mt-12 p-6 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white text-center"
         >
-          <h3 className="text-xl font-bold mb-2">Manage Your Cards Digitally</h3>
+          <h3 className="text-xl font-semibold mb-2">Manage Your Cards Digitally</h3>
           <p className="text-blue-100 mb-4 max-w-xl mx-auto">
             Block, unblock, set limits, and track spending all from your mobile app. 
             Get instant virtual cards for immediate online use.
