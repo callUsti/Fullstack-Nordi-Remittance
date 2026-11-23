@@ -19,6 +19,13 @@ import { CardFace, CardStatusPill, fmtDate } from "@pages/client/components/card
 const VirtualCards: React.FC = () => {
   const {
     virtualCards,
+    wallets,
+    selectedWalletId,
+    setSelectedWalletId,
+    selectedCardType,
+    setSelectedCardType,
+    creditLimit,
+    setCreditLimit,
     isLoading,
     showBalances,
     isCreating,
@@ -52,7 +59,7 @@ const VirtualCards: React.FC = () => {
             <motion.button
               onClick={() => setIsModalOpen(true)}
               disabled={cardLimitReached}
-              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-3 py-2 text-xs font-medium text-white shadow-md transition hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 sm:px-4 sm:text-sm"
+              className="flex items-center gap-2 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-medium text-white shadow-md transition hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 sm:px-4 sm:text-sm"
               whileHover={{ scale: cardLimitReached ? 1 : 1.02 }}
               whileTap={{ scale: cardLimitReached ? 1 : 0.98 }}
             >
@@ -75,10 +82,10 @@ const VirtualCards: React.FC = () => {
         <StatsGridSkeleton count={2} />
       ) : virtualCards.length === 0 ? (
         <DashCard className="border border-gray-100 py-12 text-center dark:border-gray-800">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-md">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-md">
             <Smartphone size={28} />
           </div>
-          <h3 className="mb-2 text-base font-bold text-gray-900 dark:text-white sm:text-lg">
+          <h3 className="mb-2 text-base font-semibold text-gray-900 dark:text-white sm:text-lg">
             Create Your First Virtual Card
           </h3>
           <p className="mx-auto mb-6 max-w-md text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
@@ -87,7 +94,7 @@ const VirtualCards: React.FC = () => {
           </p>
           <motion.button
             onClick={() => setIsModalOpen(true)}
-            className="rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-2.5 text-sm font-medium text-white shadow-md transition hover:shadow-lg"
+            className="rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-medium text-white shadow-md transition hover:shadow-lg"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
@@ -126,7 +133,7 @@ const VirtualCards: React.FC = () => {
               className="w-full max-w-md overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-900"
             >
               <div className="flex items-center justify-between border-b border-gray-100 p-6 dark:border-gray-800">
-                <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
+                <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
                   <Smartphone size={20} className="text-emerald-500" /> New Virtual Card
                 </h3>
                 <button
@@ -138,7 +145,73 @@ const VirtualCards: React.FC = () => {
               </div>
 
               <div className="p-6">
-                <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500">
+                  Card Type
+                </label>
+                <div className="mb-4 grid grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCardType("virtual")}
+                    className={`rounded-xl border-2 px-3 py-2.5 text-left text-xs transition ${
+                      selectedCardType === "virtual"
+                        ? "border-emerald-500 bg-emerald-50/60 font-semibold text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200"
+                        : "border-gray-200 text-gray-700 dark:border-gray-700 dark:text-gray-300"
+                    }`}
+                  >
+                    <span className="block font-semibold">Virtual Debit</span>
+                    <span className="text-[10px] opacity-80">Debits linked account</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCardType("credit")}
+                    className={`rounded-xl border-2 px-3 py-2.5 text-left text-xs transition ${
+                      selectedCardType === "credit"
+                        ? "border-purple-500 bg-purple-50/60 font-semibold text-purple-900 dark:bg-purple-950/30 dark:text-purple-200"
+                        : "border-gray-200 text-gray-700 dark:border-gray-700 dark:text-gray-300"
+                    }`}
+                  >
+                    <span className="block font-semibold">Virtual Credit</span>
+                    <span className="text-[10px] opacity-80">5.0% interest · Debt on account</span>
+                  </button>
+                </div>
+
+                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500">
+                  Linked Active Account
+                </label>
+                <select
+                  value={selectedWalletId}
+                  onChange={(e) => setSelectedWalletId(e.target.value)}
+                  className="mb-4 w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white"
+                >
+                  {wallets.map((w: any) => {
+                    const wId = w.id || w._id;
+                    const bal = w.primaryCurrencyBalance ?? w.balance ?? 0;
+                    return (
+                      <option key={wId} value={wId}>
+                        {w.displayName || w.typeLabel || w.walletType || "Account"} ({w.walletNumber || wId.slice(-6)}) — ${Number(bal).toLocaleString()}
+                      </option>
+                    );
+                  })}
+                </select>
+
+                {selectedCardType === "credit" && (
+                  <div className="mb-4">
+                    <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500">
+                      Credit Limit ($)
+                    </label>
+                    <input
+                      type="number"
+                      min={1000}
+                      max={100000}
+                      step={500}
+                      value={creditLimit}
+                      onChange={(e) => setCreditLimit(Number(e.target.value) || 10000)}
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white"
+                    />
+                  </div>
+                )}
+
+                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500">
                   Cardholder Name (optional)
                 </label>
                 <input
@@ -146,11 +219,11 @@ const VirtualCards: React.FC = () => {
                   value={cardholderName}
                   onChange={(e) => setCardholderName(e.target.value)}
                   placeholder="Defaults to your account name"
-                  className="mb-5 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white"
+                  className="mb-5 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:placeholder:text-gray-500"
                 />
 
-                <p className="mb-3 text-sm font-bold text-gray-900 dark:text-white">Select Payment Network</p>
-                <div className="mb-6 grid grid-cols-3 gap-3">
+                <p className="mb-3 text-sm font-medium text-gray-900 dark:text-white">Select Payment Network</p>
+                <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
                   {CARD_BRANDS.filter((b) => b.id !== "discover").map((brand) => (
                     <button
                       key={brand.id}
@@ -162,7 +235,7 @@ const VirtualCards: React.FC = () => {
                       }`}
                     >
                       <img src={brand.icon} alt={brand.name} className="mb-2 h-8 object-contain" />
-                      <span className="text-[10px] font-bold text-gray-600 dark:text-gray-400">{brand.name}</span>
+                      <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400">{brand.name}</span>
                     </button>
                   ))}
                 </div>
@@ -170,18 +243,18 @@ const VirtualCards: React.FC = () => {
                 <div className="mb-6 rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
                   <div className="mb-2 flex justify-between text-xs">
                     <span className="text-gray-500 dark:text-gray-400">Issuance Fee</span>
-                    <span className="font-bold text-gray-900 dark:text-white">Free</span>
+                    <span className="font-medium text-gray-900 dark:text-white">Free</span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-500 dark:text-gray-400">Monthly Limit</span>
-                    <span className="font-bold text-gray-900 dark:text-white">$5,000.00</span>
+                    <span className="font-medium text-gray-900 dark:text-white">$5,000.00</span>
                   </div>
                 </div>
 
                 <motion.button
                   onClick={onSubmit}
                   disabled={isCreating}
-                  className="w-full rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 py-3.5 text-sm font-bold text-white shadow-md transition hover:shadow-lg disabled:opacity-50"
+                  className="w-full rounded-xl bg-emerald-600 py-3.5 text-sm font-medium text-white shadow-md transition hover:shadow-lg disabled:opacity-50"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
