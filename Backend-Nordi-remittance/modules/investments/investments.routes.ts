@@ -93,19 +93,26 @@ router.delete(
 // ============================================================================
 
 /**
- * @route   GET /api/investments/account
+ * @route   GET /api/investments/account (and /accounts alias)
  * @desc    Get user's investment account
  * @access  Private
  */
 router.get("/account", InvestmentController.getInvestmentAccount);
+router.get("/accounts", InvestmentController.getInvestmentAccount);
 
 /**
- * @route   POST /api/investments/account
+ * @route   POST /api/investments/account (and /accounts alias)
  * @desc    Create investment account
  * @access  Private
  */
 router.post(
   "/account",
+  requireKycVerified,
+  auditLogMiddleware,
+  InvestmentController.createInvestmentAccount,
+);
+router.post(
+  "/accounts",
   requireKycVerified,
   auditLogMiddleware,
   InvestmentController.createInvestmentAccount,
@@ -178,6 +185,69 @@ router.post(
   requireKycVerified,
   auditLogMiddleware,
   InvestmentController.sellAsset,
+);
+
+/**
+ * @route   POST /api/investments/swap
+ * @desc    Swap between two investment assets (stocks, crypto, ETFs, bonds)
+ * @access  Private
+ */
+router.post(
+  "/swap",
+  transactionRateLimit,
+  requireKycVerified,
+  auditLogMiddleware,
+  InvestmentController.swapAssets,
+);
+
+// ============================================================================
+// LIVE MARKET FEEDS (COINMARKETCAP CRYPTO, EQUITIES & FOREX)
+// ============================================================================
+
+router.get("/crypto", InvestmentController.getCryptoMarket);
+router.get("/stocks", InvestmentController.getStockMarket);
+router.get("/forex/rates", InvestmentController.getForexRates);
+router.get("/forex/convert", InvestmentController.convertForex);
+router.post("/forex/convert", InvestmentController.convertForex);
+router.post(
+  "/forex/exchange",
+  transactionRateLimit,
+  auditLogMiddleware,
+  InvestmentController.exchangeForexWallet,
+);
+
+// ============================================================================
+// ADMIN INVESTMENTS & MARKET MANAGEMENT
+// ============================================================================
+
+router.get(
+  "/admin/overview",
+  requireAdmin,
+  InvestmentController.getAdminInvestmentsOverview,
+);
+router.post(
+  "/admin/sync",
+  requireAdmin,
+  auditLogMiddleware,
+  InvestmentController.syncAdminMarketAssets,
+);
+router.post(
+  "/admin/assets",
+  requireAdmin,
+  auditLogMiddleware,
+  InvestmentController.upsertAdminAsset,
+);
+router.put(
+  "/admin/assets/:assetId",
+  requireAdmin,
+  auditLogMiddleware,
+  InvestmentController.upsertAdminAsset,
+);
+router.delete(
+  "/admin/assets/:assetId",
+  requireAdmin,
+  auditLogMiddleware,
+  InvestmentController.deleteAdminAsset,
 );
 
 // ============================================================================
