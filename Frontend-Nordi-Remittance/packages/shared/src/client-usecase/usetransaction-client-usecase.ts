@@ -65,12 +65,39 @@ const extractPagination = (d: unknown): PaginationMeta | null => {
 // QUERIES
 // ============================================================================
 
+const normalizeClientTransaction = (tx: any) => {
+  if (!tx || typeof tx !== "object") return tx;
+  const meta = tx.meta && typeof tx.meta === "object" ? tx.meta : {};
+  const senderBank =
+    tx.senderBank ||
+    meta.senderBankName ||
+    meta.senderBank ||
+    tx.recipientBankName ||
+    meta.bankName ||
+    "Nordi Bank";
+  const bankName = tx.recipientBankName || meta.bankName || tx.bankName || senderBank;
+  const purpose = tx.purpose || meta.purpose || tx.description || meta.narration || tx.category || "Transfer";
+  const transactionType = tx.transferType || meta.transferType || tx.type || "transfer";
+  const timeSent = tx.createdAt || tx.date || tx.completedAt || "";
+  const reference = tx.referenceNumber || tx.reference || tx._id || tx.id || "";
+
+  return {
+    ...tx,
+    senderBank,
+    bankName,
+    purpose,
+    transactionType,
+    timeSent,
+    reference,
+  };
+};
+
 /** Paginated transactions list */
 export function useClientTransactions(filters?: TransactionFilters) {
   const { data: raw, isLoading, error, refetch } = useTransactions(filters);
 
   const result = useMemo(() => {
-    const transactions = extractArray(raw, "transactions");
+    const transactions = extractArray(raw, "transactions").map(normalizeClientTransaction);
     const pagination = extractPagination(raw);
     return { transactions, pagination };
   }, [raw]);
@@ -105,7 +132,7 @@ export function useClientRecentTransactions(limit = 10) {
   const { data: raw, isLoading, error, refetch } = useRecentTransactions(limit);
 
   const transactions = useMemo(() => {
-    const list = extractArray(raw, "transactions");
+    const list = extractArray(raw, "transactions").map(normalizeClientTransaction);
     return multiKeySort(list, [{ getter: (t: any) => new Date(t.createdAt || t.date), direction: "desc" }]).slice(
       0,
       limit,
