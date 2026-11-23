@@ -133,7 +133,7 @@ const BlackCard: React.FC = () => {
                       <div className="p-1 sm:p-1.5 rounded-lg bg-amber-400">
                         <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-neutral-900" />
                       </div>
-                      <span className="text-amber-400 font-black tracking-[0.2em] text-xs sm:text-sm">BLACK</span>
+                      <span className="text-amber-400 font-medium tracking-[0.2em] text-xs sm:text-sm">BLACK</span>
                     </div>
                     <CreditCard className="w-8 h-8 sm:w-10 sm:h-10 text-amber-500/30" />
                   </div>
@@ -145,12 +145,12 @@ const BlackCard: React.FC = () => {
 
                   <div className="flex items-end justify-between">
                     <div className="min-w-0">
-                      <p className="text-[8px] sm:text-[10px] text-neutral-500 uppercase font-black tracking-widest mb-0.5">Card Holder</p>
-                      <p className="font-bold text-[12px] sm:text-base uppercase truncate">PREFERRED MEMBER</p>
+                      <p className="text-[8px] sm:text-[10px] text-neutral-500 uppercase font-medium tracking-widest mb-0.5">Card Holder</p>
+                      <p className="font-medium text-[12px] sm:text-base uppercase truncate">PREFERRED MEMBER</p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-[8px] sm:text-[10px] text-neutral-500 uppercase font-black tracking-widest mb-0.5">Valid Thru</p>
-                      <p className="font-bold text-[12px] sm:text-base tabular-nums">12/28</p>
+                      <p className="text-[8px] sm:text-[10px] text-neutral-500 uppercase font-medium tracking-widest mb-0.5">Valid Thru</p>
+                      <p className="font-medium text-[12px] sm:text-base tabular-nums">12/28</p>
                     </div>
                   </div>
                 </div>
@@ -184,14 +184,14 @@ const BlackCard: React.FC = () => {
                       : benefit.icon}
                   </div>
                   <div>
-                    <h4 className="font-bold text-sm sm:text-base uppercase tracking-tight mb-0.5">{benefit.title}</h4>
+                    <h4 className="font-semibold text-sm sm:text-base uppercase tracking-tight mb-0.5">{benefit.title}</h4>
                     <p className="text-[11px] sm:text-xs text-neutral-400 leading-relaxed">{benefit.description}</p>
                   </div>
                 </motion.div>
               ))}
             </div>
 
-            <Button variant="primary" size="lg" className="w-full bg-amber-400 hover:bg-amber-500 text-neutral-900 font-bold py-4 px-10 shadow-xl shadow-amber-400/10">
+            <Button variant="primary" size="lg" className="w-full bg-amber-400 hover:bg-amber-500 text-neutral-900 font-medium py-4 px-10 shadow-xl shadow-amber-400/10">
               <Star className="w-5 h-5 mr-2" />
               Apply for Black Card
             </Button>
@@ -205,7 +205,7 @@ const BlackCard: React.FC = () => {
           viewport={{ once: true }}
           className="mt-16 sm:mt-24 pt-16 sm:pt-20 border-t border-white/10"
         >
-          <h3 className="text-xl sm:text-3xl font-black text-center mb-10 sm:mb-16 uppercase tracking-widest">Card Tiers</h3>
+          <h3 className="text-xl sm:text-3xl font-bold text-center mb-10 sm:mb-16 uppercase tracking-widest">Card Tiers</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
             {cardTiers.map((tier, index) => (
               <motion.div
@@ -220,11 +220,11 @@ const BlackCard: React.FC = () => {
                 )}
               >
                 <div className={cn("w-20 h-12 mx-auto rounded-xl mb-6 shadow-lg transform group-hover:scale-110 group-hover:rotate-3 transition-transform", tier.color)} />
-                <h4 className="font-black text-xl sm:text-2xl mb-3 uppercase tracking-tighter">{tier.name}</h4>
+                <h4 className="font-semibold text-xl sm:text-2xl mb-3 uppercase tracking-tighter">{tier.name}</h4>
                 <div className="py-2.5 px-4 rounded-full bg-amber-400/10 border border-amber-400/20 inline-block mb-4">
-                  <p className="text-amber-400 font-bold text-sm uppercase tracking-widest">{tier.fee}</p>
+                  <p className="text-amber-400 font-medium text-sm uppercase tracking-widest">{tier.fee}</p>
                 </div>
-                <p className="text-xs sm:text-sm text-neutral-400 font-bold uppercase tracking-wider">Min. annual spend: <span className="text-white">{tier.spend}</span></p>
+                <p className="text-xs sm:text-sm text-neutral-400 font-medium uppercase tracking-wider">Min. annual spend: <span className="text-white">{tier.spend}</span></p>
               </motion.div>
             ))}
           </div>
