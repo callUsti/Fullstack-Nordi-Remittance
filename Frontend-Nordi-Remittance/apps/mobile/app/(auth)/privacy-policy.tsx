@@ -224,7 +224,7 @@ export default function PrivacyPolicyScreen() {
           </View>
 
           {/* Complete Structured Privacy Sections */}
-          {sections.map((section, idx) => {
+          {sections.map((section: any, idx: number) => {
             const paragraphs = (section.content || '').split('\n\n').filter(Boolean);
             return (
               <Card
