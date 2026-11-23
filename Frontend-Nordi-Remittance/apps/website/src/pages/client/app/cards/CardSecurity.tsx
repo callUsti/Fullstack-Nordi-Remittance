@@ -81,7 +81,7 @@ const CardSecurity: React.FC = () => {
       label: "Set Limits",
       icon: Shield,
       color:
-        "text-indigo-500 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border-indigo-100 dark:border-indigo-900/30",
+        "text-blue-500 bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/40 border-blue-100 dark:border-blue-900/30",
     },
   ];
 
@@ -116,7 +116,7 @@ const CardSecurity: React.FC = () => {
                   onClick={() => setActiveCardId(c.id)}
                   className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
                     c.id === activeCardId
-                      ? "bg-indigo-600 text-white shadow-md"
+                      ? "bg-blue-600 text-white shadow-md"
                       : "dark:hover:bg-gray-750 bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300"
                   }`}
                 >
@@ -128,7 +128,7 @@ const CardSecurity: React.FC = () => {
 
           <div className="my-4 flex items-center justify-between">
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Managing <span className="font-bold text-gray-700 dark:text-gray-300">•••• {activeCard.last4}</span>
+              Managing <span className="font-medium text-gray-700 dark:text-gray-300">•••• {activeCard.last4}</span>
             </p>
             <CardStatusPill status={activeCard.status} />
           </div>
@@ -137,8 +137,8 @@ const CardSecurity: React.FC = () => {
             {/* Transaction Permissions */}
             <motion.div variants={dashboardItemVariants}>
               <DashCard className="h-full border border-gray-100 shadow-md dark:border-gray-800/80">
-                <h3 className="mb-1 flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white sm:text-lg">
-                  <Shield size={18} className="text-indigo-600 dark:text-indigo-400" /> Transaction Permissions
+                <h3 className="mb-1 flex items-center gap-2 text-base font-semibold text-gray-900 dark:text-white sm:text-lg">
+                  <Shield size={18} className="text-blue-600 dark:text-blue-400" /> Transaction Permissions
                 </h3>
                 <p className="mb-6 text-xs text-gray-500 dark:text-gray-400">
                   Toggle authorization channels for this card. Changes take effect in real time.
@@ -154,7 +154,7 @@ const CardSecurity: React.FC = () => {
                           <opt.icon size={20} />
                         </div>
                         <div>
-                          <h4 className="text-xs font-bold text-gray-900 dark:text-white sm:text-sm">{opt.label}</h4>
+                          <h4 className="text-xs font-medium text-gray-900 dark:text-white sm:text-sm">{opt.label}</h4>
                           <p className="mt-0.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400 sm:text-xs">
                             {opt.desc}
                           </p>
@@ -165,7 +165,7 @@ const CardSecurity: React.FC = () => {
                         disabled={isPending}
                         onClick={() => handleToggleOption(opt.key)}
                         className={`relative h-7 w-14 shrink-0 rounded-full transition-colors disabled:opacity-50 ${
-                          toggles[opt.key] ? "bg-indigo-600" : "bg-gray-200 dark:bg-gray-700"
+                          toggles[opt.key] ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-700"
                         }`}
                       >
                         <span
@@ -184,7 +184,7 @@ const CardSecurity: React.FC = () => {
             <motion.div variants={dashboardItemVariants}>
               <DashCard className="flex h-full flex-col justify-between border border-gray-100 shadow-md dark:border-gray-800/80">
                 <div>
-                  <h3 className="mb-1 text-base font-bold text-gray-900 dark:text-white sm:text-lg">
+                  <h3 className="mb-1 text-base font-semibold text-gray-900 dark:text-white sm:text-lg">
                     Emergency & Security Controls
                   </h3>
                   <p className="mb-5 text-xs text-gray-500 dark:text-gray-400">
@@ -210,7 +210,7 @@ const CardSecurity: React.FC = () => {
                             <action.icon size={18} />
                           </div>
                           <div>
-                            <span className="block text-xs font-bold text-gray-900 dark:text-gray-100 sm:text-sm">
+                            <span className="block text-xs font-medium text-gray-900 dark:text-gray-100 sm:text-sm">
                               {action.label === "Freeze Card" && activeCard.status === "blocked"
                                 ? "Unfreeze Card"
                                 : action.label}
@@ -231,7 +231,7 @@ const CardSecurity: React.FC = () => {
                   <div className="flex gap-3">
                     <AlertTriangle className="mt-0.5 shrink-0 text-blue-500" size={20} />
                     <div>
-                      <h4 className="mb-1 text-sm font-bold text-gray-900 dark:text-gray-100">
+                      <h4 className="mb-1 text-sm font-semibold text-gray-900 dark:text-gray-100">
                         Fraud Protection Guarantee
                       </h4>
                       <p className="text-xs leading-relaxed text-gray-500 dark:text-gray-400">
