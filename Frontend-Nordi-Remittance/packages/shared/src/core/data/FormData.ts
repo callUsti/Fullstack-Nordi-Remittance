@@ -1,16 +1,10 @@
-// Define currencies
-export const currencies = [
-  { value: "USD", label: "US Dollar (USD)" },
-  { value: "EUR", label: "Euro (EUR)" },
-  { value: "GBP", label: "British Pound (GBP)" },
-  { value: "JPY", label: "Japanese Yen (JPY)" },
-  { value: "AUD", label: "Australian Dollar (AUD)" },
-  { value: "CAD", label: "Canadian Dollar (CAD)" },
-  { value: "CHF", label: "Swiss Franc (CHF)" },
-  { value: "CNY", label: "Chinese Yuan (CNY)" },
-  { value: "SEK", label: "Swedish Krona (SEK)" },
-  { value: "NZD", label: "New Zealand Dollar (NZD)" },
-];
+import Currencies from "./Currencies";
+
+// Define currencies (derived from shared Currencies catalog)
+export const currencies = Currencies.map((c) => ({
+  value: c.code,
+  label: `${c.name} (${c.code})`,
+}));
 
 // Define income ranges
 export const incomeRanges = [
