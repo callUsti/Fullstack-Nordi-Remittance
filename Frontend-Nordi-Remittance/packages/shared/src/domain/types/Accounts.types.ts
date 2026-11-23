@@ -181,6 +181,49 @@ declare global {
     endDate?: string;
     type?: "debit" | "credit";
   }
+
+  /** Linked products for a wallet */
+  interface WalletProductSummary {
+    cards: Array<{
+      id: string;
+      cardId: string;
+      cardholderName: string;
+      lastFour: string;
+      cardType: string;
+      brand: string;
+      status: string;
+      currency: string;
+      isFundingSource: boolean;
+    }>;
+    loans: Array<{
+      id: string;
+      loanId: string;
+      amount: number;
+      currency: string;
+      status: string;
+      remainingBalance: number;
+      nextPaymentDate?: string;
+    }>;
+    investments: Array<{
+      id: string;
+      accountId: string;
+      portfolioName: string;
+      totalInvested: number;
+      currentValue: number;
+      currency: string;
+      status: string;
+    }>;
+  }
+
+  interface ConsolidatedLimitsSummary {
+    totalDailyLimit: number;
+    totalDailyUsed: number;
+    totalDailyRemaining: number;
+    totalMonthlyLimit: number;
+    totalMonthlyUsed: number;
+    totalMonthlyRemaining: number;
+    walletsCount: number;
+  }
 }
 
 export {};
