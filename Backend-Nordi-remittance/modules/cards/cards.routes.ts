@@ -101,6 +101,18 @@ router.post(
   CardController.withdrawFromCard,
 );
 
+router.patch(
+  "/:cardId/link-account",
+  auditLogMiddleware,
+  CardController.linkCardAccount,
+);
+
+router.post(
+  "/:cardId/link-account",
+  auditLogMiddleware,
+  CardController.linkCardAccount,
+);
+
 router.post(
   "/:cardId/activate",
   auditLogMiddleware,
