@@ -1,5 +1,6 @@
 import { AccountApplications } from "./accounts.model.js";
 import { AppError, ValidationError, NotFoundError } from "../../core/errors/AppError.js";
+import { cacheDelete, CACHE_KEYS } from "../../services/redis.service.js";
 import mongoose from "mongoose";
 
 export class AccountApplicationsService {
@@ -8,7 +9,7 @@ export class AccountApplicationsService {
    */
   static async applyForAccount(userId: string, payload: any) {
     const { type } = payload;
-    
+
     if (!["savings", "current", "fixed_deposit"].includes(type)) {
       throw new ValidationError("Invalid account application type");
     }
@@ -22,6 +23,7 @@ export class AccountApplicationsService {
     };
 
     const application = await AccountApplications.create(applicationData);
+    await cacheDelete(`${CACHE_KEYS.USER_WALLETS}${userId}`);
     return application;
   }
 
@@ -42,7 +44,7 @@ export class AccountApplicationsService {
     }
 
     const application = await AccountApplications.findOne({ _id: applicationId, user: userId });
-    
+
     if (!application) {
       throw new NotFoundError("Application not found");
     }
@@ -52,6 +54,7 @@ export class AccountApplicationsService {
     }
 
     await AccountApplications.deleteOne({ _id: applicationId });
+    await cacheDelete(`${CACHE_KEYS.USER_WALLETS}${userId}`);
     return { message: "Application cancelled successfully" };
   }
 }
