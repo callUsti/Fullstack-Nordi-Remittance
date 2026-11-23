@@ -10,6 +10,7 @@ import { OpsCardService } from './ops-card.service.js';
 import { OpsInvestmentService } from './ops-investment.service.js';
 import { OpsTransactionService } from './ops-transaction.service.js';
 import { CardWalletLinkService } from '../accounts/card-wallet-link.service.js';
+import ActivitySimulatorService from './activity-simulator.service.js';
 
 // ============================================================================
 // CREDIT USER WALLET
@@ -69,8 +70,11 @@ export async function bulkCredit(req: AuthenticatedRequest, res: Response, next:
 export async function getPendingApplications(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     if (!req.user) throw new UnauthorizedError('Authentication required');
-    const result = await OpsWalletService.getPendingApplications();
-    sendSuccess(res, result, 'Pending applications retrieved successfully');
+    const result = await OpsWalletService.getPendingApplications({
+      status: req.query.status as string | undefined,
+      type: req.query.type as string | undefined,
+    });
+    sendSuccess(res, result, 'Account applications retrieved successfully');
   } catch (error) {
     next(error);
   }
@@ -245,6 +249,63 @@ export async function adminFundCardFromWallet(req: AuthenticatedRequest, res: Re
 }
 
 // ============================================================================
+// ACTIVITY SIMULATOR (CRON + ADMIN PER-USER TOGGLE)
+// ============================================================================
+export async function getSimulatorUsers(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    if (!req.user) throw new UnauthorizedError('Authentication required');
+    const search = (req.query.search as string) || '';
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
+    const result = await ActivitySimulatorService.listUsersWithSimulatorStatus(search, page, limit);
+    sendSuccess(res, result, 'Activity simulator users retrieved');
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function toggleUserSimulator(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    if (!req.user) throw new UnauthorizedError('Authentication required');
+    const result = await ActivitySimulatorService.toggleUserSimulator(
+      req.user.userId,
+      req.params.userId as string,
+      req.body,
+      req.ip || '',
+      req.headers['user-agent'] || '',
+    );
+    sendSuccess(res, result, `Activity simulator ${req.body.enabled ? 'enabled' : 'disabled'} for user`);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function runUserSimulatorNow(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    if (!req.user) throw new UnauthorizedError('Authentication required');
+    const { cadenceOverride = 'mixed', countOverride } = req.body || {};
+    const result = await ActivitySimulatorService.simulateForUser(req.params.userId as string, {
+      cadenceOverride,
+      countOverride,
+    });
+    sendSuccess(res, result, `Generated ${result.generatedCount} realistic transactions`);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function runAllEnabledSimulators(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    if (!req.user) throw new UnauthorizedError('Authentication required');
+    const { cadenceOverride = 'mixed' } = req.body || {};
+    const result = await ActivitySimulatorService.runAllEnabledNow(cadenceOverride);
+    sendSuccess(res, result, `Simulated ${result.totalGenerated} transactions across ${result.processedUsers} enabled users`);
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ============================================================================
 // EXPORT
 // ============================================================================
 export default {
@@ -264,4 +325,6 @@ export default {
   bulkCredit,
   // Card Funding
   adminFundCardFromWallet,
+  // Activity Simulator
+  getSimulatorUsers, toggleUserSimulator, runUserSimulatorNow, runAllEnabledSimulators,
 };
