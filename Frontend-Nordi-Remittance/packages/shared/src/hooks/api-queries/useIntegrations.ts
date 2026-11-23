@@ -558,16 +558,24 @@ export const useConnectIntegration = () => {
   return useMutation({
     mutationFn: async (data: {
       integrationType: string;
+      name?: string;
+      provider?: string;
       config?: Record<string, unknown>;
       authCode?: string;
     }) => {
-      // Mock connectIntegration
-      return { message: "Integration connected successfully" };
+      const response = await IntegrationsRepository.createAdminIntegration({
+        name: data.name || data.integrationType,
+        provider: data.provider || data.integrationType,
+        type: data.integrationType,
+        config: data.config || {},
+      });
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.integrations.connected(),
       });
+      queryClient.invalidateQueries({ queryKey: ["integrations", "admin"] });
       showToast("Integration connected", "success");
     },
     onError: (error: Error) => {
@@ -593,6 +601,7 @@ export const useDisconnectIntegration = () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.integrations.connected(),
       });
+      queryClient.invalidateQueries({ queryKey: ["integrations", "admin"] });
       showToast("Integration disconnected", "success");
     },
     onError: (error: Error) => {
@@ -616,13 +625,17 @@ export const useUpdateIntegrationSettings = () => {
       integrationId: UUID;
       settings: Record<string, unknown>;
     }) => {
-      // Mock updateIntegrationSettings
-      return { message: "Settings updated successfully" };
+      const response = await IntegrationsRepository.updateAdminIntegration(
+        integrationId,
+        settings,
+      );
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.integrations.connected(),
       });
+      queryClient.invalidateQueries({ queryKey: ["integrations", "admin"] });
       showToast("Integration settings updated", "success");
     },
     onError: (error: Error) => {
@@ -647,10 +660,37 @@ export const useRefreshIntegration = () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.integrations.connected(),
       });
+      queryClient.invalidateQueries({ queryKey: ["integrations", "admin"] });
       showToast("Integration refreshed", "success");
     },
     onError: (error: Error) => {
       showToast(error.message || "Failed to refresh integration", "error");
+    },
+  });
+};
+
+export const useAdminIntegrations = (params?: any) => {
+  return useQuery({
+    queryKey: ["integrations", "admin", params],
+    queryFn: async () => {
+      const response = await IntegrationsRepository.getAdminIntegrations(params);
+      return response.data;
+    },
+  });
+};
+
+export const useTestAdminIntegration = () => {
+  const { showToast } = useToastStore();
+  return useMutation({
+    mutationFn: async (integrationId: string) => {
+      const response = await IntegrationsRepository.testAdminIntegration(integrationId);
+      return response.data;
+    },
+    onSuccess: () => {
+      showToast("Integration connection test passed", "success");
+    },
+    onError: (error: Error) => {
+      showToast(error.message || "Integration test failed", "error");
     },
   });
 };
