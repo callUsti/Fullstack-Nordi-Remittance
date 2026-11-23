@@ -149,33 +149,33 @@ const LoanCard: React.FC<LoanCardProps> = ({ loan, index }) => (
     </div>
 
     {/* Content */}
-    <h3 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-white mb-1.5 sm:mb-2 leading-tight">{loan.name}</h3>
+    <h3 className="text-lg sm:text-xl font-semibold text-neutral-900 dark:text-white mb-1.5 sm:mb-2 leading-tight">{loan.name}</h3>
     <p className="text-[13px] sm:text-sm text-neutral-500 dark:text-neutral-400 mb-4 leading-tight">{loan.description}</p>
 
     {/* Loan Details */}
     <div className="grid grid-cols-3 gap-2 py-3 sm:py-5 border-y border-neutral-100 dark:border-neutral-700 mb-4 sm:mb-5">
       <div>
-        <p className="text-[10px] text-neutral-400 uppercase tracking-wider font-bold leading-tight mb-0.5">Max Amount</p>
-        <p className="text-base sm:text-lg font-black text-neutral-900 dark:text-white leading-tight">{loan.maxAmount}</p>
+        <p className="text-[10px] text-neutral-400 uppercase tracking-wider font-medium leading-tight mb-0.5">Max Amount</p>
+        <p className="text-base sm:text-lg font-semibold text-neutral-900 dark:text-white leading-tight">{loan.maxAmount}</p>
       </div>
       <div>
-        <p className="text-[10px] text-neutral-400 uppercase tracking-wider font-bold leading-tight mb-0.5">Rate</p>
-        <p className="text-base sm:text-lg font-black text-emerald-600 leading-tight">{loan.rate}</p>
+        <p className="text-[10px] text-neutral-400 uppercase tracking-wider font-medium leading-tight mb-0.5">Rate</p>
+        <p className="text-base sm:text-lg font-semibold text-emerald-600 leading-tight">{loan.rate}</p>
       </div>
       <div>
-        <p className="text-[10px] text-neutral-400 uppercase tracking-wider font-bold leading-tight mb-0.5">Tenure</p>
-        <p className="text-base sm:text-lg font-black text-neutral-900 dark:text-white leading-tight">{loan.tenure}</p>
+        <p className="text-[10px] text-neutral-400 uppercase tracking-wider font-medium leading-tight mb-0.5">Tenure</p>
+        <p className="text-base sm:text-lg font-semibold text-neutral-900 dark:text-white leading-tight">{loan.tenure}</p>
       </div>
     </div>
 
     {/* Eligible For */}
     <div className="flex-1 mb-6 sm:mb-8">
-      <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-2 sm:mb-3">Eligible Businesses</p>
+      <p className="text-[10px] font-medium text-neutral-400 uppercase tracking-widest mb-2 sm:mb-3">Eligible Businesses</p>
       <div className="flex flex-wrap gap-2">
         {loan.eligibleFor.map((item) => (
           <span
             key={item}
-            className="px-2.5 py-1 bg-blue-50 dark:bg-blue-900/10 text-blue-600 dark:text-blue-300 text-[10px] sm:text-xs font-bold rounded-lg border border-blue-100 dark:border-blue-800/30"
+            className="px-2.5 py-1 bg-blue-50 dark:bg-blue-900/10 text-blue-600 dark:text-blue-300 text-[10px] sm:text-xs font-medium rounded-lg border border-blue-100 dark:border-blue-800/30"
           >
             {item}
           </span>
@@ -184,7 +184,7 @@ const LoanCard: React.FC<LoanCardProps> = ({ loan, index }) => (
     </div>
 
     {/* CTA */}
-    <Button variant="primary" className="w-full bg-blue-600 hover:bg-blue-700 text-sm py-2.5 sm:py-3 font-bold shadow-md">
+    <Button variant="primary" className="w-full bg-blue-600 hover:bg-blue-700 text-sm py-2.5 sm:py-3 font-medium shadow-md">
       Apply Now
       <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-1.5 sm:ml-2" />
     </Button>
@@ -277,9 +277,9 @@ const CBNHealthcare: React.FC = () => {
               <div className="w-16 h-16 sm:w-20 sm:h-20 bg-amber-400/20 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg">
                 <Heart className="w-8 h-8 sm:w-10 sm:h-10 text-amber-400" />
               </div>
-              <p className="text-3xl sm:text-5xl font-black text-amber-400 mb-2 sm:mb-3 leading-tight tracking-tighter">$50M+</p>
-              <p className="text-sm sm:text-lg text-blue-200 mb-8 sm:mb-10 font-bold leading-tight">Total funds disbursed to Nigeria's healthcare sector</p>
-              <Button variant="primary" size="lg" className="w-full sm:w-auto bg-amber-400 hover:bg-amber-500 text-blue-900 font-bold px-10 py-4 shadow-xl">
+              <p className="text-3xl sm:text-5xl font-bold text-amber-400 mb-2 sm:mb-3 leading-tight tracking-tighter">$50M+</p>
+              <p className="text-sm sm:text-lg text-blue-200 mb-8 sm:mb-10 font-semibold leading-tight">Total funds disbursed to Nigeria's healthcare sector</p>
+              <Button variant="primary" size="lg" className="w-full sm:w-auto bg-amber-400 hover:bg-amber-500 text-blue-900 font-medium px-10 py-4 shadow-xl">
                 Check Your Eligibility
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
